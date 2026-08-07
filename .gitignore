@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.venv/
+backend/out.log
+backend/err.log
+
+.claude/
+
+mobile/.dart_tool/
+mobile/.flutter-plugin-dependencies
+mobile/build/
+mobile/.idea/
+mobile/*.iml
+mobile/ios/Pods/
+mobile/android/.gradle/
