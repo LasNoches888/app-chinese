@@ -1,0 +1,55 @@
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field
+
+
+class VocabCreate(BaseModel):
+    word: str
+    pinyin: str
+    translation: str
+
+
+class VocabCard(BaseModel):
+    id: str
+    user_id: str
+    word: str
+    pinyin: str
+    translation: str
+    repetitions: int = 0
+    ease_factor: float = 2.5
+    interval_days: int = 0
+    due_date: datetime
+    weak: bool = False
+    created_at: datetime
+
+
+class ReviewRequest(BaseModel):
+    card_id: str
+    quality: int = Field(ge=0, le=5)
+
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class ChatRequest(BaseModel):
+    user_id: str
+    message: str
+    hsk_level: int = 1
+
+
+class NewWord(BaseModel):
+    word: str
+    pinyin: str
+    translation: str
+
+
+class ChatResponse(BaseModel):
+    reply_zh: str
+    reply_pinyin: str
+    new_words_used: list[NewWord] = []
+    grammar_recast: Optional[str] = None
