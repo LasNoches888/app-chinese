@@ -72,7 +72,7 @@ def review_vocab(user_id: str, body: ReviewRequest):
         raise HTTPException(status_code=404, detail="Card not found")
     updated = srs.review_card(card, body.quality)
     storage.save_card(updated)
-    storage.log_review(user_id, body.quality)
+    storage.log_review(user_id, body.quality, xp=stats.xp_for_quality(body.quality))
     return updated
 
 
@@ -80,13 +80,21 @@ def review_vocab(user_id: str, body: ReviewRequest):
 def user_stats(user_id: str):
     cards = storage.all_cards_for_user(user_id)
     logs = storage.get_review_logs(user_id)
+    learned_words = len(srs.active_vocab(cards))
+    streak_days = stats.compute_streak_days(logs)
+    xp_total = stats.compute_xp_total(logs)
     return UserStats(
         total_words=len(cards),
-        learned_words=len(srs.active_vocab(cards)),
+        learned_words=learned_words,
         weak_words=len(srs.weak_vocab(cards)),
         reviews_today=stats.reviews_today(logs),
-        streak_days=stats.compute_streak_days(logs),
+        streak_days=streak_days,
         accuracy_percent=stats.compute_accuracy(logs),
+        xp_total=xp_total,
+        xp_today=stats.compute_xp_today(logs),
+        level=stats.compute_level(xp_total),
+        daily_goal_xp=stats.DAILY_GOAL_XP,
+        achievements=stats.compute_achievements(len(logs), streak_days, learned_words),
     )
 
 
