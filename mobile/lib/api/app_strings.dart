@@ -62,6 +62,17 @@ class Strings {
       AppLocale.en: "Don't lose your streak — time to review!",
     },
     'wordsUnit': {AppLocale.ru: 'слов', AppLocale.en: 'words'},
+    'level': {AppLocale.ru: 'Уровень', AppLocale.en: 'Level'},
+    'dailyGoal': {AppLocale.ru: 'Дневная цель', AppLocale.en: 'Daily goal'},
+    'achievements': {AppLocale.ru: 'Достижения', AppLocale.en: 'Achievements'},
+    'flashcardsMode': {AppLocale.ru: 'Карточки', AppLocale.en: 'Cards'},
+    'quizMode': {AppLocale.ru: 'Тест', AppLocale.en: 'Quiz'},
+    'outOfHearts': {
+      AppLocale.ru: 'Жизни закончились! Возвращайтесь позже.',
+      AppLocale.en: 'Out of hearts! Come back later.',
+    },
+    'restart': {AppLocale.ru: 'Начать заново', AppLocale.en: 'Restart'},
+    'xpGained': {AppLocale.ru: 'опыта', AppLocale.en: 'XP'},
   };
 
   static String of(AppLocale locale, String key) => _values[key]?[locale] ?? key;

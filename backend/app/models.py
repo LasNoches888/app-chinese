@@ -58,6 +58,7 @@ class ChatResponse(BaseModel):
 class ReviewLogEntry(BaseModel):
     quality: int
     reviewed_at: datetime
+    xp: int = 0
 
 
 class UserStats(BaseModel):
@@ -67,6 +68,11 @@ class UserStats(BaseModel):
     reviews_today: int
     streak_days: int
     accuracy_percent: float
+    xp_total: int
+    xp_today: int
+    level: int
+    daily_goal_xp: int
+    achievements: list[str]
 
 
 class DeckWord(BaseModel):

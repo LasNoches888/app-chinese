@@ -51,9 +51,11 @@ def word_exists(user_id: str, word: str) -> bool:
     return any(c.word == word for c in all_cards_for_user(user_id))
 
 
-def log_review(user_id: str, quality: int, when: datetime | None = None) -> None:
+def log_review(user_id: str, quality: int, xp: int = 0, when: datetime | None = None) -> None:
     when = when or datetime.utcnow()
-    _review_logs.setdefault(user_id, []).append(ReviewLogEntry(quality=quality, reviewed_at=when))
+    _review_logs.setdefault(user_id, []).append(
+        ReviewLogEntry(quality=quality, reviewed_at=when, xp=xp)
+    )
 
 
 def get_review_logs(user_id: str) -> list[ReviewLogEntry]:

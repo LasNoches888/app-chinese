@@ -5,6 +5,11 @@ class UserStats {
   final int reviewsToday;
   final int streakDays;
   final double accuracyPercent;
+  final int xpTotal;
+  final int xpToday;
+  final int level;
+  final int dailyGoalXp;
+  final List<String> achievements;
 
   UserStats({
     required this.totalWords,
@@ -13,6 +18,11 @@ class UserStats {
     required this.reviewsToday,
     required this.streakDays,
     required this.accuracyPercent,
+    required this.xpTotal,
+    required this.xpToday,
+    required this.level,
+    required this.dailyGoalXp,
+    required this.achievements,
   });
 
   factory UserStats.fromJson(Map<String, dynamic> json) => UserStats(
@@ -22,5 +32,10 @@ class UserStats {
         reviewsToday: json['reviews_today'] as int,
         streakDays: json['streak_days'] as int,
         accuracyPercent: (json['accuracy_percent'] as num).toDouble(),
+        xpTotal: json['xp_total'] as int,
+        xpToday: json['xp_today'] as int,
+        level: json['level'] as int,
+        dailyGoalXp: json['daily_goal_xp'] as int,
+        achievements: (json['achievements'] as List<dynamic>).map((e) => e as String).toList(),
       );
 }
