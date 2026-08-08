@@ -23,6 +23,7 @@ Env vars (all optional, defaults shown):
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_MODEL=qwen2.5:7b-instruct
 LLM_API_KEY=ollama
+LLM_TIMEOUT_SECONDS=180
 ```
 
 To switch to a hosted provider later, just point `LLM_BASE_URL`/`LLM_MODEL`/`LLM_API_KEY`
