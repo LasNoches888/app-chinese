@@ -19,16 +19,17 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _send() async {
     final text = _inputCtl.text.trim();
     if (text.isEmpty || _sending) return;
+    final settings = context.read<AppSettings>();
     setState(() {
       _messages.add(ChatMessage(fromUser: true, text: text));
       _sending = true;
       _inputCtl.clear();
     });
     try {
-      final reply = await context.read<AppSettings>().client.sendChatMessage(text);
+      final reply = await settings.client.sendChatMessage(text);
       setState(() => _messages.add(reply));
     } catch (e) {
-      setState(() => _messages.add(ChatMessage(fromUser: false, text: 'Error: $e')));
+      setState(() => _messages.add(ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
     } finally {
       setState(() => _sending = false);
     }
@@ -36,15 +37,16 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Chat with Xiao Qiao')),
+      appBar: AppBar(title: Text(settings.t('chatTitle'))),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
               itemCount: _messages.length,
-              itemBuilder: (ctx, i) => _MessageBubble(message: _messages[i]),
+              itemBuilder: (ctx, i) => _MessageBubble(message: _messages[i], settings: settings),
             ),
           ),
           if (_sending) const LinearProgressIndicator(),
@@ -56,9 +58,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _inputCtl,
-                      decoration: const InputDecoration(
-                        hintText: 'Type in Chinese...',
-                        border: OutlineInputBorder(),
+                      decoration: InputDecoration(
+                        hintText: settings.t('chatHint'),
+                        border: const OutlineInputBorder(),
                       ),
                       onSubmitted: (_) => _send(),
                     ),
@@ -77,8 +79,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
 class _MessageBubble extends StatelessWidget {
   final ChatMessage message;
+  final AppSettings settings;
 
-  const _MessageBubble({required this.message});
+  const _MessageBubble({required this.message, required this.settings});
 
   @override
   Widget build(BuildContext context) {
@@ -131,7 +134,7 @@ class _MessageBubble extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    'Try: ${message.grammarRecast}',
+                    '${settings.t('tryRecast')}: ${message.grammarRecast}',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
