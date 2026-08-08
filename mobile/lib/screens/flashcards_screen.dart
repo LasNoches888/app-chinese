@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../api/app_strings.dart';
+import '../models/deck.dart';
 import '../models/vocab_card.dart';
 
 class FlashcardsScreen extends StatefulWidget {
@@ -94,6 +95,51 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
     }
   }
 
+  Future<void> _showDeckPicker() async {
+    final settings = context.read<AppSettings>();
+    final client = settings.client;
+    List<DeckSummary> decks;
+    try {
+      decks = await client.fetchDecks();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${settings.t('error')}: $e')));
+      return;
+    }
+    if (!mounted) return;
+    await showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Text(settings.t('themes'), style: Theme.of(context).textTheme.titleLarge),
+            ),
+            for (final deck in decks)
+              ListTile(
+                title: Text(deck.name),
+                subtitle: Text('${deck.wordCount} ${settings.t('wordsUnit')}'),
+                trailing: FilledButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final added = await client.importDeck(deck.id);
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${settings.t('deckAdded')}: $added')),
+                    );
+                    _refresh();
+                  },
+                  child: Text(settings.t('addDeck')),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
@@ -101,6 +147,7 @@ class _FlashcardsScreenState extends State<FlashcardsScreen> {
       appBar: AppBar(
         title: Text(settings.t('flashcards')),
         actions: [
+          IconButton(icon: const Icon(Icons.category), onPressed: _showDeckPicker),
           IconButton(icon: const Icon(Icons.refresh), onPressed: _refresh),
           IconButton(icon: const Icon(Icons.add), onPressed: _showAddDialog),
         ],

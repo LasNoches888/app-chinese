@@ -9,9 +9,10 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 
-from .models import VocabCard
+from .models import ReviewLogEntry, VocabCard
 
 _cards: dict[str, VocabCard] = {}
+_review_logs: dict[str, list[ReviewLogEntry]] = {}
 
 
 def add_card(user_id: str, word: str, pinyin: str, translation: str) -> VocabCard:
@@ -44,3 +45,16 @@ def due_cards_for_user(user_id: str, now: datetime | None = None) -> list[VocabC
 
 def save_card(card: VocabCard) -> None:
     _cards[card.id] = card
+
+
+def word_exists(user_id: str, word: str) -> bool:
+    return any(c.word == word for c in all_cards_for_user(user_id))
+
+
+def log_review(user_id: str, quality: int, when: datetime | None = None) -> None:
+    when = when or datetime.utcnow()
+    _review_logs.setdefault(user_id, []).append(ReviewLogEntry(quality=quality, reviewed_at=when))
+
+
+def get_review_logs(user_id: str) -> list[ReviewLogEntry]:
+    return _review_logs.get(user_id, [])

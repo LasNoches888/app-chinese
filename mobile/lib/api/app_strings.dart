@@ -44,6 +44,24 @@ class Strings {
     'chatTitle': {AppLocale.ru: 'Чат с Xiao Qiao', AppLocale.en: 'Chat with Xiao Qiao'},
     'tryRecast': {AppLocale.ru: 'Лучше сказать', AppLocale.en: 'Try'},
     'error': {AppLocale.ru: 'Ошибка', AppLocale.en: 'Error'},
+    'progress': {AppLocale.ru: 'Прогресс', AppLocale.en: 'Progress'},
+    'totalWords': {AppLocale.ru: 'Всего слов', AppLocale.en: 'Total words'},
+    'learnedWords': {AppLocale.ru: 'Выучено', AppLocale.en: 'Learned'},
+    'weakWords': {AppLocale.ru: 'Слабые слова', AppLocale.en: 'Weak words'},
+    'reviewsToday': {AppLocale.ru: 'Повторений сегодня', AppLocale.en: 'Reviews today'},
+    'streakDays': {AppLocale.ru: 'Серия дней', AppLocale.en: 'Streak'},
+    'accuracy': {AppLocale.ru: 'Точность', AppLocale.en: 'Accuracy'},
+    'themes': {AppLocale.ru: 'Темы', AppLocale.en: 'Themes'},
+    'addDeck': {AppLocale.ru: 'Добавить', AppLocale.en: 'Add'},
+    'deckAdded': {AppLocale.ru: 'Добавлено слов', AppLocale.en: 'Words added'},
+    'close': {AppLocale.ru: 'Закрыть', AppLocale.en: 'Close'},
+    'dailyReminder': {AppLocale.ru: 'Ежедневное напоминание', AppLocale.en: 'Daily reminder'},
+    'reminderTime': {AppLocale.ru: 'Время напоминания', AppLocale.en: 'Reminder time'},
+    'reminderBody': {
+      AppLocale.ru: 'Не теряй серию — пора повторить слова!',
+      AppLocale.en: "Don't lose your streak — time to review!",
+    },
+    'wordsUnit': {AppLocale.ru: 'слов', AppLocale.en: 'words'},
   };
 
   static String of(AppLocale locale, String key) => _values[key]?[locale] ?? key;

@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'api/app_settings.dart';
+import 'api/reminder_service.dart';
 import 'screens/chat_screen.dart';
 import 'screens/flashcards_screen.dart';
+import 'screens/progress_screen.dart';
 import 'screens/settings_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = AppSettings();
   await settings.load();
+  if (settings.reminderEnabled) {
+    await ReminderService.scheduleDaily(
+      hour: settings.reminderTime.hour,
+      minute: settings.reminderTime.minute,
+      title: 'AppChinese',
+      body: settings.t('reminderBody'),
+    );
+  }
   runApp(
     ChangeNotifierProvider.value(
       value: settings,
@@ -44,6 +54,7 @@ class _HomeShellState extends State<HomeShell> {
   static const _screens = [
     FlashcardsScreen(),
     ChatScreen(),
+    ProgressScreen(),
     SettingsScreen(),
   ];
 
@@ -58,6 +69,10 @@ class _HomeShellState extends State<HomeShell> {
         destinations: [
           NavigationDestination(icon: const Icon(Icons.style), label: settings.t('flashcards')),
           NavigationDestination(icon: const Icon(Icons.chat_bubble), label: settings.t('chat')),
+          NavigationDestination(
+            icon: const Icon(Icons.bar_chart),
+            label: settings.t('progress'),
+          ),
           NavigationDestination(icon: const Icon(Icons.settings), label: settings.t('settings')),
         ],
       ),
