@@ -49,15 +49,16 @@ class _HomeShellState extends State<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
     return Scaffold(
       body: _screens[_index],
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.style), label: 'Flashcards'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble), label: 'Chat'),
-          NavigationDestination(icon: Icon(Icons.settings), label: 'Settings'),
+        destinations: [
+          NavigationDestination(icon: const Icon(Icons.style), label: settings.t('flashcards')),
+          NavigationDestination(icon: const Icon(Icons.chat_bubble), label: settings.t('chat')),
+          NavigationDestination(icon: const Icon(Icons.settings), label: settings.t('settings')),
         ],
       ),
     );
