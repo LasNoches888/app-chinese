@@ -5,6 +5,7 @@ backend/out.log
 backend/err.log
 
 .claude/
+artifacts/
 
 mobile/.dart_tool/
 mobile/.flutter-plugin-dependencies
