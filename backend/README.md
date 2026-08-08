@@ -41,6 +41,9 @@ pytest
 - `GET /users/{user_id}/vocab/due` — cards due for review today
 - `POST /users/{user_id}/vocab/review` — submit a review result (`quality` 0-5), recomputed via SM-2
 - `GET /users/{user_id}/vocab` — full deck
+- `GET /users/{user_id}/stats` — streak days, accuracy, reviews today, learned/weak word counts
+- `GET /decks` — list of curated starter decks (topic, word count)
+- `POST /users/{user_id}/vocab/import-deck` — bulk-add a deck's words (`{"deck_id": "food"}`), skips words already in the deck
 - `POST /chat` — message the AI tutor, returns structured JSON
 - `GET /health`
 
