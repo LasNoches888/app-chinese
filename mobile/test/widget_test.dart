@@ -16,6 +16,7 @@ void main() {
 
     expect(find.text('Карточки'), findsWidgets);
     expect(find.text('Чат'), findsWidgets);
+    expect(find.text('Прогресс'), findsWidgets);
     expect(find.text('Настройки'), findsWidgets);
   });
 }

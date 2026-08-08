@@ -12,6 +12,8 @@ class NewWord {
       translation: json['translation'] as String,
     );
   }
+
+  Map<String, dynamic> toJson() => {'word': word, 'pinyin': pinyin, 'translation': translation};
 }
 
 class ChatMessage {
@@ -40,4 +42,22 @@ class ChatMessage {
           .toList(),
     );
   }
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
+        fromUser: json['from_user'] as bool,
+        text: json['text'] as String,
+        pinyin: json['pinyin'] as String?,
+        grammarRecast: json['grammar_recast'] as String?,
+        newWords: (json['new_words'] as List<dynamic>? ?? [])
+            .map((e) => NewWord.fromJson(e as Map<String, dynamic>))
+            .toList(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        'from_user': fromUser,
+        'text': text,
+        'pinyin': pinyin,
+        'grammar_recast': grammarRecast,
+        'new_words': newWords.map((w) => w.toJson()).toList(),
+      };
 }

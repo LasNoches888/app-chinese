@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../models/chat_message.dart';
+import '../models/deck.dart';
+import '../models/user_stats.dart';
 import '../models/vocab_card.dart';
 
 class ApiClient {
@@ -59,6 +61,30 @@ class ApiClient {
     );
     _checkOk(res);
     return ChatMessage.fromReplyJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  Future<UserStats> fetchStats() async {
+    final res = await http.get(_uri('/users/$userId/stats'));
+    _checkOk(res);
+    return UserStats.fromJson(jsonDecode(res.body) as Map<String, dynamic>);
+  }
+
+  Future<List<DeckSummary>> fetchDecks() async {
+    final res = await http.get(_uri('/decks'));
+    _checkOk(res);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.map((e) => DeckSummary.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<int> importDeck(String deckId) async {
+    final res = await http.post(
+      _uri('/users/$userId/vocab/import-deck'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'deck_id': deckId}),
+    );
+    _checkOk(res);
+    final list = jsonDecode(res.body) as List<dynamic>;
+    return list.length;
   }
 
   void _checkOk(http.Response res) {

@@ -53,3 +53,39 @@ class ChatResponse(BaseModel):
     reply_pinyin: str
     new_words_used: list[NewWord] = []
     grammar_recast: Optional[str] = None
+
+
+class ReviewLogEntry(BaseModel):
+    quality: int
+    reviewed_at: datetime
+
+
+class UserStats(BaseModel):
+    total_words: int
+    learned_words: int
+    weak_words: int
+    reviews_today: int
+    streak_days: int
+    accuracy_percent: float
+
+
+class DeckWord(BaseModel):
+    word: str
+    pinyin: str
+    translation: str
+
+
+class Deck(BaseModel):
+    id: str
+    name: str
+    words: list[DeckWord]
+
+
+class DeckSummary(BaseModel):
+    id: str
+    name: str
+    word_count: int
+
+
+class ImportDeckRequest(BaseModel):
+    deck_id: str

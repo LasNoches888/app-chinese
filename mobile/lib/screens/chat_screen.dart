@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/app_settings.dart';
 import '../models/chat_message.dart';
@@ -12,9 +15,34 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  static const _historyKeyPrefix = 'chat_history_';
+
   final List<ChatMessage> _messages = [];
   final TextEditingController _inputCtl = TextEditingController();
   bool _sending = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHistory();
+  }
+
+  Future<void> _loadHistory() async {
+    final userId = context.read<AppSettings>().userId;
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString('$_historyKeyPrefix$userId');
+    if (raw == null) return;
+    final list = jsonDecode(raw) as List<dynamic>;
+    setState(() {
+      _messages.addAll(list.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)));
+    });
+  }
+
+  Future<void> _saveHistory(String userId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = jsonEncode(_messages.map((m) => m.toJson()).toList());
+    await prefs.setString('$_historyKeyPrefix$userId', raw);
+  }
 
   Future<void> _send() async {
     final text = _inputCtl.text.trim();
@@ -32,6 +60,7 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
     } finally {
       setState(() => _sending = false);
+      await _saveHistory(settings.userId);
     }
   }
 
