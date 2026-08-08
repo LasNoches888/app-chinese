@@ -14,6 +14,7 @@ import httpx
 LLM_BASE_URL = os.environ.get("LLM_BASE_URL", "http://localhost:11434/v1")
 LLM_MODEL = os.environ.get("LLM_MODEL", "qwen2.5:7b-instruct")
 LLM_API_KEY = os.environ.get("LLM_API_KEY", "ollama")
+LLM_TIMEOUT_SECONDS = float(os.environ.get("LLM_TIMEOUT_SECONDS", "180"))
 
 
 def _extract_json(text: str) -> dict:
@@ -34,7 +35,7 @@ def _extract_json(text: str) -> dict:
 
 
 async def chat_completion_json(system_prompt: str, user_message: str) -> dict:
-    async with httpx.AsyncClient(base_url=LLM_BASE_URL, timeout=60.0) as client:
+    async with httpx.AsyncClient(base_url=LLM_BASE_URL, timeout=LLM_TIMEOUT_SECONDS) as client:
         resp = await client.post(
             "/chat/completions",
             headers={"Authorization": f"Bearer {LLM_API_KEY}"},
