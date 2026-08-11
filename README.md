@@ -6,6 +6,9 @@ AI-репетитором на локальной модели Qwen. Голос 
 
 - [`/backend`](backend) — FastAPI + SM-2 + LLM-клиент
 - [`/mobile`](mobile) — Flutter-клиент (Flashcards + Chat)
+- [`/web`](web) — отдельное веб-приложение в стиле Duolingo (React + TS + Tailwind,
+  без бэкенда, прогресс в localStorage) — независимый продукт, не связан с
+  backend/mobile выше
 
 ## Быстрый старт (всё вместе)
 
@@ -42,11 +45,22 @@ flutter run
 Для iOS-симулятора / физического устройства поменяйте base URL на экране Settings
 в приложении (например, `http://localhost:8000` или IP машины в локальной сети).
 
+### 4. Web (Duolingo-style, опционально, независимо от остального)
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Полностью автономно — не требует backend/Ollama, весь прогресс в localStorage браузера.
+
 ## Тесты и линт
 
 ```bash
 cd backend && pytest
 cd mobile && flutter analyze && flutter build apk --debug
+cd web && npm run build && npm run lint
 ```
 
 ## Архитектурные заметки
