@@ -44,7 +44,10 @@ pytest
 - `GET /users/{user_id}/stats` — streak days, accuracy, reviews today, learned/weak word counts
 - `GET /decks` — list of curated starter decks (topic, word count)
 - `POST /users/{user_id}/vocab/import-deck` — bulk-add a deck's words (`{"deck_id": "food"}`), skips words already in the deck
-- `POST /chat` — message the AI tutor, returns structured JSON
+- `POST /chat` — message the AI tutor, returns structured JSON. Body accepts optional
+  `known_words`/`weak_words` (string lists) — an offline-first client (like `/mobile`)
+  sends its own local vocabulary snapshot here instead of relying on server-side storage;
+  falls back to the `/users/{id}/vocab` lookup below when omitted.
 - `GET /health`
 
 ## Storage
@@ -52,3 +55,12 @@ pytest
 `app/storage.py` is an in-memory data-access layer. It's the only module that
 knows about card persistence; swapping it for SQLite/Postgres later doesn't
 require touching `srs.py` or `main.py`.
+
+## Current usage note
+
+`/mobile` moved to a fully local (SQLite) data model — it only calls `POST /chat`
+now, sending its own `known_words`/`weak_words` with each request. `/web` never
+called this backend at all (its progress lives in browser localStorage). The
+vocab/decks/stats endpoints above are kept working and tested, but nothing in
+this repo currently calls them — they're available for a future client that
+wants server-synced progress.

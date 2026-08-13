@@ -17,18 +17,22 @@ class NewWord {
 }
 
 class ChatMessage {
+  final int? id;
   final bool fromUser;
   final String text;
   final String? pinyin;
   final String? grammarRecast;
   final List<NewWord> newWords;
+  final DateTime? createdAt;
 
   ChatMessage({
+    this.id,
     required this.fromUser,
     required this.text,
     this.pinyin,
     this.grammarRecast,
     this.newWords = const [],
+    this.createdAt,
   });
 
   factory ChatMessage.fromReplyJson(Map<String, dynamic> json) {

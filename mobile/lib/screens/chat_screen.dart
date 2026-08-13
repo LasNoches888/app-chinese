@@ -1,11 +1,13 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/app_settings.dart';
+import '../app_repositories.dart';
 import '../models/chat_message.dart';
+import '../services/connectivity_service.dart';
+import 'settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -15,62 +17,124 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
-  static const _historyKeyPrefix = 'chat_history_';
-
   final List<ChatMessage> _messages = [];
   final TextEditingController _inputCtl = TextEditingController();
+  final ConnectivityService _connectivity = ConnectivityService();
+  StreamSubscription<bool>? _sub;
   bool _sending = false;
+  bool _online = true;
 
   @override
   void initState() {
     super.initState();
     _loadHistory();
+    _initConnectivity();
   }
 
-  Future<void> _loadHistory() async {
-    final userId = context.read<AppSettings>().userId;
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString('$_historyKeyPrefix$userId');
-    if (raw == null) return;
-    final list = jsonDecode(raw) as List<dynamic>;
-    setState(() {
-      _messages.addAll(list.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)));
+  Future<void> _initConnectivity() async {
+    final online = await _connectivity.isOnline();
+    if (mounted) setState(() => _online = online);
+    _sub = _connectivity.onStatusChange.listen((online) {
+      if (mounted) setState(() => _online = online);
     });
   }
 
-  Future<void> _saveHistory(String userId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = jsonEncode(_messages.map((m) => m.toJson()).toList());
-    await prefs.setString('$_historyKeyPrefix$userId', raw);
+  Future<void> _loadHistory() async {
+    final repos = context.read<AppRepositories>();
+    final history = await repos.chat.getHistory();
+    if (!mounted) return;
+    setState(() => _messages.addAll(history));
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _inputCtl.dispose();
+    super.dispose();
   }
 
   Future<void> _send() async {
     final text = _inputCtl.text.trim();
-    if (text.isEmpty || _sending) return;
+    if (text.isEmpty || _sending || !_online) return;
     final settings = context.read<AppSettings>();
+    final repos = context.read<AppRepositories>();
+
+    final userMessage = await repos.chat.addUserMessage(text);
     setState(() {
-      _messages.add(ChatMessage(fromUser: true, text: text));
+      _messages.add(userMessage);
       _sending = true;
       _inputCtl.clear();
     });
+
     try {
-      final reply = await settings.client.sendChatMessage(text);
-      setState(() => _messages.add(reply));
+      final knownIds = await repos.srs.getKnownWordIds();
+      final weakIds = await repos.srs.getWeakWordIds();
+      final knownWords = (await repos.words.getWordsByIds(knownIds)).map((w) => w.hanzi).toList();
+      final weakWords = (await repos.words.getWordsByIds(weakIds)).map((w) => w.hanzi).toList();
+
+      final reply = await settings.chatClient.sendChatMessage(
+        text,
+        knownWords: knownWords,
+        weakWords: weakWords,
+      );
+      final saved = await repos.chat.addAssistantMessage(reply);
+      if (!mounted) return;
+      setState(() => _messages.add(saved));
     } catch (e) {
+      if (!mounted) return;
       setState(() => _messages.add(ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
     } finally {
-      setState(() => _sending = false);
-      await _saveHistory(settings.userId);
+      if (mounted) setState(() => _sending = false);
     }
+  }
+
+  Future<void> _clearHistory() async {
+    final repos = context.read<AppRepositories>();
+    await repos.chat.clearHistory();
+    if (!mounted) return;
+    setState(() => _messages.clear());
   }
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return Scaffold(
-      appBar: AppBar(title: Text(settings.t('chatTitle'))),
+      appBar: AppBar(
+        title: Text(settings.t('chatTitle')),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Center(
+              child: Row(
+                children: [
+                  Icon(_online ? Icons.wifi : Icons.wifi_off, size: 18, color: _online ? Colors.green : Colors.red),
+                  const SizedBox(width: 4),
+                  Text(_online ? settings.t('online') : settings.t('offline'), style: const TextStyle(fontSize: 12)),
+                ],
+              ),
+            ),
+          ),
+          IconButton(icon: const Icon(Icons.delete_outline), onPressed: _clearHistory),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () =>
+                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+          ),
+        ],
+      ),
       body: Column(
         children: [
+          if (!_online)
+            Container(
+              width: double.infinity,
+              color: Colors.red.withValues(alpha: 0.12),
+              padding: const EdgeInsets.all(10),
+              child: Text(
+                settings.t('offlineBanner'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.red),
+              ),
+            ),
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(12),
@@ -87,6 +151,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _inputCtl,
+                      enabled: _online && !_sending,
                       decoration: InputDecoration(
                         hintText: settings.t('chatHint'),
                         border: const OutlineInputBorder(),
@@ -95,7 +160,10 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  IconButton.filled(icon: const Icon(Icons.send), onPressed: _send),
+                  IconButton.filled(
+                    icon: const Icon(Icons.send),
+                    onPressed: _online && !_sending ? _send : null,
+                  ),
                 ],
               ),
             ),
