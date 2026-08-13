@@ -31,6 +31,7 @@ jobs:
 
       - name: Test
         working-directory: mobile
+        timeout-minutes: 5
         run: flutter test
 
       - name: Build debug APK

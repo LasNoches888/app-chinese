@@ -2,27 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'api/app_settings.dart';
-import 'api/reminder_service.dart';
+import 'app_repositories.dart';
 import 'screens/chat_screen.dart';
-import 'screens/flashcards_screen.dart';
+import 'screens/lessons_screen.dart';
 import 'screens/progress_screen.dart';
-import 'screens/settings_screen.dart';
+import 'screens/review_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final settings = AppSettings();
   await settings.load();
-  if (settings.reminderEnabled) {
-    await ReminderService.scheduleDaily(
-      hour: settings.reminderTime.hour,
-      minute: settings.reminderTime.minute,
-      title: 'AppChinese',
-      body: settings.t('reminderBody'),
-    );
-  }
+  final repos = await AppRepositories.initialize();
+
   runApp(
-    ChangeNotifierProvider.value(
-      value: settings,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: settings),
+        Provider<AppRepositories>.value(value: repos),
+      ],
       child: const AppChinese(),
     ),
   );
@@ -33,9 +30,12 @@ class AppChinese extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
     return MaterialApp(
       title: 'AppChinese',
-      theme: ThemeData(colorSchemeSeed: Colors.red, useMaterial3: true),
+      themeMode: settings.themeMode,
+      theme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.light, useMaterial3: true),
+      darkTheme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.dark, useMaterial3: true),
       home: const HomeShell(),
     );
   }
@@ -52,10 +52,10 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
   static const _screens = [
-    FlashcardsScreen(),
-    ChatScreen(),
+    LessonsScreen(),
+    ReviewScreen(),
     ProgressScreen(),
-    SettingsScreen(),
+    ChatScreen(),
   ];
 
   @override
@@ -67,13 +67,10 @@ class _HomeShellState extends State<HomeShell> {
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.style), label: settings.t('flashcards')),
+          NavigationDestination(icon: const Icon(Icons.menu_book), label: settings.t('lessons')),
+          NavigationDestination(icon: const Icon(Icons.refresh), label: settings.t('review')),
+          NavigationDestination(icon: const Icon(Icons.bar_chart), label: settings.t('progress')),
           NavigationDestination(icon: const Icon(Icons.chat_bubble), label: settings.t('chat')),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart),
-            label: settings.t('progress'),
-          ),
-          NavigationDestination(icon: const Icon(Icons.settings), label: settings.t('settings')),
         ],
       ),
     );

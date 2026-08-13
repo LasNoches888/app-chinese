@@ -4,8 +4,9 @@ MVP приложения для изучения китайского: SRS-сл�
 AI-репетитором на локальной модели Qwen. Голос и коррекция тонов — не в этой
 версии (архитектура зарезервирована под них на будущее).
 
-- [`/backend`](backend) — FastAPI + SM-2 + LLM-клиент
-- [`/mobile`](mobile) — Flutter-клиент (Flashcards + Chat)
+- [`/backend`](backend) — FastAPI, нужен только для `/chat` (LLM-клиент)
+- [`/mobile`](mobile) — Flutter, offline-first: уроки/SRS/XP/жизни/стрики/ачивки
+  полностью локальные (SQLite), только чат требует backend
 - [`/web`](web) — отдельное веб-приложение в стиле Duolingo (React + TS + Tailwind,
   без бэкенда, прогресс в localStorage) — независимый продукт, не связан с
   backend/mobile выше
@@ -33,7 +34,7 @@ uvicorn app.main:app --reload
 
 Переопределить LLM (переменные окружения): `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`.
 
-### 3. Mobile (Flutter)
+### 3. Mobile (Flutter) — offline-first
 
 ```bash
 cd mobile
@@ -41,9 +42,11 @@ flutter pub get
 flutter run
 ```
 
-По умолчанию клиент ходит на `http://10.0.2.2:8000` (алиас хоста для Android-эмулятора).
-Для iOS-симулятора / физического устройства поменяйте base URL на экране Settings
-в приложении (например, `http://localhost:8000` или IP машины в локальной сети).
+Приложение полностью рабочее для обучения без бэкенда/интернета — словарь
+HSK1/2 зашит в APK, прогресс в локальной SQLite. Backend нужен только для
+вкладки Чат: по умолчанию клиент ходит на `http://10.0.2.2:8000` (алиас
+хоста для Android-эмулятора); для физического устройства поменяйте base URL
+на экране Settings (например, IP машины в локальной сети).
 
 ### 4. Web (Duolingo-style, опционально, независимо от остального)
 
@@ -59,7 +62,7 @@ npm run dev
 
 ```bash
 cd backend && pytest
-cd mobile && flutter analyze && flutter build apk --debug
+cd mobile && flutter analyze && flutter test && flutter build apk --debug
 cd web && npm run build && npm run lint
 ```
 

@@ -1,0 +1,261 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../api/app_settings.dart';
+import '../app_repositories.dart';
+import '../components/exercise_widgets.dart';
+import '../components/hearts_row.dart';
+import '../models/exercise_question.dart';
+import '../services/exercise_generator.dart';
+import '../services/xp_service.dart';
+import 'results_screen.dart';
+
+/// Runs a queue of exercises (a lesson, or a review session over due SRS
+/// words) end to end: question generation, grading against the local DB,
+/// hearts/XP bookkeeping, and handing off to ResultsScreen when done.
+class LessonSessionScreen extends StatefulWidget {
+  final List<String> wordIds;
+  final String title;
+  final String? deckIdToComplete;
+  final bool isReview;
+
+  const LessonSessionScreen({
+    super.key,
+    required this.wordIds,
+    required this.title,
+    this.deckIdToComplete,
+    this.isReview = false,
+  });
+
+  @override
+  State<LessonSessionScreen> createState() => _LessonSessionScreenState();
+}
+
+class _LessonSessionScreenState extends State<LessonSessionScreen> {
+  List<ExerciseQuestion>? _questions;
+  int _index = 0;
+  int _hearts = 5;
+  int _xpEarned = 0;
+  final Set<String> _mistakeIds = {};
+  bool _outOfHearts = false;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final repos = context.read<AppRepositories>();
+    final lessonWords = await repos.words.getWordsByIds(widget.wordIds);
+    final allWords = await repos.words.getAllWords();
+    final stats = await repos.stats.getStats();
+    final questions = ExerciseGenerator.build(lessonWords: lessonWords, allWords: allWords);
+    if (!mounted) return;
+    setState(() {
+      _questions = questions;
+      _hearts = stats.heartsCurrent;
+      _outOfHearts = stats.heartsCurrent <= 0 && questions.isNotEmpty;
+      _loading = false;
+    });
+  }
+
+  Future<void> _handleAnswer(bool correct) async {
+    final repos = context.read<AppRepositories>();
+    final question = _questions![_index];
+    final earned = XpService.xpForAnswer(correct);
+
+    await repos.srs.recordReview(
+      wordId: question.wordId,
+      wasCorrect: correct,
+      exerciseType: question.type.name,
+    );
+    await repos.stats.addXpAndRecordActivity(earned);
+
+    var hearts = _hearts;
+    if (!correct) {
+      final statsAfterHeart = await repos.stats.loseHeart();
+      hearts = statsAfterHeart.heartsCurrent;
+      _mistakeIds.add(question.wordId);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _xpEarned += earned;
+      _hearts = hearts;
+    });
+
+    if (hearts <= 0) {
+      setState(() => _outOfHearts = true);
+      return;
+    }
+
+    if (_index + 1 >= _questions!.length) {
+      await _finish();
+    } else {
+      setState(() => _index += 1);
+    }
+  }
+
+  Future<void> _finish() async {
+    final repos = context.read<AppRepositories>();
+    final perfect = _mistakeIds.isEmpty;
+
+    if (widget.deckIdToComplete != null) {
+      await repos.srs.markLessonCompleted(widget.deckIdToComplete!);
+    }
+    if (perfect) {
+      await repos.stats.recordPerfectLesson();
+    }
+    if (widget.isReview) {
+      // Documented reward for clearing your review queue: an instant full
+      // heart refill, in addition to the passive time-based regen.
+      await repos.stats.restoreHeartsFully();
+    }
+
+    final latestStats = await repos.stats.getStats();
+    final newAchievements = await repos.achievements.evaluateAndUnlock(latestStats);
+    final mistakeWords = await repos.words.getWordsByIds(_mistakeIds.toList());
+
+    if (!mounted) return;
+    final settings = context.read<AppSettings>();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (_) => ResultsScreen(
+          result: LessonResult(
+            xpEarned: _xpEarned,
+            mistakes: mistakeWords,
+            perfect: perfect,
+            isReview: widget.isReview,
+            newAchievements: newAchievements,
+          ),
+          settings: settings,
+          onContinue: () => Navigator.of(context).popUntil((r) => r.isFirst),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+
+    if (_loading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (_questions!.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: Text(widget.title)),
+        body: Center(child: Text(settings.t('noReviewDue'))),
+      );
+    }
+
+    if (_outOfHearts) {
+      return _OutOfHeartsView(settings: settings);
+    }
+
+    final progress = _index / _questions!.length;
+    final question = _questions![_index];
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: Center(child: HeartsRow(hearts: _hearts)),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(value: progress, minHeight: 8),
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Center(
+                  child: SingleChildScrollView(child: _buildExercise(question, settings)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExercise(ExerciseQuestion question, AppSettings settings) {
+    switch (question.type) {
+      case ExerciseType.flip:
+        return FlipExerciseWidget(
+          key: ValueKey(question.id),
+          question: question,
+          settings: settings,
+          onAnswer: _handleAnswer,
+        );
+      case ExerciseType.chooseTranslation:
+      case ExerciseType.chooseHanzi:
+        return ChoiceExerciseWidget(
+          key: ValueKey(question.id),
+          question: question,
+          settings: settings,
+          onAnswer: _handleAnswer,
+        );
+      case ExerciseType.buildSentence:
+        return BuildSentenceExerciseWidget(
+          key: ValueKey(question.id),
+          question: question,
+          settings: settings,
+          onAnswer: _handleAnswer,
+        );
+      case ExerciseType.typePinyin:
+        return TypePinyinExerciseWidget(
+          key: ValueKey(question.id),
+          question: question,
+          settings: settings,
+          onAnswer: _handleAnswer,
+        );
+    }
+  }
+}
+
+class _OutOfHeartsView extends StatelessWidget {
+  final AppSettings settings;
+
+  const _OutOfHeartsView({required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.favorite_border, size: 72, color: Colors.red),
+                const SizedBox(height: 16),
+                Text(settings.t('outOfHearts'), style: Theme.of(context).textTheme.headlineSmall),
+                const SizedBox(height: 8),
+                Text(settings.t('outOfHeartsBody'), textAlign: TextAlign.center),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(settings.t('backToLessons')),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

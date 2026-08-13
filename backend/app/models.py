@@ -40,6 +40,12 @@ class ChatRequest(BaseModel):
     user_id: str
     message: str
     hsk_level: int = 1
+    # Optional local-vocabulary snapshot from an offline-first client (e.g.
+    # the mobile app's on-device SRS data) — used in place of the
+    # server-side vocab lookup when provided, since the client is the
+    # source of truth for its own learning progress.
+    known_words: Optional[list[str]] = None
+    weak_words: Optional[list[str]] = None
 
 
 class NewWord(BaseModel):

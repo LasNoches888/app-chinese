@@ -4,26 +4,28 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 import 'app_strings.dart';
 
-/// Holds app-wide configuration: backend base URL, UI language, flashcard
-/// front-side preference, and daily reminder settings. Default backend URL
-/// targets the Android emulator's host loopback; override in-app for a
-/// physical device.
+/// App-wide UI preferences that don't belong in the learning-data database:
+/// chat backend URL, interface language/theme, flashcard front-side
+/// preference, and daily reminder settings. None of this is required for
+/// offline learning to work — it's just presentation config.
 class AppSettings extends ChangeNotifier {
   static const _baseUrlKey = 'base_url';
   static const _localeKey = 'app_locale';
   static const _cardFrontKey = 'card_front_side';
+  static const _themeKey = 'theme_mode';
   static const _reminderEnabledKey = 'reminder_enabled';
   static const _reminderHourKey = 'reminder_hour';
   static const _reminderMinuteKey = 'reminder_minute';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
-  static const _userId = 'demo-user';
 
   String _baseUrl = defaultBaseUrl;
   String get baseUrl => _baseUrl;
-  String get userId => _userId;
 
   AppLocale _locale = AppLocale.ru;
   AppLocale get locale => _locale;
+
+  ThemeMode _themeMode = ThemeMode.light;
+  ThemeMode get themeMode => _themeMode;
 
   CardFrontSide _cardFrontSide = CardFrontSide.hanzi;
   CardFrontSide get cardFrontSide => _cardFrontSide;
@@ -34,7 +36,7 @@ class AppSettings extends ChangeNotifier {
   TimeOfDay _reminderTime = const TimeOfDay(hour: 19, minute: 0);
   TimeOfDay get reminderTime => _reminderTime;
 
-  ApiClient get client => ApiClient(baseUrl: _baseUrl, userId: _userId);
+  ChatApiClient get chatClient => ChatApiClient(baseUrl: _baseUrl);
 
   String t(String key) => Strings.of(_locale, key);
 
@@ -42,6 +44,7 @@ class AppSettings extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _baseUrl = prefs.getString(_baseUrlKey) ?? defaultBaseUrl;
     _locale = prefs.getString(_localeKey) == 'en' ? AppLocale.en : AppLocale.ru;
+    _themeMode = prefs.getString(_themeKey) == 'dark' ? ThemeMode.dark : ThemeMode.light;
     _cardFrontSide = prefs.getString(_cardFrontKey) == 'translation'
         ? CardFrontSide.translation
         : CardFrontSide.hanzi;
@@ -65,6 +68,13 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_localeKey, locale == AppLocale.en ? 'en' : 'ru');
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_themeKey, mode == ThemeMode.dark ? 'dark' : 'light');
   }
 
   Future<void> setCardFrontSide(CardFrontSide side) async {

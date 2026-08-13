@@ -1,0 +1,10 @@
+[
+  { "id": "greetings", "title": "Приветствия", "topic": "greetings", "hsk_level": 1, "word_count": 8 },
+  { "id": "numbers", "title": "Числа", "topic": "numbers", "hsk_level": 1, "word_count": 10 },
+  { "id": "people", "title": "Люди", "topic": "people", "hsk_level": 1, "word_count": 11 },
+  { "id": "family", "title": "Семья", "topic": "family", "hsk_level": 1, "word_count": 10 },
+  { "id": "food", "title": "Еда", "topic": "food", "hsk_level": 1, "word_count": 11 },
+  { "id": "time", "title": "Время", "topic": "time", "hsk_level": 1, "word_count": 10 },
+  { "id": "colors", "title": "Цвета", "topic": "colors", "hsk_level": 2, "word_count": 7 },
+  { "id": "movement", "title": "Движение", "topic": "movement", "hsk_level": 2, "word_count": 8 }
+]

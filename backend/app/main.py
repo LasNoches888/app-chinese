@@ -118,9 +118,13 @@ def import_deck(user_id: str, body: ImportDeckRequest):
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(body: ChatRequest):
-    cards = storage.all_cards_for_user(body.user_id)
-    known = ", ".join(c.word for c in srs.active_vocab(cards)) or "(пока пусто)"
-    weak = ", ".join(c.word for c in srs.weak_vocab(cards)) or "(пока пусто)"
+    if body.known_words is not None or body.weak_words is not None:
+        known = ", ".join(body.known_words or []) or "(пока пусто)"
+        weak = ", ".join(body.weak_words or []) or "(пока пусто)"
+    else:
+        cards = storage.all_cards_for_user(body.user_id)
+        known = ", ".join(c.word for c in srs.active_vocab(cards)) or "(пока пусто)"
+        weak = ", ".join(c.word for c in srs.weak_vocab(cards)) or "(пока пусто)"
 
     system_prompt = SYSTEM_PROMPT_TEMPLATE.format(
         hsk_level=body.hsk_level, known_words=known, weak_words=weak
