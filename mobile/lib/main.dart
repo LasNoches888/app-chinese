@@ -8,6 +8,8 @@ import 'screens/lessons_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/review_screen.dart';
 
+const _brandSeed = Color(0xFF6C5CE7);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -42,17 +44,45 @@ Future<void> main() async {
   );
 }
 
+/// Softer overscroll everywhere (iOS-style bounce instead of the hard
+/// Android glow stop), which is most of what makes list scrolling feel
+/// smooth rather than abrupt.
+class _SmoothScrollBehavior extends MaterialScrollBehavior {
+  const _SmoothScrollBehavior();
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+}
+
 class AppChinese extends StatelessWidget {
   const AppChinese({super.key});
+
+  ThemeData _theme(Brightness brightness) {
+    return ThemeData(
+      colorSchemeSeed: _brandSeed,
+      brightness: brightness,
+      useMaterial3: true,
+      // Material's zoom transition animates both the incoming and outgoing
+      // route, so pushing Settings fades/scales in instead of snapping.
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {TargetPlatform.android: ZoomPageTransitionsBuilder()},
+      ),
+      appBarTheme:
+          const AppBarTheme(centerTitle: false, scrolledUnderElevation: 0),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return MaterialApp(
       title: 'Uchi',
+      debugShowCheckedModeBanner: false,
+      scrollBehavior: const _SmoothScrollBehavior(),
       themeMode: settings.themeMode,
-      theme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.light, useMaterial3: true),
-      darkTheme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.dark, useMaterial3: true),
+      theme: _theme(Brightness.light),
+      darkTheme: _theme(Brightness.dark),
       home: const HomeShell(),
     );
   }
@@ -79,15 +109,51 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return Scaffold(
-      body: _screens[_index],
+      // Cross-fades tabs with a slight upward drift instead of swapping
+      // them instantly.
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 260),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.015),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        child: KeyedSubtree(
+          key: ValueKey<int>(_index),
+          child: _screens[_index],
+        ),
+      ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _index,
         onDestinationSelected: (i) => setState(() => _index = i),
         destinations: [
-          NavigationDestination(icon: const Icon(Icons.menu_book), label: settings.t('lessons')),
-          NavigationDestination(icon: const Icon(Icons.refresh), label: settings.t('review')),
-          NavigationDestination(icon: const Icon(Icons.bar_chart), label: settings.t('progress')),
-          NavigationDestination(icon: const Icon(Icons.chat_bubble), label: settings.t('chat')),
+          NavigationDestination(
+            icon: const Icon(Icons.menu_book_outlined),
+            selectedIcon: const Icon(Icons.menu_book),
+            label: settings.t('lessons'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.refresh_outlined),
+            selectedIcon: const Icon(Icons.refresh),
+            label: settings.t('review'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.bar_chart_outlined),
+            selectedIcon: const Icon(Icons.bar_chart),
+            label: settings.t('progress'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.chat_bubble_outline),
+            selectedIcon: const Icon(Icons.chat_bubble),
+            label: settings.t('chat'),
+          ),
         ],
       ),
     );
