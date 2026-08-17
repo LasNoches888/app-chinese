@@ -125,8 +125,9 @@ class _ChoiceExerciseWidgetState extends State<ChoiceExerciseWidget> {
 
   Color? _colorFor(String option) {
     if (_selected == null) return null;
-    if (option == widget.question.correctOption)
+    if (option == widget.question.correctOption) {
       return Colors.green.withValues(alpha: 0.25);
+    }
     if (option == _selected) return Colors.red.withValues(alpha: 0.25);
     return null;
   }

@@ -58,8 +58,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _canSend(AppSettings settings) {
     if (_sending) return false;
-    if (settings.chatMode == ChatMode.local)
+    if (settings.chatMode == ChatMode.local) {
       return LocalLlmService.isModelReady;
+    }
     return _online;
   }
 
