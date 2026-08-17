@@ -33,6 +33,20 @@ android {
         }
     }
 
+    // Checked-in debug.keystore (not secret — it's the debug key) so every
+    // build, local or CI, signs with the same key. Without this, each fresh
+    // CI runner auto-generates its own random debug key and Android refuses
+    // to install the new APK over the previous one ("package conflicts with
+    // an existing package") — updates silently fail to land on the device.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.
