@@ -48,7 +48,8 @@ void main() {
 
     test('leftover partial progress toward the next heart is preserved', () {
       final updatedAt = DateTime(2026, 1, 1, 0, 0);
-      final oneAndAHalfIntervals = HeartsService.regenInterval + (HeartsService.regenInterval ~/ 2);
+      final oneAndAHalfIntervals =
+          HeartsService.regenInterval + (HeartsService.regenInterval ~/ 2);
       final (hearts, newUpdatedAt) = HeartsService.applyRegen(
         hearts: 2,
         updatedAt: updatedAt,

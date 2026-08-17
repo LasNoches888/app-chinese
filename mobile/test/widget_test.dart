@@ -17,7 +17,8 @@ void main() {
     databaseFactory = databaseFactoryFfiNoIsolate;
   });
 
-  testWidgets('App shows bottom navigation with four tabs', (WidgetTester tester) async {
+  testWidgets('App shows bottom navigation with four tabs',
+      (WidgetTester tester) async {
     late AppSettings settings;
     late AppRepositories repos;
 

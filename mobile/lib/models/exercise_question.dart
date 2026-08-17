@@ -1,4 +1,11 @@
-enum ExerciseType { flip, chooseTranslation, chooseHanzi, buildSentence, typePinyin, writeHanzi }
+enum ExerciseType {
+  flip,
+  chooseTranslation,
+  chooseHanzi,
+  buildSentence,
+  typePinyin,
+  writeHanzi
+}
 
 class ExerciseQuestion {
   final String id;

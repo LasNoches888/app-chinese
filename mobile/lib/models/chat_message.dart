@@ -3,7 +3,8 @@ class NewWord {
   final String pinyin;
   final String translation;
 
-  NewWord({required this.word, required this.pinyin, required this.translation});
+  NewWord(
+      {required this.word, required this.pinyin, required this.translation});
 
   factory NewWord.fromJson(Map<String, dynamic> json) {
     return NewWord(
@@ -13,7 +14,8 @@ class NewWord {
     );
   }
 
-  Map<String, dynamic> toJson() => {'word': word, 'pinyin': pinyin, 'translation': translation};
+  Map<String, dynamic> toJson() =>
+      {'word': word, 'pinyin': pinyin, 'translation': translation};
 }
 
 class ChatMessage {

@@ -6,7 +6,8 @@ class XpService {
   static const int xpForCorrectAnswer = 10;
   static const int xpForIncorrectAttempt = 2;
 
-  static int xpForAnswer(bool correct) => correct ? xpForCorrectAnswer : xpForIncorrectAttempt;
+  static int xpForAnswer(bool correct) =>
+      correct ? xpForCorrectAnswer : xpForIncorrectAttempt;
 
   /// Level threshold: level N requires floor(100 * N^1.2) cumulative XP
   /// (level 1 starts at 0 XP). Returns the highest level fully reached.

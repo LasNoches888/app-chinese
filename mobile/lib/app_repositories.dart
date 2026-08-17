@@ -38,6 +38,7 @@ class AppRepositories {
     final achievements = AchievementsRepository(db, srs, words);
     final chat = ChatRepository(db);
     final strokeData = await StrokeDataRepository.load();
-    return AppRepositories._(db, words, srs, stats, achievements, chat, strokeData);
+    return AppRepositories._(
+        db, words, srs, stats, achievements, chat, strokeData);
   }
 }

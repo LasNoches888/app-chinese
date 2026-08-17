@@ -18,10 +18,11 @@ class StatsRepository {
   }
 
   Future<UserStats> _applyHeartRegenIfNeeded(UserStats stats) async {
-    final (newHearts, newUpdatedAt) =
-        HeartsService.applyRegen(hearts: stats.heartsCurrent, updatedAt: stats.heartsUpdatedAt);
+    final (newHearts, newUpdatedAt) = HeartsService.applyRegen(
+        hearts: stats.heartsCurrent, updatedAt: stats.heartsUpdatedAt);
     if (newHearts == stats.heartsCurrent) return stats;
-    final updated = stats.copyWith(heartsCurrent: newHearts, heartsUpdatedAt: newUpdatedAt);
+    final updated =
+        stats.copyWith(heartsCurrent: newHearts, heartsUpdatedAt: newUpdatedAt);
     await _save(updated);
     return updated;
   }
@@ -90,7 +91,8 @@ class StatsRepository {
 
   Future<UserStats> restoreHeartsFully() async {
     var stats = await getStats();
-    stats = stats.copyWith(heartsCurrent: stats.heartsMax, heartsUpdatedAt: DateTime.now());
+    stats = stats.copyWith(
+        heartsCurrent: stats.heartsMax, heartsUpdatedAt: DateTime.now());
     await _save(stats);
     return stats;
   }
@@ -118,6 +120,7 @@ class StatsRepository {
     await db.delete('completed_lessons');
     await db.delete('achievements_unlocked');
     await db.delete('user_stats');
-    await db.insert('user_stats', {'id': 1, 'hearts_updated_at': DateTime.now().millisecondsSinceEpoch});
+    await db.insert('user_stats',
+        {'id': 1, 'hearts_updated_at': DateTime.now().millisecondsSinceEpoch});
   }
 }

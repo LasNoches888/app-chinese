@@ -19,12 +19,15 @@ class AchievementsRepository {
   Future<Map<String, DateTime>> getUnlockedMap() async {
     final rows = await db.query('achievements_unlocked');
     return {
-      for (final r in rows) r['code'] as String: DateTime.fromMillisecondsSinceEpoch(r['unlocked_at'] as int),
+      for (final r in rows)
+        r['code'] as String:
+            DateTime.fromMillisecondsSinceEpoch(r['unlocked_at'] as int),
     };
   }
 
   Future<bool> _isHsk1Complete() async {
-    final hsk1Words = (await words.getAllWords()).where((w) => w.hskLevel == 1).toList();
+    final hsk1Words =
+        (await words.getAllWords()).where((w) => w.hskLevel == 1).toList();
     if (hsk1Words.isEmpty) return false;
     for (final w in hsk1Words) {
       final state = await srs.getState(w.id);
