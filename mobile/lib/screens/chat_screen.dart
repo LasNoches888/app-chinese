@@ -132,20 +132,22 @@ class _ChatScreenState extends State<ChatScreen> {
               child: Row(
                 children: isLocal
                     ? [
-                        Text(localReady ? '🎓' : '🧒', style: const TextStyle(fontSize: 16)),
+                        Text(localReady ? '👋' : '🚪', style: const TextStyle(fontSize: 16)),
                         const SizedBox(width: 4),
                         Text(settings.t('chatSourceLocal'), style: const TextStyle(fontSize: 12)),
                       ]
                     : [
-                        Icon(
-                          _online ? Icons.wifi : Icons.wifi_off,
-                          size: 18,
-                          color: _online ? Colors.green : Colors.red,
-                        ),
+                        const Text('🎓', style: TextStyle(fontSize: 16)),
                         const SizedBox(width: 4),
                         Text(
                           _online ? settings.t('online') : settings.t('offline'),
                           style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          _online ? Icons.wifi : Icons.wifi_off,
+                          size: 14,
+                          color: _online ? Colors.green : Colors.red,
                         ),
                       ],
               ),
