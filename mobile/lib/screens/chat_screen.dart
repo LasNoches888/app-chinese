@@ -7,6 +7,8 @@ import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../models/chat_message.dart';
 import '../services/connectivity_service.dart';
+import '../services/local_llm_service.dart';
+import '../services/system_prompt.dart';
 import 'settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -53,10 +55,16 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
+  bool _canSend(AppSettings settings) {
+    if (_sending) return false;
+    if (settings.chatMode == ChatMode.local) return LocalLlmService.isModelReady;
+    return _online;
+  }
+
   Future<void> _send() async {
     final text = _inputCtl.text.trim();
-    if (text.isEmpty || _sending || !_online) return;
     final settings = context.read<AppSettings>();
+    if (text.isEmpty || !_canSend(settings)) return;
     final repos = context.read<AppRepositories>();
 
     final userMessage = await repos.chat.addUserMessage(text);
@@ -72,11 +80,21 @@ class _ChatScreenState extends State<ChatScreen> {
       final knownWords = (await repos.words.getWordsByIds(knownIds)).map((w) => w.hanzi).toList();
       final weakWords = (await repos.words.getWordsByIds(weakIds)).map((w) => w.hanzi).toList();
 
-      final reply = await settings.chatClient.sendChatMessage(
-        text,
-        knownWords: knownWords,
-        weakWords: weakWords,
-      );
+      final ChatMessage reply;
+      if (settings.chatMode == ChatMode.local) {
+        final prompt = buildTutorSystemPrompt(hskLevel: 1, knownWords: knownWords, weakWords: weakWords);
+        final raw = await LocalLlmService.sendMessage(text, systemPrompt: prompt);
+        final json = LocalLlmService.extractReplyJson(raw);
+        reply = json != null
+            ? ChatMessage.fromReplyJson(json)
+            : ChatMessage(fromUser: false, text: raw);
+      } else {
+        reply = await settings.chatClient.sendChatMessage(
+          text,
+          knownWords: knownWords,
+          weakWords: weakWords,
+        );
+      }
       final saved = await repos.chat.addAssistantMessage(reply);
       if (!mounted) return;
       setState(() => _messages.add(saved));
@@ -91,6 +109,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _clearHistory() async {
     final repos = context.read<AppRepositories>();
     await repos.chat.clearHistory();
+    LocalLlmService.resetSession();
     if (!mounted) return;
     setState(() => _messages.clear());
   }
@@ -98,6 +117,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    final isLocal = settings.chatMode == ChatMode.local;
+    final localReady = LocalLlmService.isModelReady;
+    final canSend = _canSend(settings);
+    final showBlockedBanner = isLocal ? !localReady : !_online;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(settings.t('chatTitle')),
@@ -106,11 +130,24 @@ class _ChatScreenState extends State<ChatScreen> {
             padding: const EdgeInsets.only(right: 8),
             child: Center(
               child: Row(
-                children: [
-                  Icon(_online ? Icons.wifi : Icons.wifi_off, size: 18, color: _online ? Colors.green : Colors.red),
-                  const SizedBox(width: 4),
-                  Text(_online ? settings.t('online') : settings.t('offline'), style: const TextStyle(fontSize: 12)),
-                ],
+                children: isLocal
+                    ? [
+                        Text(localReady ? '🎓' : '🧒', style: const TextStyle(fontSize: 16)),
+                        const SizedBox(width: 4),
+                        Text(settings.t('chatSourceLocal'), style: const TextStyle(fontSize: 12)),
+                      ]
+                    : [
+                        Icon(
+                          _online ? Icons.wifi : Icons.wifi_off,
+                          size: 18,
+                          color: _online ? Colors.green : Colors.red,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _online ? settings.t('online') : settings.t('offline'),
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                      ],
               ),
             ),
           ),
@@ -124,13 +161,13 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          if (!_online)
+          if (showBlockedBanner)
             Container(
               width: double.infinity,
               color: Colors.red.withValues(alpha: 0.12),
               padding: const EdgeInsets.all(10),
               child: Text(
-                settings.t('offlineBanner'),
+                isLocal ? settings.t('localModelUnavailable') : settings.t('offlineBanner'),
                 textAlign: TextAlign.center,
                 style: const TextStyle(color: Colors.red),
               ),
@@ -151,7 +188,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   Expanded(
                     child: TextField(
                       controller: _inputCtl,
-                      enabled: _online && !_sending,
+                      enabled: canSend,
                       decoration: InputDecoration(
                         hintText: settings.t('chatHint'),
                         border: const OutlineInputBorder(),
@@ -162,7 +199,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   const SizedBox(width: 8),
                   IconButton.filled(
                     icon: const Icon(Icons.send),
-                    onPressed: _online && !_sending ? _send : null,
+                    onPressed: canSend ? _send : null,
                   ),
                 ],
               ),

@@ -29,6 +29,12 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // flutter_gemma's MediaPipe native libraries only ship for arm64 —
+        // restrict native ABIs so the build doesn't fail looking for x86/armv7 .so files.
+        ndk {
+            abiFilters += listOf("arm64-v8a")
+        }
     }
 
     buildTypes {

@@ -101,6 +101,36 @@ class Strings {
     },
     'online': {AppLocale.ru: 'В сети', AppLocale.en: 'Online'},
     'offline': {AppLocale.ru: 'Не в сети', AppLocale.en: 'Offline'},
+    'chatSource': {AppLocale.ru: 'Источник ответов чата', AppLocale.en: 'Chat source'},
+    'chatSourceServer': {AppLocale.ru: 'Старший брат (сервер)', AppLocale.en: 'Big brother (server)'},
+    'chatSourceLocal': {AppLocale.ru: 'Младший братик (на телефоне)', AppLocale.en: 'Little brother (on-device)'},
+    'littleBrotherNeedsTraining': {
+      AppLocale.ru: 'Младшего братика нужно обучить',
+      AppLocale.en: 'Little brother needs to study first',
+    },
+    'littleBrotherIntro': {
+      AppLocale.ru:
+          'Младший братик (Gemma 3, 1B) живёт прямо на телефоне и работает совсем без интернета — но сначала его нужно один раз "обучить": скачать модель (~500 МБ). Дальше сеть не нужна вообще.',
+      AppLocale.en:
+          'Little brother (Gemma 3, 1B) lives right on your phone and works with zero internet — but first he needs to "study" once: download the model (~500 MB). After that, no network needed at all.',
+    },
+    'littleBrotherReady': {
+      AppLocale.ru: 'Младший братик обучен и готов болтать офлайн 🎓',
+      AppLocale.en: 'Little brother has studied and is ready to chat offline 🎓',
+    },
+    'hfTokenLabel': {AppLocale.ru: 'Токен HuggingFace', AppLocale.en: 'HuggingFace token'},
+    'hfTokenHint': {
+      AppLocale.ru:
+          'Модель Gemma закрыта лицензией Google — примите условия на странице модели на huggingface.co и создайте read-токен (Settings → Access Tokens).',
+      AppLocale.en:
+          'Gemma is gated by Google\'s license — accept the terms on the model page on huggingface.co and create a read token (Settings → Access Tokens).',
+    },
+    'startTraining': {AppLocale.ru: 'Обучить младшего братика', AppLocale.en: 'Train little brother'},
+    'trainingInProgress': {AppLocale.ru: 'Обучение идёт', AppLocale.en: 'Studying'},
+    'localModelUnavailable': {
+      AppLocale.ru: 'Младший братик ещё не обучен — зайдите в Настройки',
+      AppLocale.en: 'Little brother hasn\'t studied yet — check Settings',
+    },
 
     // Settings
     'backendUrl': {AppLocale.ru: 'Адрес сервера чата', AppLocale.en: 'Chat backend URL'},

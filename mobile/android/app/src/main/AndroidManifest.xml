@@ -3,10 +3,24 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Gemma model download runs as a foreground service (background_downloader,
+         used internally by flutter_gemma) so it survives the app going to background. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <application
         android:label="app_chinese"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+        <!-- Optional GPU-accelerated inference backends for on-device Gemma
+             (flutter_gemma / MediaPipe) — declared optional so devices without
+             them still install fine and fall back to CPU. -->
+        <uses-native-library android:name="libOpenCL.so" android:required="false"/>
+        <uses-native-library android:name="libOpenCL-car.so" android:required="false"/>
+        <uses-native-library android:name="libOpenCL-pixel.so" android:required="false"/>
+        <service
+            android:name="com.bbflight.background_downloader.BDBackgroundDownloaderService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"

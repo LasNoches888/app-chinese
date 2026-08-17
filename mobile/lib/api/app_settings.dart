@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 import 'app_strings.dart';
 
+enum ChatMode { server, local }
+
 /// App-wide UI preferences that don't belong in the learning-data database:
 /// chat backend URL, interface language/theme, flashcard front-side
 /// preference, and daily reminder settings. None of this is required for
@@ -16,6 +18,8 @@ class AppSettings extends ChangeNotifier {
   static const _reminderEnabledKey = 'reminder_enabled';
   static const _reminderHourKey = 'reminder_hour';
   static const _reminderMinuteKey = 'reminder_minute';
+  static const _chatModeKey = 'chat_mode';
+  static const _hfTokenKey = 'hf_token';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
 
   String _baseUrl = defaultBaseUrl;
@@ -36,6 +40,12 @@ class AppSettings extends ChangeNotifier {
   TimeOfDay _reminderTime = const TimeOfDay(hour: 19, minute: 0);
   TimeOfDay get reminderTime => _reminderTime;
 
+  ChatMode _chatMode = ChatMode.server;
+  ChatMode get chatMode => _chatMode;
+
+  String _hfToken = '';
+  String get hfToken => _hfToken;
+
   ChatApiClient get chatClient => ChatApiClient(baseUrl: _baseUrl);
 
   String t(String key) => Strings.of(_locale, key);
@@ -53,6 +63,8 @@ class AppSettings extends ChangeNotifier {
       hour: prefs.getInt(_reminderHourKey) ?? 19,
       minute: prefs.getInt(_reminderMinuteKey) ?? 0,
     );
+    _chatMode = prefs.getString(_chatModeKey) == 'local' ? ChatMode.local : ChatMode.server;
+    _hfToken = prefs.getString(_hfTokenKey) ?? '';
     notifyListeners();
   }
 
@@ -85,6 +97,20 @@ class AppSettings extends ChangeNotifier {
       _cardFrontKey,
       side == CardFrontSide.translation ? 'translation' : 'hanzi',
     );
+  }
+
+  Future<void> setChatMode(ChatMode mode) async {
+    _chatMode = mode;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_chatModeKey, mode == ChatMode.local ? 'local' : 'server');
+  }
+
+  Future<void> setHfToken(String token) async {
+    _hfToken = token;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_hfTokenKey, token);
   }
 
   Future<void> setReminder({required bool enabled, required TimeOfDay time}) async {
