@@ -65,7 +65,9 @@ void main() {
       expect(result.easeFactor, greaterThanOrEqualTo(SrsService.minEaseFactor));
     });
 
-    test('a good-but-not-perfect answer (quality 3) still grows the ease factor slightly', () {
+    test(
+        'a good-but-not-perfect answer (quality 3) still grows the ease factor slightly',
+        () {
       final result = SrsService.review(
         prevRepetitions: 2,
         prevEaseFactor: 2.5,

@@ -6,7 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 /// Mirrors XpService's private threshold formula (100 * level^1.2) so
 /// tests assert against the real curve instead of a hand-computed
 /// (and easily wrong) constant.
-int _threshold(int level) => level <= 1 ? 0 : (100 * math.pow(level.toDouble(), 1.2)).floor();
+int _threshold(int level) =>
+    level <= 1 ? 0 : (100 * math.pow(level.toDouble(), 1.2)).floor();
 
 void main() {
   group('XpService.xpForAnswer', () {

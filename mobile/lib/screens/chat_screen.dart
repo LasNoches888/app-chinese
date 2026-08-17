@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
+import '../components/app_background.dart';
 import '../models/chat_message.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
@@ -57,7 +58,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _canSend(AppSettings settings) {
     if (_sending) return false;
-    if (settings.chatMode == ChatMode.local) return LocalLlmService.isModelReady;
+    if (settings.chatMode == ChatMode.local)
+      return LocalLlmService.isModelReady;
     return _online;
   }
 
@@ -77,13 +79,19 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final knownIds = await repos.srs.getKnownWordIds();
       final weakIds = await repos.srs.getWeakWordIds();
-      final knownWords = (await repos.words.getWordsByIds(knownIds)).map((w) => w.hanzi).toList();
-      final weakWords = (await repos.words.getWordsByIds(weakIds)).map((w) => w.hanzi).toList();
+      final knownWords = (await repos.words.getWordsByIds(knownIds))
+          .map((w) => w.hanzi)
+          .toList();
+      final weakWords = (await repos.words.getWordsByIds(weakIds))
+          .map((w) => w.hanzi)
+          .toList();
 
       final ChatMessage reply;
       if (settings.chatMode == ChatMode.local) {
-        final prompt = buildTutorSystemPrompt(hskLevel: 1, knownWords: knownWords, weakWords: weakWords);
-        final raw = await LocalLlmService.sendMessage(text, systemPrompt: prompt);
+        final prompt = buildTutorSystemPrompt(
+            hskLevel: 1, knownWords: knownWords, weakWords: weakWords);
+        final raw =
+            await LocalLlmService.sendMessage(text, systemPrompt: prompt);
         final json = LocalLlmService.extractReplyJson(raw);
         reply = json != null
             ? ChatMessage.fromReplyJson(json)
@@ -100,7 +108,8 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(saved));
     } catch (e) {
       if (!mounted) return;
-      setState(() => _messages.add(ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
+      setState(() => _messages.add(
+          ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -146,58 +155,64 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: settings.t('settings'),
-            onPressed: () => Navigator.of(context)
-                .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
-      body: Column(
-        children: [
-          if (showBlockedBanner)
-            Container(
-              width: double.infinity,
-              color: Colors.red.withValues(alpha: 0.12),
-              padding: const EdgeInsets.all(10),
-              child: Text(
-                isLocal ? settings.t('localModelUnavailable') : settings.t('offlineBanner'),
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.red),
+      body: AppBackground(
+        child: Column(
+          children: [
+            if (showBlockedBanner)
+              Container(
+                width: double.infinity,
+                color: Colors.red.withValues(alpha: 0.12),
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  isLocal
+                      ? settings.t('localModelUnavailable')
+                      : settings.t('offlineBanner'),
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(12),
+                itemCount: _messages.length,
+                itemBuilder: (ctx, i) =>
+                    _MessageBubble(message: _messages[i], settings: settings),
               ),
             ),
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: _messages.length,
-              itemBuilder: (ctx, i) => _MessageBubble(message: _messages[i], settings: settings),
-            ),
-          ),
-          if (_sending) const LinearProgressIndicator(),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _inputCtl,
-                      enabled: canSend,
-                      decoration: InputDecoration(
-                        hintText: settings.t('chatHint'),
-                        border: const OutlineInputBorder(),
+            if (_sending) const LinearProgressIndicator(),
+            SafeArea(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _inputCtl,
+                        enabled: canSend,
+                        decoration: InputDecoration(
+                          hintText: settings.t('chatHint'),
+                          border: const OutlineInputBorder(),
+                        ),
+                        onSubmitted: (_) => _send(),
                       ),
-                      onSubmitted: (_) => _send(),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    icon: const Icon(Icons.send),
-                    onPressed: canSend ? _send : null,
-                  ),
-                ],
+                    const SizedBox(width: 8),
+                    IconButton.filled(
+                      icon: const Icon(Icons.send),
+                      onPressed: canSend ? _send : null,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -211,7 +226,8 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final align = message.fromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final align =
+        message.fromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
     final color = message.fromUser
         ? Theme.of(context).colorScheme.primaryContainer
         : Theme.of(context).colorScheme.surfaceContainerHighest;
@@ -223,7 +239,8 @@ class _MessageBubble extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 4),
           padding: const EdgeInsets.all(12),
           constraints: const BoxConstraints(maxWidth: 320),
-          decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(
+              color: color, borderRadius: BorderRadius.circular(12)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -242,7 +259,9 @@ class _MessageBubble extends StatelessWidget {
             ],
           ),
         ),
-        if (!message.fromUser && message.grammarRecast != null && message.grammarRecast!.isNotEmpty)
+        if (!message.fromUser &&
+            message.grammarRecast != null &&
+            message.grammarRecast!.isNotEmpty)
           Container(
             margin: const EdgeInsets.only(bottom: 8),
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -256,7 +275,8 @@ class _MessageBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline, size: 16, color: Colors.amber),
+                const Icon(Icons.lightbulb_outline,
+                    size: 16, color: Colors.amber),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(

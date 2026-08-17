@@ -44,7 +44,8 @@ class ExerciseGenerator {
           break;
         case ExerciseType.chooseTranslation:
           {
-            final distractors = _distractors(word, allWords, (w) => w.translationRu, rng, 3);
+            final distractors =
+                _distractors(word, allWords, (w) => w.translationRu, rng, 3);
             final options = [word.translationRu, ...distractors]..shuffle(rng);
             questions.add(ExerciseQuestion(
               id: id,
@@ -58,7 +59,8 @@ class ExerciseGenerator {
           break;
         case ExerciseType.chooseHanzi:
           {
-            final distractors = _distractors(word, allWords, (w) => w.hanzi, rng, 3);
+            final distractors =
+                _distractors(word, allWords, (w) => w.hanzi, rng, 3);
             final options = [word.hanzi, ...distractors]..shuffle(rng);
             questions.add(ExerciseQuestion(
               id: id,
@@ -85,7 +87,10 @@ class ExerciseGenerator {
       }
     }
 
-    final withSentences = lessonWords.where((w) => w.exampleSentence != null && w.exampleSentence!.isNotEmpty).toList()
+    final withSentences = lessonWords
+        .where(
+            (w) => w.exampleSentence != null && w.exampleSentence!.isNotEmpty)
+        .toList()
       ..shuffle(rng);
     for (final word in withSentences.take(sentenceQuestionCap)) {
       final tiles = word.exampleSentence!.split('').toList()..shuffle(rng);

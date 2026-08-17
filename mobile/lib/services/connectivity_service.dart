@@ -11,7 +11,8 @@ class ConnectivityService {
     return _hasConnection(results);
   }
 
-  Stream<bool> get onStatusChange => _connectivity.onConnectivityChanged.map(_hasConnection);
+  Stream<bool> get onStatusChange =>
+      _connectivity.onConnectivityChanged.map(_hasConnection);
 
   bool _hasConnection(List<ConnectivityResult> results) =>
       results.any((r) => r != ConnectivityResult.none);

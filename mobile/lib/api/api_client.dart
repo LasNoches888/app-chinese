@@ -39,6 +39,7 @@ class ChatApiClient {
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception('API error ${res.statusCode}: ${res.body}');
     }
-    return ChatMessage.fromReplyJson(jsonDecode(res.body) as Map<String, dynamic>);
+    return ChatMessage.fromReplyJson(
+        jsonDecode(res.body) as Map<String, dynamic>);
   }
 }

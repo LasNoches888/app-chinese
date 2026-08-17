@@ -29,11 +29,13 @@ class UserStats {
         totalXp: map['total_xp'] as int,
         currentStreak: map['current_streak'] as int,
         longestStreak: map['longest_streak'] as int,
-        lastActivityDate:
-            map['last_activity_date'] == null ? null : DateTime.parse(map['last_activity_date'] as String),
+        lastActivityDate: map['last_activity_date'] == null
+            ? null
+            : DateTime.parse(map['last_activity_date'] as String),
         heartsCurrent: map['hearts_current'] as int,
         heartsMax: map['hearts_max'] as int,
-        heartsUpdatedAt: DateTime.fromMillisecondsSinceEpoch(map['hearts_updated_at'] as int),
+        heartsUpdatedAt: DateTime.fromMillisecondsSinceEpoch(
+            map['hearts_updated_at'] as int),
         dailyGoalXp: map['daily_goal_xp'] as int,
         xpToday: map['xp_today'] as int,
         xpTodayDate: map['xp_today_date'] as String?,

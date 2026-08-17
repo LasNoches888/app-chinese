@@ -35,5 +35,6 @@ class DeckProgress {
   final bool completed;
   final bool unlocked;
 
-  const DeckProgress({required this.deck, required this.completed, required this.unlocked});
+  const DeckProgress(
+      {required this.deck, required this.completed, required this.unlocked});
 }

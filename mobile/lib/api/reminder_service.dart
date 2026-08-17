@@ -6,7 +6,8 @@ import 'package:timezone/timezone.dart' as tz;
 /// learner to keep their streak going. Uses inexact scheduling so it
 /// doesn't require the Android 12+ exact-alarm permission.
 class ReminderService {
-  static final FlutterLocalNotificationsPlugin _plugin = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
   static bool _initialized = false;
 
   static Future<void> _ensureInit() async {
@@ -21,7 +22,8 @@ class ReminderService {
   static Future<void> requestPermission() async {
     await _ensureInit();
     await _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
   }
 
@@ -41,7 +43,8 @@ class ReminderService {
         android: AndroidNotificationDetails('daily_reminder', 'Daily reminder'),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
     );
   }
@@ -53,7 +56,8 @@ class ReminderService {
 
   static tz.TZDateTime _nextInstance(int hour, int minute) {
     final now = tz.TZDateTime.now(tz.local);
-    var scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    var scheduled =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
     if (scheduled.isBefore(now)) {
       scheduled = scheduled.add(const Duration(days: 1));
     }

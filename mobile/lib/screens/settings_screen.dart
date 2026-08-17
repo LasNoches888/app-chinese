@@ -5,6 +5,7 @@ import '../api/app_settings.dart';
 import '../api/app_strings.dart';
 import '../api/reminder_service.dart';
 import '../app_repositories.dart';
+import '../components/app_background.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
 
@@ -159,216 +160,217 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
-      backgroundColor:
-          isDark ? const Color(0xFF14141F) : const Color(0xFFF5F6FA),
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: Text(settings.t('settings')),
         backgroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
-        children: [
-          const _BrandHeader(),
-          const SizedBox(height: 20),
-          _SectionCard(
-            icon: Icons.palette_outlined,
-            accent: _brandEnd,
-            title: settings.t('appearance'),
-            children: [
-              _SettingTile(
-                label: settings.t('language'),
-                child: SegmentedButton<AppLocale>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(value: AppLocale.ru, label: Text('Русский')),
-                    ButtonSegment(value: AppLocale.en, label: Text('English')),
-                  ],
-                  selected: {settings.locale},
-                  onSelectionChanged: (s) =>
-                      context.read<AppSettings>().setLocale(s.first),
+      body: AppBackground(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
+          children: [
+            const _BrandHeader(),
+            const SizedBox(height: 20),
+            _SectionCard(
+              icon: Icons.palette_outlined,
+              accent: _brandEnd,
+              title: settings.t('appearance'),
+              children: [
+                _SettingTile(
+                  label: settings.t('language'),
+                  child: SegmentedButton<AppLocale>(
+                    showSelectedIcon: false,
+                    segments: const [
+                      ButtonSegment(
+                          value: AppLocale.ru, label: Text('Русский')),
+                      ButtonSegment(
+                          value: AppLocale.en, label: Text('English')),
+                    ],
+                    selected: {settings.locale},
+                    onSelectionChanged: (s) =>
+                        context.read<AppSettings>().setLocale(s.first),
+                  ),
                 ),
-              ),
-              _SettingTile(
-                label: settings.t('theme'),
-                child: SegmentedButton<ThemeMode>(
-                  showSelectedIcon: false,
-                  segments: [
-                    ButtonSegment(
-                      value: ThemeMode.light,
-                      icon: const Icon(Icons.light_mode_outlined, size: 18),
-                      label: Text(settings.t('themeLight')),
-                    ),
-                    ButtonSegment(
-                      value: ThemeMode.dark,
-                      icon: const Icon(Icons.dark_mode_outlined, size: 18),
-                      label: Text(settings.t('themeDark')),
-                    ),
-                  ],
-                  selected: {settings.themeMode},
-                  onSelectionChanged: (s) =>
-                      context.read<AppSettings>().setThemeMode(s.first),
-                ),
-              ),
-            ],
-          ),
-          _SectionCard(
-            icon: Icons.local_fire_department_outlined,
-            accent: _brandStart,
-            title: settings.t('goalsSection'),
-            children: [
-              _SettingTile(
-                label: settings.t('dailyGoal'),
-                child: _stats == null
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: LinearProgressIndicator(),
-                      )
-                    : SegmentedButton<int>(
-                        showSelectedIcon: false,
-                        segments: const [
-                          ButtonSegment(value: 10, label: Text('10 XP')),
-                          ButtonSegment(value: 20, label: Text('20 XP')),
-                          ButtonSegment(value: 50, label: Text('50 XP')),
-                        ],
-                        selected: {_stats!.dailyGoalXp},
-                        onSelectionChanged: (s) => _setDailyGoal(s.first),
+                _SettingTile(
+                  label: settings.t('theme'),
+                  child: SegmentedButton<ThemeMode>(
+                    showSelectedIcon: false,
+                    segments: [
+                      ButtonSegment(
+                        value: ThemeMode.light,
+                        icon: const Icon(Icons.light_mode_outlined, size: 18),
+                        label: Text(settings.t('themeLight')),
                       ),
-              ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                secondary: const Icon(Icons.notifications_active_outlined),
-                title: Text(settings.t('dailyReminder')),
-                value: settings.reminderEnabled,
-                onChanged: (v) => _toggleReminder(v, settings),
-              ),
-              // Grows/shrinks the card instead of the time row popping in
-              // and out when the reminder switch is toggled.
-              AnimatedSize(
-                duration: const Duration(milliseconds: 240),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: settings.reminderEnabled
-                    ? ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.schedule_outlined),
-                        title: Text(settings.t('reminderTime')),
-                        trailing: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: _brandStart.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            settings.reminderTime.format(context),
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                color: _brandStart),
-                          ),
+                      ButtonSegment(
+                        value: ThemeMode.dark,
+                        icon: const Icon(Icons.dark_mode_outlined, size: 18),
+                        label: Text(settings.t('themeDark')),
+                      ),
+                    ],
+                    selected: {settings.themeMode},
+                    onSelectionChanged: (s) =>
+                        context.read<AppSettings>().setThemeMode(s.first),
+                  ),
+                ),
+              ],
+            ),
+            _SectionCard(
+              icon: Icons.local_fire_department_outlined,
+              accent: _brandStart,
+              title: settings.t('goalsSection'),
+              children: [
+                _SettingTile(
+                  label: settings.t('dailyGoal'),
+                  child: _stats == null
+                      ? const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: LinearProgressIndicator(),
+                        )
+                      : SegmentedButton<int>(
+                          showSelectedIcon: false,
+                          segments: const [
+                            ButtonSegment(value: 10, label: Text('10 XP')),
+                            ButtonSegment(value: 20, label: Text('20 XP')),
+                            ButtonSegment(value: 50, label: Text('50 XP')),
+                          ],
+                          selected: {_stats!.dailyGoalXp},
+                          onSelectionChanged: (s) => _setDailyGoal(s.first),
                         ),
-                        onTap: () => _pickTime(settings),
-                      )
-                    : const SizedBox(width: double.infinity),
-              ),
-            ],
-          ),
-          _SectionCard(
-            icon: Icons.forum_outlined,
-            accent: _accentBlue,
-            title: settings.t('chatSource'),
-            children: [
-              // IntrinsicHeight is what makes `stretch` legal here: inside a
-              // ListView the Row has unbounded height, and stretching a child
-              // to that throws "BoxConstraints forces an infinite height",
-              // which takes the whole settings list down with it.
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      child: _ChatModeCard(
-                      emoji: '🎓',
-                      gradient: const [_accentBlue, _brandEnd],
-                      title: settings.t('chatSourceServer'),
-                      subtitle: settings.t('chatSourceServerDesc'),
-                      selected: settings.chatMode == ChatMode.server,
-                      onTap: () => context
-                          .read<AppSettings>()
-                          .setChatMode(ChatMode.server),
-                    ),
-                  ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _ChatModeCard(
-                        emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
-                        gradient: const [_accentGreen, _accentGreenDark],
-                        title: settings.t('chatSourceLocal'),
-                        subtitle: settings.t('chatSourceLocalDesc'),
-                        selected: settings.chatMode == ChatMode.local,
-                        onTap: () => context
-                            .read<AppSettings>()
-                            .setChatMode(ChatMode.local),
+                ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  secondary: const Icon(Icons.notifications_active_outlined),
+                  title: Text(settings.t('dailyReminder')),
+                  value: settings.reminderEnabled,
+                  onChanged: (v) => _toggleReminder(v, settings),
+                ),
+                // Grows/shrinks the card instead of the time row popping in
+                // and out when the reminder switch is toggled.
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 240),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: settings.reminderEnabled
+                      ? ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(Icons.schedule_outlined),
+                          title: Text(settings.t('reminderTime')),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: _brandStart.withValues(alpha: 0.12),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              settings.reminderTime.format(context),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: _brandStart),
+                            ),
+                          ),
+                          onTap: () => _pickTime(settings),
+                        )
+                      : const SizedBox(width: double.infinity),
+                ),
+              ],
+            ),
+            _SectionCard(
+              icon: Icons.forum_outlined,
+              accent: _accentBlue,
+              title: settings.t('chatSource'),
+              children: [
+                // IntrinsicHeight is what makes `stretch` legal here: inside a
+                // ListView the Row has unbounded height, and stretching a child
+                // to that throws "BoxConstraints forces an infinite height",
+                // which takes the whole settings list down with it.
+                IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        child: _ChatModeCard(
+                          emoji: '🎓',
+                          gradient: const [_accentBlue, _brandEnd],
+                          title: settings.t('chatSourceServer'),
+                          subtitle: settings.t('chatSourceServerDesc'),
+                          selected: settings.chatMode == ChatMode.server,
+                          onTap: () => context
+                              .read<AppSettings>()
+                              .setChatMode(ChatMode.server),
+                        ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ChatModeCard(
+                          emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
+                          gradient: const [_accentGreen, _accentGreenDark],
+                          title: settings.t('chatSourceLocal'),
+                          subtitle: settings.t('chatSourceLocalDesc'),
+                          selected: settings.chatMode == ChatMode.local,
+                          onTap: () => context
+                              .read<AppSettings>()
+                              .setChatMode(ChatMode.local),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Server and local panels are very different heights, so the
+                // card is resized as well as cross-faded — otherwise the swap
+                // jumps the whole list.
+                AnimatedSize(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOutCubic,
+                  alignment: Alignment.topCenter,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOut,
+                    transitionBuilder: (child, animation) => FadeTransition(
+                      opacity: animation,
+                      child: child,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Server and local panels are very different heights, so the
-              // card is resized as well as cross-faded — otherwise the swap
-              // jumps the whole list.
-              AnimatedSize(
-                duration: const Duration(milliseconds: 260),
-                curve: Curves.easeOutCubic,
-                alignment: Alignment.topCenter,
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 220),
-                  switchInCurve: Curves.easeOut,
-                  transitionBuilder: (child, animation) => FadeTransition(
-                    opacity: animation,
-                    child: child,
-                  ),
-                  child: KeyedSubtree(
-                    key: ValueKey<ChatMode>(settings.chatMode),
-                    child: settings.chatMode == ChatMode.server
-                        ? _buildServerSection(settings)
-                        : _buildLocalModelSection(settings),
+                    child: KeyedSubtree(
+                      key: ValueKey<ChatMode>(settings.chatMode),
+                      child: settings.chatMode == ChatMode.server
+                          ? _buildServerSection(settings)
+                          : _buildLocalModelSection(settings),
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          _SectionCard(
-            icon: Icons.storage_outlined,
-            accent: Colors.blueGrey,
-            title: settings.t('dataSection'),
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.delete_outline),
-                title: Text(settings.t('clearChatHistory')),
-                trailing: const Icon(Icons.chevron_right),
-                onTap: () => _clearChatHistory(settings),
-              ),
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.warning_amber, color: Colors.red),
-                title: Text(
-                  settings.t('resetProgress'),
-                  style: const TextStyle(color: Colors.red),
+              ],
+            ),
+            _SectionCard(
+              icon: Icons.storage_outlined,
+              accent: Colors.blueGrey,
+              title: settings.t('dataSection'),
+              children: [
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.delete_outline),
+                  title: Text(settings.t('clearChatHistory')),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => _clearChatHistory(settings),
                 ),
-                trailing: const Icon(Icons.chevron_right, color: Colors.red),
-                onTap: () => _confirmResetProgress(settings),
-              ),
-            ],
-          ),
-        ],
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.warning_amber, color: Colors.red),
+                  title: Text(
+                    settings.t('resetProgress'),
+                    style: const TextStyle(color: Colors.red),
+                  ),
+                  trailing: const Icon(Icons.chevron_right, color: Colors.red),
+                  onTap: () => _confirmResetProgress(settings),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -559,7 +561,6 @@ class _BrandHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
@@ -575,32 +576,44 @@ class _BrandHeader extends StatelessWidget {
           ),
         ],
       ),
-      child: const Row(
-        children: [
-          _EmojiAvatar(emoji: '🎓', background: Color(0x38FFFFFF)),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Uchi',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: const Stack(
+          children: [
+            Positioned.fill(child: BrandHeaderArt()),
+            Padding(
+              padding: EdgeInsets.all(20),
+              child: Row(
+                children: [
+                  _EmojiAvatar(emoji: '🎓', background: Color(0x38FFFFFF)),
+                  SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Uchi',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '学中文 · 每天一点',
+                          style:
+                              TextStyle(color: Color(0xE6FFFFFF), fontSize: 13),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  '学中文 · 每天一点',
-                  style: TextStyle(color: Color(0xE6FFFFFF), fontSize: 13),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -654,29 +667,29 @@ class _SectionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-          Row(
-            children: [
-              Container(
-                width: 34,
-                height: 34,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, size: 19, color: accent),
+              Row(
+                children: [
+                  Container(
+                    width: 34,
+                    height: 34,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(icon, size: 19, color: accent),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: theme.textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ...children,
+              const SizedBox(height: 6),
+              ...children,
             ],
           ),
         ),

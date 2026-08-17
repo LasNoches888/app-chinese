@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
+import '../components/app_background.dart';
 import 'lesson_session_screen.dart';
 import 'settings_screen.dart';
 
@@ -53,50 +54,59 @@ class _ReviewScreenState extends State<ReviewScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () =>
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
-      body: _dueWordIds == null
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: _dueWordIds!.isEmpty
-                  ? ListView(
-                      children: [
-                        SizedBox(
-                          height: 400,
-                          child: Center(child: Text(settings.t('noReviewDue'), textAlign: TextAlign.center)),
-                        ),
-                      ],
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.all(24),
-                      children: [
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(24),
-                            child: Column(
-                              children: [
-                                Icon(Icons.refresh, size: 48, color: Theme.of(context).colorScheme.primary),
-                                const SizedBox(height: 12),
-                                Text(
-                                  '${_dueWordIds!.length} ${settings.t('due')}',
-                                  style: Theme.of(context).textTheme.titleLarge,
-                                ),
-                                const SizedBox(height: 16),
-                                FilledButton(
-                                  onPressed: _startReview,
-                                  child: Text(settings.t('review')),
-                                ),
-                              ],
+      body: AppBackground(
+        child: _dueWordIds == null
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _load,
+                child: _dueWordIds!.isEmpty
+                    ? ListView(
+                        children: [
+                          SizedBox(
+                            height: 400,
+                            child: Center(
+                                child: Text(settings.t('noReviewDue'),
+                                    textAlign: TextAlign.center)),
+                          ),
+                        ],
+                      )
+                    : ListView(
+                        padding: const EdgeInsets.all(24),
+                        children: [
+                          Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                children: [
+                                  Icon(Icons.refresh,
+                                      size: 48,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primary),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${_dueWordIds!.length} ${settings.t('due')}',
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  FilledButton(
+                                    onPressed: _startReview,
+                                    child: Text(settings.t('review')),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-            ),
+                        ],
+                      ),
+              ),
+      ),
     );
   }
 }

@@ -56,7 +56,8 @@ class ChatRepository {
 
   ChatMessage _fromRow(Map<String, Object?> row) {
     final role = row['role'] as String;
-    final createdAt = DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int);
+    final createdAt =
+        DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int);
     if (role == 'user') {
       return ChatMessage(
         id: row['id'] as int,
@@ -65,7 +66,8 @@ class ChatRepository {
         createdAt: createdAt,
       );
     }
-    final decoded = jsonDecode(row['content'] as String) as Map<String, dynamic>;
+    final decoded =
+        jsonDecode(row['content'] as String) as Map<String, dynamic>;
     return ChatMessage(
       id: row['id'] as int,
       fromUser: false,

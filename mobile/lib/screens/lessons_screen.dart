@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
+import '../components/app_background.dart';
 import '../models/deck.dart';
 import 'lesson_session_screen.dart';
 import 'settings_screen.dart';
@@ -31,7 +32,8 @@ class _LessonsScreenState extends State<LessonsScreen> {
     for (var i = 0; i < decks.length; i++) {
       final isCompleted = completed.contains(decks[i].id);
       final isUnlocked = i == 0 || completed.contains(decks[i - 1].id);
-      result.add(DeckProgress(deck: decks[i], completed: isCompleted, unlocked: isUnlocked));
+      result.add(DeckProgress(
+          deck: decks[i], completed: isCompleted, unlocked: isUnlocked));
     }
     if (!mounted) return;
     setState(() => _decks = result);
@@ -62,22 +64,28 @@ class _LessonsScreenState extends State<LessonsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () =>
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
-      body: _decks == null
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _load,
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                children: [
-                  for (final dp in _decks!) _DeckTile(deckProgress: dp, settings: settings, onTap: _openDeck),
-                ],
+      body: AppBackground(
+        child: _decks == null
+            ? const Center(child: CircularProgressIndicator())
+            : RefreshIndicator(
+                onRefresh: _load,
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  children: [
+                    for (final dp in _decks!)
+                      _DeckTile(
+                          deckProgress: dp,
+                          settings: settings,
+                          onTap: _openDeck),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }
@@ -87,7 +95,10 @@ class _DeckTile extends StatelessWidget {
   final AppSettings settings;
   final void Function(Deck) onTap;
 
-  const _DeckTile({required this.deckProgress, required this.settings, required this.onTap});
+  const _DeckTile(
+      {required this.deckProgress,
+      required this.settings,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
