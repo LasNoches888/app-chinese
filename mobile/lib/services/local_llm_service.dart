@@ -30,7 +30,18 @@ class LocalLlmService {
     FlutterGemma.initialize(inferenceEngines: [const MediaPipeEngine()]);
   }
 
-  static bool get isModelReady => FlutterGemma.hasActiveModel();
+  /// Safe to call before the model has ever been downloaded — makes sure the
+  /// inference engine is registered first (flutter_gemma throws if you query
+  /// model state before that) and treats any unexpected native error as
+  /// "not ready" instead of letting it crash whatever screen checks this.
+  static bool get isModelReady {
+    try {
+      ensureEngineRegistered();
+      return FlutterGemma.hasActiveModel();
+    } catch (_) {
+      return false;
+    }
+  }
 
   static Future<void> downloadModel({
     required String huggingFaceToken,
@@ -64,7 +75,8 @@ class LocalLlmService {
   /// Sends one user turn and returns the model's raw text reply (still
   /// needs [extractReplyJson] applied — a 1B model is much less reliable
   /// at strict JSON formatting than the 7B server model).
-  static Future<String> sendMessage(String userText, {required String systemPrompt}) async {
+  static Future<String> sendMessage(String userText,
+      {required String systemPrompt}) async {
     final chat = await _getOrCreateChat(systemPrompt);
     await chat.addQueryChunk(Message.text(text: userText, isUser: true));
     final response = await chat.generateChatResponse();
@@ -85,7 +97,8 @@ class LocalLlmService {
       // fall through to the more lenient extraction below
     }
 
-    final fenced = RegExp(r'```(?:json)?\s*(\{.*?\})\s*```', dotAll: true).firstMatch(text);
+    final fenced = RegExp(r'```(?:json)?\s*(\{.*?\})\s*```', dotAll: true)
+        .firstMatch(text);
     if (fenced != null) {
       try {
         final decoded = jsonDecode(fenced.group(1)!);
