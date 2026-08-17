@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -26,8 +28,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(text: context.read<AppSettings>().baseUrl);
-    _hfTokenController = TextEditingController(text: context.read<AppSettings>().hfToken);
+    _controller =
+        TextEditingController(text: context.read<AppSettings>().baseUrl);
+    _hfTokenController =
+        TextEditingController(text: context.read<AppSettings>().hfToken);
   }
 
   @override
@@ -65,7 +69,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _pickTime(AppSettings settings) async {
-    final picked = await showTimePicker(context: context, initialTime: settings.reminderTime);
+    final picked = await showTimePicker(
+        context: context, initialTime: settings.reminderTime);
     if (picked == null) return;
     await settings.setReminder(enabled: settings.reminderEnabled, time: picked);
     if (settings.reminderEnabled) {
@@ -89,7 +94,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await context.read<AppRepositories>().chat.clearHistory();
     LocalLlmService.resetSession();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settings.t('done'))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
   Future<void> _confirmResetProgress(AppSettings settings) async {
@@ -100,7 +106,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text(settings.t('resetProgressConfirmTitle')),
         content: Text(settings.t('resetProgressConfirmBody')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(settings.t('cancel'))),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(settings.t('cancel'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -113,7 +121,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await repos.stats.resetAllProgress();
     await _loadStats();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settings.t('done'))));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
   Future<void> _downloadLocalModel(AppSettings settings) async {
@@ -148,119 +157,138 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final settings = context.watch<AppSettings>();
     return Scaffold(
       appBar: AppBar(title: Text(settings.t('settings'))),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: Stack(
         children: [
-          Text(settings.t('language')),
-          const SizedBox(height: 8),
-          SegmentedButton<AppLocale>(
-            segments: const [
-              ButtonSegment(value: AppLocale.ru, label: Text('Русский')),
-              ButtonSegment(value: AppLocale.en, label: Text('English')),
-            ],
-            selected: {settings.locale},
-            onSelectionChanged: (s) => context.read<AppSettings>().setLocale(s.first),
-          ),
-          const SizedBox(height: 24),
-          Text(settings.t('theme')),
-          const SizedBox(height: 8),
-          SegmentedButton<ThemeMode>(
-            segments: [
-              ButtonSegment(value: ThemeMode.light, label: Text(settings.t('themeLight'))),
-              ButtonSegment(value: ThemeMode.dark, label: Text(settings.t('themeDark'))),
-            ],
-            selected: {settings.themeMode},
-            onSelectionChanged: (s) => context.read<AppSettings>().setThemeMode(s.first),
-          ),
-          const SizedBox(height: 24),
-          Text(settings.t('dailyGoal')),
-          const SizedBox(height: 8),
-          if (_stats != null)
-            SegmentedButton<int>(
-              segments: const [
-                ButtonSegment(value: 10, label: Text('10 XP')),
-                ButtonSegment(value: 20, label: Text('20 XP')),
-                ButtonSegment(value: 50, label: Text('50 XP')),
-              ],
-              selected: {_stats!.dailyGoalXp},
-              onSelectionChanged: (s) => _setDailyGoal(s.first),
-            ),
-          const SizedBox(height: 24),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(settings.t('dailyReminder')),
-            value: settings.reminderEnabled,
-            onChanged: (v) => _toggleReminder(v, settings),
-          ),
-          if (settings.reminderEnabled)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(settings.t('reminderTime')),
-              trailing: Text(settings.reminderTime.format(context)),
-              onTap: () => _pickTime(settings),
-            ),
-          const Divider(height: 40),
-          Text(settings.t('chatSource'), style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 12),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          const Positioned.fill(child: _DecorativeBackground()),
+          ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              Expanded(
-                child: _ChatModeCard(
-                  emoji: '🎓',
-                  gradient: const [Color(0xFF4E7CFF), Color(0xFF6C5CE7)],
-                  title: settings.t('chatSourceServer'),
-                  subtitle: settings.t('chatSourceServerDesc'),
-                  selected: settings.chatMode == ChatMode.server,
-                  onTap: () => context.read<AppSettings>().setChatMode(ChatMode.server),
-                ),
+              Text(settings.t('language')),
+              const SizedBox(height: 8),
+              SegmentedButton<AppLocale>(
+                segments: const [
+                  ButtonSegment(value: AppLocale.ru, label: Text('Русский')),
+                  ButtonSegment(value: AppLocale.en, label: Text('English')),
+                ],
+                selected: {settings.locale},
+                onSelectionChanged: (s) =>
+                    context.read<AppSettings>().setLocale(s.first),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ChatModeCard(
-                  emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
-                  gradient: const [Color(0xFF23C58F), Color(0xFF17A673)],
-                  title: settings.t('chatSourceLocal'),
-                  subtitle: settings.t('chatSourceLocalDesc'),
-                  selected: settings.chatMode == ChatMode.local,
-                  onTap: () => context.read<AppSettings>().setChatMode(ChatMode.local),
+              const SizedBox(height: 24),
+              Text(settings.t('theme')),
+              const SizedBox(height: 8),
+              SegmentedButton<ThemeMode>(
+                segments: [
+                  ButtonSegment(
+                      value: ThemeMode.light,
+                      label: Text(settings.t('themeLight'))),
+                  ButtonSegment(
+                      value: ThemeMode.dark,
+                      label: Text(settings.t('themeDark'))),
+                ],
+                selected: {settings.themeMode},
+                onSelectionChanged: (s) =>
+                    context.read<AppSettings>().setThemeMode(s.first),
+              ),
+              const SizedBox(height: 24),
+              Text(settings.t('dailyGoal')),
+              const SizedBox(height: 8),
+              if (_stats != null)
+                SegmentedButton<int>(
+                  segments: const [
+                    ButtonSegment(value: 10, label: Text('10 XP')),
+                    ButtonSegment(value: 20, label: Text('20 XP')),
+                    ButtonSegment(value: 50, label: Text('50 XP')),
+                  ],
+                  selected: {_stats!.dailyGoalXp},
+                  onSelectionChanged: (s) => _setDailyGoal(s.first),
                 ),
+              const SizedBox(height: 24),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(settings.t('dailyReminder')),
+                value: settings.reminderEnabled,
+                onChanged: (v) => _toggleReminder(v, settings),
+              ),
+              if (settings.reminderEnabled)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(settings.t('reminderTime')),
+                  trailing: Text(settings.reminderTime.format(context)),
+                  onTap: () => _pickTime(settings),
+                ),
+              const Divider(height: 40),
+              Text(settings.t('chatSource'),
+                  style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 12),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _ChatModeCard(
+                      emoji: '🎓',
+                      gradient: const [Color(0xFF4E7CFF), Color(0xFF6C5CE7)],
+                      title: settings.t('chatSourceServer'),
+                      subtitle: settings.t('chatSourceServerDesc'),
+                      selected: settings.chatMode == ChatMode.server,
+                      onTap: () => context
+                          .read<AppSettings>()
+                          .setChatMode(ChatMode.server),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _ChatModeCard(
+                      emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
+                      gradient: const [Color(0xFF23C58F), Color(0xFF17A673)],
+                      title: settings.t('chatSourceLocal'),
+                      subtitle: settings.t('chatSourceLocalDesc'),
+                      selected: settings.chatMode == ChatMode.local,
+                      onTap: () => context
+                          .read<AppSettings>()
+                          .setChatMode(ChatMode.local),
+                    ),
+                  ),
+                ],
+              ),
+              if (settings.chatMode == ChatMode.server) ...[
+                const SizedBox(height: 16),
+                Text(settings.t('backendUrl')),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: _controller,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'http://10.0.2.2:8000',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: () {
+                    context
+                        .read<AppSettings>()
+                        .setBaseUrl(_controller.text.trim());
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(settings.t('saved'))));
+                  },
+                  child: Text(settings.t('save')),
+                ),
+              ] else
+                _buildLocalModelSection(settings),
+              const SizedBox(height: 32),
+              OutlinedButton.icon(
+                onPressed: () => _clearChatHistory(settings),
+                icon: const Icon(Icons.delete_outline),
+                label: Text(settings.t('clearChatHistory')),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
+                onPressed: () => _confirmResetProgress(settings),
+                icon: const Icon(Icons.warning_amber),
+                label: Text(settings.t('resetProgress')),
               ),
             ],
-          ),
-          if (settings.chatMode == ChatMode.server) ...[
-            const SizedBox(height: 16),
-            Text(settings.t('backendUrl')),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _controller,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'http://10.0.2.2:8000',
-              ),
-            ),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () {
-                context.read<AppSettings>().setBaseUrl(_controller.text.trim());
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(settings.t('saved'))));
-              },
-              child: Text(settings.t('save')),
-            ),
-          ] else
-            _buildLocalModelSection(settings),
-          const SizedBox(height: 32),
-          OutlinedButton.icon(
-            onPressed: () => _clearChatHistory(settings),
-            icon: const Icon(Icons.delete_outline),
-            label: Text(settings.t('clearChatHistory')),
-          ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () => _confirmResetProgress(settings),
-            icon: const Icon(Icons.warning_amber),
-            label: Text(settings.t('resetProgress')),
           ),
         ],
       ),
@@ -290,12 +318,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              _EmojiAvatar(emoji: '👋', background: Colors.white.withValues(alpha: 0.22)),
+              _EmojiAvatar(
+                  emoji: '👋',
+                  background: Colors.white.withValues(alpha: 0.22)),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(
                   settings.t('nearbyFriendReady'),
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15),
                 ),
               ),
             ],
@@ -309,8 +342,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          border:
+              Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          color: Theme.of(context)
+              .colorScheme
+              .surfaceContainerHighest
+              .withValues(alpha: 0.4),
         ),
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -326,19 +363,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Expanded(
                   child: Text(
                     settings.t('nearbyFriendNeedsSetup'),
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(settings.t('nearbyFriendIntro'), style: Theme.of(context).textTheme.bodySmall),
+            Text(settings.t('nearbyFriendIntro'),
+                style: Theme.of(context).textTheme.bodySmall),
             const SizedBox(height: 20),
-            Text(settings.t('hfTokenLabel'), style: const TextStyle(fontWeight: FontWeight.w600)),
+            Text(settings.t('hfTokenLabel'),
+                style: const TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
             Text(
               settings.t('hfTokenHint'),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.grey.shade600),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -346,7 +391,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               enabled: !_downloading,
               obscureText: true,
               decoration: InputDecoration(
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border:
+                    OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 hintText: 'hf_...',
                 prefixIcon: const Icon(Icons.vpn_key_outlined),
               ),
@@ -355,7 +401,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (_downloading) ...[
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(value: _downloadProgress / 100, minHeight: 8),
+                child: LinearProgressIndicator(
+                    value: _downloadProgress / 100, minHeight: 8),
               ),
               const SizedBox(height: 8),
               Text('${settings.t('trainingInProgress')}… $_downloadProgress%'),
@@ -368,9 +415,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: const Color(0xFF23C58F),
                       padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: value.text.trim().isEmpty ? null : () => _downloadLocalModel(settings),
+                    onPressed: value.text.trim().isEmpty
+                        ? null
+                        : () => _downloadLocalModel(settings),
                     icon: const Text('👋', style: TextStyle(fontSize: 16)),
                     label: Text(settings.t('startTraining')),
                   ),
@@ -436,11 +486,21 @@ class _ChatModeCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           gradient: selected
-              ? LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight)
+              ? LinearGradient(
+                  colors: gradient,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight)
               : null,
-          color: selected ? null : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          color: selected
+              ? null
+              : Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withValues(alpha: 0.4),
           border: Border.all(
-            color: selected ? Colors.transparent : Theme.of(context).colorScheme.outlineVariant,
+            color: selected
+                ? Colors.transparent
+                : Theme.of(context).colorScheme.outlineVariant,
           ),
           boxShadow: selected
               ? [
@@ -473,7 +533,8 @@ class _ChatModeCard extends StatelessWidget {
                 if (selected)
                   const Icon(Icons.check_circle, color: Colors.white, size: 20)
                 else
-                  Icon(Icons.circle_outlined, color: Theme.of(context).colorScheme.outline, size: 20),
+                  Icon(Icons.circle_outlined,
+                      color: Theme.of(context).colorScheme.outline, size: 20),
               ],
             ),
             const SizedBox(height: 12),
@@ -490,10 +551,91 @@ class _ChatModeCard extends StatelessWidget {
               subtitle,
               style: TextStyle(
                 fontSize: 12,
-                color: selected ? Colors.white.withValues(alpha: 0.9) : Colors.grey.shade600,
+                color: selected
+                    ? Colors.white.withValues(alpha: 0.9)
+                    : Colors.grey.shade600,
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Soft gradient wash with a few blurred colour blobs behind the settings
+/// list, generated purely from vector shapes so it stays offline and
+/// theme-aware instead of a plain flat background.
+class _DecorativeBackground extends StatelessWidget {
+  const _DecorativeBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [const Color(0xFF1A1A2E), const Color(0xFF16213E)]
+              : [const Color(0xFFFFF7F0), const Color(0xFFFCEEEA)],
+        ),
+      ),
+      child: ClipRect(
+        child: Stack(
+          children: [
+            Positioned(
+              top: -90,
+              right: -60,
+              child: _Blob(
+                  size: 240,
+                  color: const Color(0xFFFF7A59),
+                  opacity: isDark ? 0.28 : 0.35),
+            ),
+            Positioned(
+              top: 260,
+              left: -80,
+              child: _Blob(
+                  size: 200,
+                  color: const Color(0xFF23C58F),
+                  opacity: isDark ? 0.22 : 0.26),
+            ),
+            Positioned(
+              bottom: -110,
+              right: -50,
+              child: _Blob(
+                  size: 260,
+                  color: const Color(0xFF6C5CE7),
+                  opacity: isDark ? 0.24 : 0.28),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Blob extends StatelessWidget {
+  final double size;
+  final Color color;
+  final double opacity;
+
+  const _Blob({required this.size, required this.color, required this.opacity});
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ui.ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: RadialGradient(colors: [
+            color.withValues(alpha: opacity),
+            color.withValues(alpha: 0)
+          ]),
         ),
       ),
     );
