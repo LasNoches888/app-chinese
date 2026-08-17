@@ -201,14 +201,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           const Divider(height: 40),
           Text(settings.t('chatSource'), style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          SegmentedButton<ChatMode>(
-            segments: [
-              ButtonSegment(value: ChatMode.server, label: Text(settings.t('chatSourceServer'))),
-              ButtonSegment(value: ChatMode.local, label: Text(settings.t('chatSourceLocal'))),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: _ChatModeCard(
+                  emoji: '🎓',
+                  gradient: const [Color(0xFF4E7CFF), Color(0xFF6C5CE7)],
+                  title: settings.t('chatSourceServer'),
+                  subtitle: settings.t('chatSourceServerDesc'),
+                  selected: settings.chatMode == ChatMode.server,
+                  onTap: () => context.read<AppSettings>().setChatMode(ChatMode.server),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ChatModeCard(
+                  emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
+                  gradient: const [Color(0xFF23C58F), Color(0xFF17A673)],
+                  title: settings.t('chatSourceLocal'),
+                  subtitle: settings.t('chatSourceLocalDesc'),
+                  selected: settings.chatMode == ChatMode.local,
+                  onTap: () => context.read<AppSettings>().setChatMode(ChatMode.local),
+                ),
+              ),
             ],
-            selected: {settings.chatMode},
-            onSelectionChanged: (s) => context.read<AppSettings>().setChatMode(s.first),
           ),
           if (settings.chatMode == ChatMode.server) ...[
             const SizedBox(height: 16),
@@ -253,17 +271,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (LocalLlmService.isModelReady) {
       return Padding(
         padding: const EdgeInsets.only(top: 16),
-        child: Card(
-          color: Colors.green.withValues(alpha: 0.1),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                const Text('🎓', style: TextStyle(fontSize: 28)),
-                const SizedBox(width: 12),
-                Expanded(child: Text(settings.t('littleBrotherReady'))),
-              ],
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF23C58F), Color(0xFF17A673)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF17A673).withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              _EmojiAvatar(emoji: '👋', background: Colors.white.withValues(alpha: 0.22)),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  settings.t('nearbyFriendReady'),
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 15),
+                ),
+              ),
+            ],
           ),
         ),
       );
@@ -271,63 +306,194 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Text('🧒', style: TextStyle(fontSize: 28)),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      settings.t('littleBrotherNeedsTraining'),
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _EmojiAvatar(
+                  emoji: '🚪',
+                  background: const Color(0xFF23C58F).withValues(alpha: 0.16),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Text(
+                    settings.t('nearbyFriendNeedsSetup'),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
                   ),
-                ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(settings.t('nearbyFriendIntro'), style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 20),
+            Text(settings.t('hfTokenLabel'), style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text(
+              settings.t('hfTokenHint'),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _hfTokenController,
+              enabled: !_downloading,
+              obscureText: true,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                hintText: 'hf_...',
+                prefixIcon: const Icon(Icons.vpn_key_outlined),
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (_downloading) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(value: _downloadProgress / 100, minHeight: 8),
               ),
               const SizedBox(height: 8),
-              Text(settings.t('littleBrotherIntro'), style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(height: 16),
-              Text(settings.t('hfTokenLabel')),
-              const SizedBox(height: 4),
-              Text(
-                settings.t('hfTokenHint'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 8),
-              TextField(
-                controller: _hfTokenController,
-                enabled: !_downloading,
-                obscureText: true,
-                decoration: const InputDecoration(border: OutlineInputBorder(), hintText: 'hf_...'),
-              ),
-              const SizedBox(height: 16),
-              if (_downloading) ...[
-                LinearProgressIndicator(value: _downloadProgress / 100),
-                const SizedBox(height: 8),
-                Text('${settings.t('trainingInProgress')}… $_downloadProgress%'),
-              ] else
-                ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: _hfTokenController,
-                  builder: (context, value, _) => FilledButton.icon(
+              Text('${settings.t('trainingInProgress')}… $_downloadProgress%'),
+            ] else
+              ValueListenableBuilder<TextEditingValue>(
+                valueListenable: _hfTokenController,
+                builder: (context, value, _) => SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF23C58F),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
                     onPressed: value.text.trim().isEmpty ? null : () => _downloadLocalModel(settings),
-                    icon: const Icon(Icons.school),
+                    icon: const Text('👋', style: TextStyle(fontSize: 16)),
                     label: Text(settings.t('startTraining')),
                   ),
                 ),
-              if (_downloadError != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '${settings.t('error')}: $_downloadError',
-                  style: const TextStyle(color: Colors.red),
-                ),
-              ],
+              ),
+            if (_downloadError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                '${settings.t('error')}: $_downloadError',
+                style: const TextStyle(color: Colors.red),
+              ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmojiAvatar extends StatelessWidget {
+  final String emoji;
+  final Color background;
+
+  const _EmojiAvatar({required this.emoji, required this.background});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(color: background, shape: BoxShape.circle),
+      alignment: Alignment.center,
+      child: Text(emoji, style: const TextStyle(fontSize: 24)),
+    );
+  }
+}
+
+class _ChatModeCard extends StatelessWidget {
+  final String emoji;
+  final List<Color> gradient;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ChatModeCard({
+    required this.emoji,
+    required this.gradient,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(18),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: selected
+              ? LinearGradient(colors: gradient, begin: Alignment.topLeft, end: Alignment.bottomRight)
+              : null,
+          color: selected ? null : Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          border: Border.all(
+            color: selected ? Colors.transparent : Theme.of(context).colorScheme.outlineVariant,
           ),
+          boxShadow: selected
+              ? [
+                  BoxShadow(
+                    color: gradient.last.withValues(alpha: 0.35),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selected
+                        ? Colors.white.withValues(alpha: 0.22)
+                        : Theme.of(context).colorScheme.surface,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                ),
+                if (selected)
+                  const Icon(Icons.check_circle, color: Colors.white, size: 20)
+                else
+                  Icon(Icons.circle_outlined, color: Theme.of(context).colorScheme.outline, size: 20),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: selected ? Colors.white : null,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: TextStyle(
+                fontSize: 12,
+                color: selected ? Colors.white.withValues(alpha: 0.9) : Colors.grey.shade600,
+              ),
+            ),
+          ],
         ),
       ),
     );

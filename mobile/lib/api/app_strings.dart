@@ -102,21 +102,29 @@ class Strings {
     'online': {AppLocale.ru: 'В сети', AppLocale.en: 'Online'},
     'offline': {AppLocale.ru: 'Не в сети', AppLocale.en: 'Offline'},
     'chatSource': {AppLocale.ru: 'Источник ответов чата', AppLocale.en: 'Chat source'},
-    'chatSourceServer': {AppLocale.ru: 'Старший брат (сервер)', AppLocale.en: 'Big brother (server)'},
-    'chatSourceLocal': {AppLocale.ru: 'Младший братик (на телефоне)', AppLocale.en: 'Little brother (on-device)'},
-    'littleBrotherNeedsTraining': {
-      AppLocale.ru: 'Младшего братика нужно обучить',
-      AppLocale.en: 'Little brother needs to study first',
+    'chatSourceServer': {AppLocale.ru: 'Профессор', AppLocale.en: 'Professor'},
+    'chatSourceServerDesc': {
+      AppLocale.ru: 'Большая модель на сервере — нужен интернет',
+      AppLocale.en: 'Big model on the server — needs internet',
     },
-    'littleBrotherIntro': {
+    'chatSourceLocal': {AppLocale.ru: 'Друг поблизости', AppLocale.en: 'Nearby friend'},
+    'chatSourceLocalDesc': {
+      AppLocale.ru: 'Живёт у вас в телефоне — работает офлайн',
+      AppLocale.en: 'Lives right on your phone — works offline',
+    },
+    'nearbyFriendNeedsSetup': {
+      AppLocale.ru: 'Друг поблизости пока не зашёл в гости',
+      AppLocale.en: 'Your nearby friend hasn\'t stopped by yet',
+    },
+    'nearbyFriendIntro': {
       AppLocale.ru:
-          'Младший братик (Gemma 3, 1B) живёт прямо на телефоне и работает совсем без интернета — но сначала его нужно один раз "обучить": скачать модель (~500 МБ). Дальше сеть не нужна вообще.',
+          'Друг поблизости (Gemma 3, 1B) живёт прямо на телефоне и болтает совсем без интернета — но сначала его нужно один раз позвать в гости: скачать модель (~500 МБ). Дальше сеть не понадобится вообще.',
       AppLocale.en:
-          'Little brother (Gemma 3, 1B) lives right on your phone and works with zero internet — but first he needs to "study" once: download the model (~500 MB). After that, no network needed at all.',
+          'Your nearby friend (Gemma 3, 1B) lives right on your phone and chats with zero internet — but first you need to invite them over once: download the model (~500 MB). After that, no network needed at all.',
     },
-    'littleBrotherReady': {
-      AppLocale.ru: 'Младший братик обучен и готов болтать офлайн 🎓',
-      AppLocale.en: 'Little brother has studied and is ready to chat offline 🎓',
+    'nearbyFriendReady': {
+      AppLocale.ru: 'Друг поблизости зашёл в гости и готов болтать офлайн 👋',
+      AppLocale.en: 'Your nearby friend has settled in and is ready to chat offline 👋',
     },
     'hfTokenLabel': {AppLocale.ru: 'Токен HuggingFace', AppLocale.en: 'HuggingFace token'},
     'hfTokenHint': {
@@ -125,11 +133,11 @@ class Strings {
       AppLocale.en:
           'Gemma is gated by Google\'s license — accept the terms on the model page on huggingface.co and create a read token (Settings → Access Tokens).',
     },
-    'startTraining': {AppLocale.ru: 'Обучить младшего братика', AppLocale.en: 'Train little brother'},
-    'trainingInProgress': {AppLocale.ru: 'Обучение идёт', AppLocale.en: 'Studying'},
+    'startTraining': {AppLocale.ru: 'Позвать в гости', AppLocale.en: 'Invite them over'},
+    'trainingInProgress': {AppLocale.ru: 'Идёт в гости', AppLocale.en: 'On their way'},
     'localModelUnavailable': {
-      AppLocale.ru: 'Младший братик ещё не обучен — зайдите в Настройки',
-      AppLocale.en: 'Little brother hasn\'t studied yet — check Settings',
+      AppLocale.ru: 'Друг поблизости ещё не зашёл в гости — откройте Настройки',
+      AppLocale.en: 'Your nearby friend hasn\'t stopped by yet — check Settings',
     },
 
     // Settings
