@@ -124,40 +124,30 @@ class _ChatScreenState extends State<ChatScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(settings.t('chatTitle')),
+        title: Text(settings.t('chatTitle'), overflow: TextOverflow.ellipsis),
         actions: [
+          // Just a small emoji badge, not a text label — a full status label
+          // here made the actions row wide enough to overflow the AppBar on
+          // narrow phones and push the settings button off-screen entirely.
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Center(
-              child: Row(
-                children: isLocal
-                    ? [
-                        Text(localReady ? '👋' : '🚪', style: const TextStyle(fontSize: 16)),
-                        const SizedBox(width: 4),
-                        Text(settings.t('chatSourceLocal'), style: const TextStyle(fontSize: 12)),
-                      ]
-                    : [
-                        const Text('🎓', style: TextStyle(fontSize: 16)),
-                        const SizedBox(width: 4),
-                        Text(
-                          _online ? settings.t('online') : settings.t('offline'),
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          _online ? Icons.wifi : Icons.wifi_off,
-                          size: 14,
-                          color: _online ? Colors.green : Colors.red,
-                        ),
-                      ],
+              child: Text(
+                isLocal ? (localReady ? '👋' : '🚪') : '🎓',
+                style: const TextStyle(fontSize: 18),
               ),
             ),
           ),
-          IconButton(icon: const Icon(Icons.delete_outline), onPressed: _clearHistory),
+          IconButton(
+            icon: const Icon(Icons.delete_outline),
+            tooltip: settings.t('clearChatHistory'),
+            onPressed: _clearHistory,
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () =>
-                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            tooltip: settings.t('settings'),
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
