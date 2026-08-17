@@ -5,6 +5,7 @@ import 'repositories/achievements_repository.dart';
 import 'repositories/chat_repository.dart';
 import 'repositories/srs_repository.dart';
 import 'repositories/stats_repository.dart';
+import 'repositories/stroke_data_repository.dart';
 import 'repositories/word_repository.dart';
 
 /// Bundles every repository behind one object handed down via Provider,
@@ -16,8 +17,17 @@ class AppRepositories {
   final StatsRepository stats;
   final AchievementsRepository achievements;
   final ChatRepository chat;
+  final StrokeDataRepository strokeData;
 
-  AppRepositories._(this.db, this.words, this.srs, this.stats, this.achievements, this.chat);
+  AppRepositories._(
+    this.db,
+    this.words,
+    this.srs,
+    this.stats,
+    this.achievements,
+    this.chat,
+    this.strokeData,
+  );
 
   static Future<AppRepositories> initialize() async {
     final db = await AppDatabase.open();
@@ -27,6 +37,7 @@ class AppRepositories {
     final stats = StatsRepository(db);
     final achievements = AchievementsRepository(db, srs, words);
     final chat = ChatRepository(db);
-    return AppRepositories._(db, words, srs, stats, achievements, chat);
+    final strokeData = await StrokeDataRepository.load();
+    return AppRepositories._(db, words, srs, stats, achievements, chat, strokeData);
   }
 }

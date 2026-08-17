@@ -13,7 +13,9 @@ class ExerciseGenerator {
   static List<ExerciseQuestion> build({
     required List<Word> lessonWords,
     required List<Word> allWords,
+    Set<String> availableStrokeChars = const {},
     int sentenceQuestionCap = 2,
+    int writeHanziCap = 2,
   }) {
     final rng = Random();
     final questions = <ExerciseQuestion>[];
@@ -78,6 +80,7 @@ class ExerciseGenerator {
           ));
           break;
         case ExerciseType.buildSentence:
+        case ExerciseType.writeHanzi:
           break; // handled separately below
       }
     }
@@ -96,6 +99,31 @@ class ExerciseGenerator {
       ));
     }
 
+    if (availableStrokeChars.isNotEmpty) {
+      // One writing question per unique character (not per word) with
+      // stroke data available, tied back to a word that contains it so
+      // SRS/mistake tracking still has a real word to attach to.
+      final charToWord = <String, Word>{};
+      for (final word in lessonWords) {
+        for (final ch in word.hanzi.split('')) {
+          if (availableStrokeChars.contains(ch)) {
+            charToWord.putIfAbsent(ch, () => word);
+          }
+        }
+      }
+      final chars = charToWord.keys.toList()..shuffle(rng);
+      for (final ch in chars.take(writeHanziCap)) {
+        final word = charToWord[ch]!;
+        questions.add(ExerciseQuestion(
+          id: 'write-$ch',
+          wordId: word.id,
+          type: ExerciseType.writeHanzi,
+          hanzi: ch,
+          translation: word.translationRu,
+        ));
+      }
+    }
+
     questions.shuffle(rng);
     return questions;
   }
@@ -108,7 +136,15 @@ class ExerciseGenerator {
     int count,
   ) {
     final value = selector(word);
-    final candidates = pool.where((w) => w.id != word.id && selector(w) != value).toList()..shuffle(rng);
-    return candidates.take(count).map(selector).toList();
+    // Dedupe by value, not just word id — two different words can share a
+    // translation/hanzi, which would otherwise render two identical-text
+    // answer buttons.
+    final seen = <String>{value};
+    final candidates = <String>[];
+    for (final w in pool..shuffle(rng)) {
+      final v = selector(w);
+      if (seen.add(v)) candidates.add(v);
+    }
+    return candidates.take(count).toList();
   }
 }
