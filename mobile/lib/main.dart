@@ -32,7 +32,7 @@ class AppChinese extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return MaterialApp(
-      title: 'AppChinese',
+      title: 'Uchi',
       themeMode: settings.themeMode,
       theme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.light, useMaterial3: true),
       darkTheme: ThemeData(colorSchemeSeed: Colors.red, brightness: Brightness.dark, useMaterial3: true),

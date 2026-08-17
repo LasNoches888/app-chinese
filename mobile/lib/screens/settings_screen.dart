@@ -59,7 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await ReminderService.scheduleDaily(
         hour: settings.reminderTime.hour,
         minute: settings.reminderTime.minute,
-        title: 'AppChinese',
+        title: 'Uchi',
         body: settings.t('reminderBody'),
       );
     } else {
@@ -77,7 +77,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await ReminderService.scheduleDaily(
         hour: picked.hour,
         minute: picked.minute,
-        title: 'AppChinese',
+        title: 'Uchi',
         body: settings.t('reminderBody'),
       );
     }
