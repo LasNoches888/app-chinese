@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:stroke_order_animator/stroke_order_animator.dart';
 
 import '../api/app_settings.dart';
 import '../models/exercise_question.dart';
@@ -24,6 +27,13 @@ class FlipExerciseWidget extends StatefulWidget {
 
 class _FlipExerciseWidgetState extends State<FlipExerciseWidget> {
   bool _revealed = false;
+  bool _answered = false;
+
+  void _answer(bool knewIt) {
+    if (_answered) return;
+    _answered = true;
+    widget.onAnswer(knewIt);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -63,12 +73,12 @@ class _FlipExerciseWidgetState extends State<FlipExerciseWidget> {
             children: [
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                onPressed: () => widget.onAnswer(false),
+                onPressed: () => _answer(false),
                 child: Text(widget.settings.t('iDontKnow')),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: Colors.green),
-                onPressed: () => widget.onAnswer(true),
+                onPressed: () => _answer(true),
                 child: Text(widget.settings.t('iKnowIt')),
               ),
             ],
@@ -99,12 +109,15 @@ class ChoiceExerciseWidget extends StatefulWidget {
 
 class _ChoiceExerciseWidgetState extends State<ChoiceExerciseWidget> {
   String? _selected;
+  Timer? _advanceTimer;
 
   void _select(String option) {
     if (_selected != null) return;
     setState(() => _selected = option);
     final correct = option == widget.question.correctOption;
-    Future.delayed(const Duration(milliseconds: 550), () => widget.onAnswer(correct));
+    _advanceTimer = Timer(const Duration(milliseconds: 550), () {
+      if (mounted) widget.onAnswer(correct);
+    });
   }
 
   Color? _colorFor(String option) {
@@ -112,6 +125,12 @@ class _ChoiceExerciseWidgetState extends State<ChoiceExerciseWidget> {
     if (option == widget.question.correctOption) return Colors.green.withValues(alpha: 0.25);
     if (option == _selected) return Colors.red.withValues(alpha: 0.25);
     return null;
+  }
+
+  @override
+  void dispose() {
+    _advanceTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -174,6 +193,7 @@ class _BuildSentenceExerciseWidgetState extends State<BuildSentenceExerciseWidge
   final List<String> _selected = [];
   bool _checked = false;
   bool _correct = false;
+  Timer? _advanceTimer;
 
   @override
   void initState() {
@@ -204,7 +224,15 @@ class _BuildSentenceExerciseWidgetState extends State<BuildSentenceExerciseWidge
       _checked = true;
       _correct = isCorrect;
     });
-    Future.delayed(const Duration(milliseconds: 900), () => widget.onAnswer(isCorrect));
+    _advanceTimer = Timer(const Duration(milliseconds: 900), () {
+      if (mounted) widget.onAnswer(isCorrect);
+    });
+  }
+
+  @override
+  void dispose() {
+    _advanceTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -287,6 +315,7 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
   final _controller = TextEditingController();
   bool _checked = false;
   bool _correct = false;
+  Timer? _advanceTimer;
 
   static const _toneMarks = {
     'ā': 'a1', 'á': 'a2', 'ǎ': 'a3', 'à': 'a4',
@@ -320,11 +349,14 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
       _checked = true;
       _correct = correct;
     });
-    Future.delayed(const Duration(milliseconds: 1000), () => widget.onAnswer(correct));
+    _advanceTimer = Timer(const Duration(milliseconds: 1000), () {
+      if (mounted) widget.onAnswer(correct);
+    });
   }
 
   @override
   void dispose() {
+    _advanceTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -360,6 +392,77 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
         FilledButton(
           onPressed: _checked ? null : _check,
           child: Text(widget.settings.t('check')),
+        ),
+      ],
+    );
+  }
+}
+
+/// Hanzi writing practice: trace the character's strokes in the correct
+/// order. Stroke data (assets/seed/stroke_data.json, sourced from Make Me
+/// a Hanzi) is bundled offline — [strokeOrderJson] is looked up by the
+/// caller and handed in directly.
+class WriteHanziExerciseWidget extends StatefulWidget {
+  final ExerciseQuestion question;
+  final AppSettings settings;
+  final String strokeOrderJson;
+  final void Function(bool correct) onAnswer;
+
+  const WriteHanziExerciseWidget({
+    super.key,
+    required this.question,
+    required this.settings,
+    required this.strokeOrderJson,
+    required this.onAnswer,
+  });
+
+  @override
+  State<WriteHanziExerciseWidget> createState() => _WriteHanziExerciseWidgetState();
+}
+
+class _WriteHanziExerciseWidgetState extends State<WriteHanziExerciseWidget>
+    with TickerProviderStateMixin {
+  late final StrokeOrderAnimationController _controller;
+  bool _answered = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = StrokeOrderAnimationController(
+      StrokeOrder(widget.strokeOrderJson),
+      this,
+      onQuizCompleteCallback: (summary) {
+        if (_answered || !mounted) return;
+        _answered = true;
+        // Up to 2 slips is still a pass — tracing exactly right first try
+        // on every stroke is a high bar on a phone touchscreen.
+        widget.onAnswer(summary.nTotalMistakes <= 2);
+      },
+    );
+    _controller.startQuiz();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(widget.settings.t('writeHanziPrompt'), style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: 4),
+        Text(widget.question.translation ?? '', textAlign: TextAlign.center),
+        const SizedBox(height: 16),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: StrokeOrderAnimator(_controller, size: const Size(260, 260)),
+        ),
+        const SizedBox(height: 12),
+        TextButton.icon(
+          onPressed: _controller.animateHint,
+          icon: const Icon(Icons.lightbulb_outline),
+          label: Text(widget.settings.t('hint')),
         ),
       ],
     );

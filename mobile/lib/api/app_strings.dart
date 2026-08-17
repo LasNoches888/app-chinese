@@ -32,6 +32,8 @@ class Strings {
       AppLocale.en: 'e.g. ni3 hao3 or ni hao',
     },
     'check': {AppLocale.ru: 'Проверить', AppLocale.en: 'Check'},
+    'writeHanziPrompt': {AppLocale.ru: 'Напишите иероглиф', AppLocale.en: 'Write the character'},
+    'hint': {AppLocale.ru: 'Подсказка', AppLocale.en: 'Hint'},
     'correctAnswerIs': {AppLocale.ru: 'Правильный ответ', AppLocale.en: 'Correct answer'},
     'due': {AppLocale.ru: 'осталось', AppLocale.en: 'due'},
 

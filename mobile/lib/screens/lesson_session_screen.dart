@@ -39,6 +39,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   final Set<String> _mistakeIds = {};
   bool _outOfHearts = false;
   bool _loading = true;
+  bool _answering = false;
 
   @override
   void initState() {
@@ -51,7 +52,11 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     final lessonWords = await repos.words.getWordsByIds(widget.wordIds);
     final allWords = await repos.words.getAllWords();
     final stats = await repos.stats.getStats();
-    final questions = ExerciseGenerator.build(lessonWords: lessonWords, allWords: allWords);
+    final questions = ExerciseGenerator.build(
+      lessonWords: lessonWords,
+      allWords: allWords,
+      availableStrokeChars: repos.strokeData.availableCharacters,
+    );
     if (!mounted) return;
     setState(() {
       _questions = questions;
@@ -62,39 +67,50 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   }
 
   Future<void> _handleAnswer(bool correct) async {
-    final repos = context.read<AppRepositories>();
-    final question = _questions![_index];
-    final earned = XpService.xpForAnswer(correct);
+    // Exercise widgets already guard against double-submission themselves,
+    // but this is the shared choke point for every type — guard here too
+    // so a rapid double-tap can never double-write SRS/XP/hearts.
+    if (_answering) return;
+    _answering = true;
+    try {
+      final repos = context.read<AppRepositories>();
+      final question = _questions![_index];
+      final earned = XpService.xpForAnswer(correct);
 
-    await repos.srs.recordReview(
-      wordId: question.wordId,
-      wasCorrect: correct,
-      exerciseType: question.type.name,
-    );
-    await repos.stats.addXpAndRecordActivity(earned);
+      await repos.srs.recordReview(
+        wordId: question.wordId,
+        wasCorrect: correct,
+        exerciseType: question.type.name,
+      );
+      await repos.stats.addXpAndRecordActivity(earned);
 
-    var hearts = _hearts;
-    if (!correct) {
-      final statsAfterHeart = await repos.stats.loseHeart();
-      hearts = statsAfterHeart.heartsCurrent;
-      _mistakeIds.add(question.wordId);
-    }
+      var hearts = _hearts;
+      if (!correct) {
+        final statsAfterHeart = await repos.stats.loseHeart();
+        hearts = statsAfterHeart.heartsCurrent;
+        _mistakeIds.add(question.wordId);
+      }
 
-    if (!mounted) return;
-    setState(() {
-      _xpEarned += earned;
-      _hearts = hearts;
-    });
+      if (!mounted) return;
+      setState(() {
+        _xpEarned += earned;
+        _hearts = hearts;
+      });
 
-    if (hearts <= 0) {
-      setState(() => _outOfHearts = true);
-      return;
-    }
-
-    if (_index + 1 >= _questions!.length) {
-      await _finish();
-    } else {
-      setState(() => _index += 1);
+      final isLastQuestion = _index + 1 >= _questions!.length;
+      if (isLastQuestion) {
+        // Every question got answered — always show results, even if the
+        // last answer also happened to drain the last heart. Running out
+        // of hearts only needs to block *further* questions, and there
+        // are none left.
+        await _finish();
+      } else if (hearts <= 0) {
+        setState(() => _outOfHearts = true);
+      } else {
+        setState(() => _index += 1);
+      }
+    } finally {
+      _answering = false;
     }
   }
 
@@ -220,6 +236,15 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
           key: ValueKey(question.id),
           question: question,
           settings: settings,
+          onAnswer: _handleAnswer,
+        );
+      case ExerciseType.writeHanzi:
+        final strokeJson = context.read<AppRepositories>().strokeData.strokeOrderJson(question.hanzi!);
+        return WriteHanziExerciseWidget(
+          key: ValueKey(question.id),
+          question: question,
+          settings: settings,
+          strokeOrderJson: strokeJson!,
           onAnswer: _handleAnswer,
         );
     }
