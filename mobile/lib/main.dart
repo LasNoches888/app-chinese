@@ -10,6 +10,23 @@ import 'screens/review_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Shows the actual exception on-screen instead of a blank/grey screen —
+  // makes it possible to screenshot and report exactly what broke, rather
+  // than just "the screen doesn't open".
+  ErrorWidget.builder = (details) => Material(
+        color: Colors.red.shade50,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              '${details.exception}\n\n${details.stack}',
+              style: const TextStyle(color: Colors.red, fontSize: 12),
+            ),
+          ),
+        ),
+      );
+
   final settings = AppSettings();
   await settings.load();
   final repos = await AppRepositories.initialize();
