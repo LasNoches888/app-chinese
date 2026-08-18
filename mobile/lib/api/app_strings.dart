@@ -225,6 +225,10 @@ class Strings {
       AppLocale.en:
           'Your nearby friend has settled in and is ready to chat offline 👋',
     },
+    'nearbyFriendWakingUp': {
+      AppLocale.ru: 'Друг поблизости просыпается…',
+      AppLocale.en: 'Your nearby friend is waking up…',
+    },
     'hfTokenLabelOptional': {
       AppLocale.ru: 'Токен HuggingFace (не обязательно)',
       AppLocale.en: 'HuggingFace token (optional)',

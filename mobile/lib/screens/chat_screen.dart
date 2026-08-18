@@ -12,6 +12,8 @@ import '../services/local_llm_service.dart';
 import '../services/system_prompt.dart';
 import 'settings_screen.dart';
 
+const _accentGreen = Color(0xFF23C58F);
+
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
 
@@ -32,6 +34,17 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _loadHistory();
     _initConnectivity();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // The weights are on disk but not in memory after a cold start — read
+    // them back so the tutor is usable without re-downloading.
+    if (context.read<AppSettings>().chatMode == ChatMode.local &&
+        LocalLlmService.status.value == LocalModelStatus.unknown) {
+      LocalLlmService.loadFromCacheIfPresent();
+    }
   }
 
   Future<void> _initConnectivity() async {
@@ -135,8 +148,16 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    return ValueListenableBuilder<LocalModelStatus>(
+      valueListenable: LocalLlmService.status,
+      builder: (context, modelStatus, _) =>
+          _buildScaffold(settings, modelStatus),
+    );
+  }
+
+  Widget _buildScaffold(AppSettings settings, LocalModelStatus modelStatus) {
     final isLocal = settings.chatMode == ChatMode.local;
-    final localReady = LocalLlmService.isModelReady;
+    final localReady = modelStatus == LocalModelStatus.ready;
     final canSend = _canSend(settings);
     final showBlockedBanner = isLocal ? !localReady : !_online;
 
@@ -174,17 +195,29 @@ class _ChatScreenState extends State<ChatScreen> {
         child: Column(
           children: [
             if (showBlockedBanner)
-              Container(
-                width: double.infinity,
-                color: Colors.red.withValues(alpha: 0.12),
-                padding: const EdgeInsets.all(10),
-                child: Text(
-                  isLocal
-                      ? settings.t('localModelUnavailable')
-                      : settings.t('offlineBanner'),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.red),
-                ),
+              Builder(
+                builder: (context) {
+                  // Loading cached weights is a normal, short-lived state —
+                  // showing it in alarming red as "model unavailable" would
+                  // read like something is broken.
+                  final isWakingUp =
+                      isLocal && modelStatus == LocalModelStatus.loading;
+                  final color = isWakingUp ? _accentGreen : Colors.red;
+                  return Container(
+                    width: double.infinity,
+                    color: color.withValues(alpha: 0.12),
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      isWakingUp
+                          ? settings.t('nearbyFriendWakingUp')
+                          : isLocal
+                          ? settings.t('localModelUnavailable')
+                          : settings.t('offlineBanner'),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: color),
+                    ),
+                  );
+                },
               ),
             Expanded(
               child: ListView.builder(

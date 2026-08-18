@@ -1,6 +1,25 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:llamadart/llamadart.dart';
+
+/// Where the local tutor currently stands, from the UI's point of view.
+enum LocalModelStatus {
+  /// Nothing checked yet — the app hasn't looked for cached weights.
+  unknown,
+
+  /// No weights on disk; the learner has to download them once.
+  absent,
+
+  /// Cached weights are being read into memory (no network involved).
+  loading,
+
+  /// Weights are being fetched from HuggingFace.
+  downloading,
+
+  /// Loaded and able to answer.
+  ready,
+}
 
 /// Wraps llamadart (llama.cpp) for a fully offline, on-device chat tutor —
 /// running the user's own fine-tuned Qwen 1.5B (distilled from the server's
@@ -16,47 +35,100 @@ import 'package:llamadart/llamadart.dart';
 /// server path doesn't have.
 class LocalLlmService {
   // TODO: replace with the real HF repo once the fine-tuned GGUF is
-  // uploaded (huggingface-cli upload <repo> tutor-v2-qwen1.5b-Q4_K_M.gguf).
+  // uploaded (hf upload <repo> tutor-v2-qwen1.5b-Q4_K_M.gguf).
   static const modelSource =
       'hf://REPLACE_ME/uchi-tutor-qwen1.5b/tutor-v2-qwen1.5b-Q4_K_M.gguf';
+
+  static const _modelParams = ModelParams(contextSize: 4096, gpuLayers: 0);
 
   static LlamaEngine? _engine;
   static ChatSession? _chat;
 
-  static bool get isModelReady => _chat != null;
+  /// Lets screens rebuild the moment the model finishes loading instead of
+  /// polling a getter that only changes as a side effect of other calls.
+  static final ValueNotifier<LocalModelStatus> status =
+      ValueNotifier<LocalModelStatus>(LocalModelStatus.unknown);
+
+  /// Whether the tutor can answer right now.
+  ///
+  /// This tracks the *engine* holding loaded weights, not the chat session:
+  /// the session is created lazily on the first message and thrown away
+  /// whenever history is cleared, so keying readiness off it made the model
+  /// look unavailable both immediately after downloading and after every
+  /// history reset — with the input box disabled, there was no way to
+  /// create the session that would have marked it ready.
+  static bool get isModelReady => _engine?.isReady ?? false;
+
+  static LlamaEngine get _sharedEngine =>
+      _engine ??= LlamaEngine(LlamaBackend());
+
+  /// Loads previously-downloaded weights from llamadart's on-disk cache,
+  /// without touching the network. Returns false when nothing is cached
+  /// yet, which is the signal to show the download panel.
+  ///
+  /// Needed because the loaded model only lives in memory: on a cold start
+  /// the weights are still on disk but nothing has read them back, and
+  /// without this the app would ask for the ~1GB download all over again.
+  static Future<bool> loadFromCacheIfPresent() async {
+    if (isModelReady) return true;
+    status.value = LocalModelStatus.loading;
+    try {
+      await _sharedEngine.loadModelSource(
+        ModelSource.parse(modelSource),
+        modelParams: _modelParams,
+        options: ModelLoadOptions(cachePolicy: ModelCachePolicy.cacheOnly),
+      );
+      status.value = LocalModelStatus.ready;
+      return true;
+    } catch (_) {
+      // cacheOnly throws when there's no cached copy — that's the normal
+      // "not downloaded yet" path, not an error worth surfacing.
+      status.value = LocalModelStatus.absent;
+      return false;
+    }
+  }
 
   static Future<void> downloadModel({
     required void Function(int percent) onProgress,
     String? huggingFaceToken,
   }) async {
-    final engine = _engine ??= LlamaEngine(LlamaBackend());
-    await engine.loadModelSource(
-      ModelSource.parse(modelSource),
-      modelParams: const ModelParams(contextSize: 4096, gpuLayers: 0),
-      options: ModelLoadOptions(
-        bearerToken: (huggingFaceToken?.isEmpty ?? true)
-            ? null
-            : huggingFaceToken,
-      ),
-      onProgress: (progress) {
-        final fraction = progress.fraction;
-        if (fraction != null) onProgress((fraction * 100).round());
-      },
-    );
+    status.value = LocalModelStatus.downloading;
+    try {
+      await _sharedEngine.loadModelSource(
+        ModelSource.parse(modelSource),
+        modelParams: _modelParams,
+        options: ModelLoadOptions(
+          bearerToken: (huggingFaceToken?.isEmpty ?? true)
+              ? null
+              : huggingFaceToken,
+        ),
+        onProgress: (progress) {
+          final fraction = progress.fraction;
+          if (fraction != null) onProgress((fraction * 100).round());
+        },
+      );
+      status.value = LocalModelStatus.ready;
+    } catch (_) {
+      status.value = isModelReady
+          ? LocalModelStatus.ready
+          : LocalModelStatus.absent;
+      rethrow;
+    }
   }
 
   /// Drops the current chat session (and its conversation memory) so the
   /// next message starts a fresh one with an up-to-date system prompt —
   /// call this whenever the learner's known/weak word set has moved on
-  /// enough to matter, or when chat history is cleared.
+  /// enough to matter, or when chat history is cleared. The weights stay
+  /// loaded, so the tutor remains usable.
   static void resetSession() {
     _chat = null;
   }
 
   static ChatSession _getOrCreateChat(String systemPrompt) {
     final engine = _engine;
-    if (engine == null) {
-      throw StateError('Model not loaded — call downloadModel() first.');
+    if (engine == null || !engine.isReady) {
+      throw StateError('Model not loaded — download it in Settings first.');
     }
     return _chat ??= ChatSession(engine, systemPrompt: systemPrompt);
   }
