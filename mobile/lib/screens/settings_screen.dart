@@ -45,6 +45,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadStats();
+    // Weights survive on disk but not in memory, so on a cold start we have
+    // to read them back before the tutor counts as available. Only probed
+    // when the learner actually uses the local tutor — loading ~1GB for
+    // someone who only ever talks to the server would be pure waste.
+    if (context.read<AppSettings>().chatMode == ChatMode.local &&
+        LocalLlmService.status.value == LocalModelStatus.unknown) {
+      LocalLlmService.loadFromCacheIfPresent();
+    }
   }
 
   Future<void> _loadStats() async {
@@ -297,61 +305,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
               accent: _accentBlue,
               title: settings.t('chatSource'),
               children: [
-                // IntrinsicHeight is what makes `stretch` legal here: inside a
-                // ListView the Row has unbounded height, and stretching a child
-                // to that throws "BoxConstraints forces an infinite height",
-                // which takes the whole settings list down with it.
-                IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                ValueListenableBuilder<LocalModelStatus>(
+                  valueListenable: LocalLlmService.status,
+                  builder: (context, modelStatus, _) => Column(
                     children: [
-                      Expanded(
-                        child: _ChatModeCard(
-                          emoji: '🎓',
-                          gradient: const [_accentBlue, _brandEnd],
-                          title: settings.t('chatSourceServer'),
-                          subtitle: settings.t('chatSourceServerDesc'),
-                          selected: settings.chatMode == ChatMode.server,
-                          onTap: () => context.read<AppSettings>().setChatMode(
-                            ChatMode.server,
-                          ),
+                      // IntrinsicHeight is what makes `stretch` legal here:
+                      // inside a ListView the Row has unbounded height, and
+                      // stretching a child to that throws "BoxConstraints
+                      // forces an infinite height", which takes the whole
+                      // settings list down with it.
+                      IntrinsicHeight(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                              child: _ChatModeCard(
+                                emoji: '🎓',
+                                gradient: const [_accentBlue, _brandEnd],
+                                title: settings.t('chatSourceServer'),
+                                subtitle: settings.t('chatSourceServerDesc'),
+                                selected: settings.chatMode == ChatMode.server,
+                                onTap: () => context
+                                    .read<AppSettings>()
+                                    .setChatMode(ChatMode.server),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _ChatModeCard(
+                                emoji: modelStatus == LocalModelStatus.ready
+                                    ? '👋'
+                                    : '🚪',
+                                gradient: const [
+                                  _accentGreen,
+                                  _accentGreenDark,
+                                ],
+                                title: settings.t('chatSourceLocal'),
+                                subtitle: settings.t('chatSourceLocalDesc'),
+                                selected: settings.chatMode == ChatMode.local,
+                                onTap: () {
+                                  context.read<AppSettings>().setChatMode(
+                                    ChatMode.local,
+                                  );
+                                  if (modelStatus == LocalModelStatus.unknown) {
+                                    LocalLlmService.loadFromCacheIfPresent();
+                                  }
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _ChatModeCard(
-                          emoji: LocalLlmService.isModelReady ? '👋' : '🚪',
-                          gradient: const [_accentGreen, _accentGreenDark],
-                          title: settings.t('chatSourceLocal'),
-                          subtitle: settings.t('chatSourceLocalDesc'),
-                          selected: settings.chatMode == ChatMode.local,
-                          onTap: () => context.read<AppSettings>().setChatMode(
-                            ChatMode.local,
+                      const SizedBox(height: 16),
+                      // Server and local panels are very different heights, so
+                      // the card is resized as well as cross-faded — otherwise
+                      // the swap jumps the whole list.
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 260),
+                        curve: Curves.easeOutCubic,
+                        alignment: Alignment.topCenter,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 220),
+                          switchInCurve: Curves.easeOut,
+                          transitionBuilder: (child, animation) =>
+                              FadeTransition(opacity: animation, child: child),
+                          child: KeyedSubtree(
+                            key: ValueKey<Object>(
+                              settings.chatMode == ChatMode.server
+                                  ? ChatMode.server
+                                  : modelStatus,
+                            ),
+                            child: settings.chatMode == ChatMode.server
+                                ? _buildServerSection(settings)
+                                : _buildLocalModelSection(
+                                    settings,
+                                    modelStatus,
+                                  ),
                           ),
                         ),
                       ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Server and local panels are very different heights, so the
-                // card is resized as well as cross-faded — otherwise the swap
-                // jumps the whole list.
-                AnimatedSize(
-                  duration: const Duration(milliseconds: 260),
-                  curve: Curves.easeOutCubic,
-                  alignment: Alignment.topCenter,
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 220),
-                    switchInCurve: Curves.easeOut,
-                    transitionBuilder: (child, animation) =>
-                        FadeTransition(opacity: animation, child: child),
-                    child: KeyedSubtree(
-                      key: ValueKey<ChatMode>(settings.chatMode),
-                      child: settings.chatMode == ChatMode.server
-                          ? _buildServerSection(settings)
-                          : _buildLocalModelSection(settings),
-                    ),
                   ),
                 ),
               ],
@@ -429,10 +462,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildLocalModelSection(AppSettings settings) {
+  Widget _buildLocalModelSection(
+    AppSettings settings,
+    LocalModelStatus modelStatus,
+  ) {
     final theme = Theme.of(context);
 
-    if (LocalLlmService.isModelReady) {
+    // Reading ~1GB of cached weights back into memory takes a moment on a
+    // cold start; without this the panel would sit on "not downloaded" and
+    // tempt the learner into re-downloading what they already have.
+    if (modelStatus == LocalModelStatus.loading) {
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _accentGreen.withValues(alpha: 0.4)),
+          color: _accentGreen.withValues(alpha: 0.06),
+        ),
+        padding: const EdgeInsets.all(18),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 22,
+              height: 22,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                color: _accentGreen,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(child: Text(settings.t('nearbyFriendWakingUp'))),
+          ],
+        ),
+      );
+    }
+
+    if (modelStatus == LocalModelStatus.ready) {
       return Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),

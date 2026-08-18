@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:app_chinese/api/app_settings.dart';
 import 'package:app_chinese/app_repositories.dart';
 import 'package:app_chinese/screens/settings_screen.dart';
+import 'package:app_chinese/services/local_llm_service.dart';
 
 /// Regression coverage for the Settings screen rendering at all. It shipped
 /// broken twice — opening it showed only the background with none of the
@@ -15,6 +16,14 @@ void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfiNoIsolate;
+  });
+
+  setUp(() {
+    // Stand in for "we already looked for cached weights and found none",
+    // so the screen renders the download panel instead of kicking off a
+    // real llamadart cache probe (which would leave a spinner on screen
+    // that pumpAndSettle can never settle).
+    LocalLlmService.status.value = LocalModelStatus.absent;
   });
 
   Future<void> pumpSettings(WidgetTester tester) async {
