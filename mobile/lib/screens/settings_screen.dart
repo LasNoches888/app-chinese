@@ -577,11 +577,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             end: Alignment.bottomRight,
           ),
         ),
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
         child: Row(
           children: [
-            const _EmojiAvatar(emoji: '👋', background: Color(0x38FFFFFF)),
-            const SizedBox(width: 16),
+            Image.asset('assets/mascot/panda_06.png', height: 64),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 settings.t('nearbyFriendReady'),

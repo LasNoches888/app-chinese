@@ -48,10 +48,13 @@ class ResultsScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  result.perfect ? '🏆' : '🎉',
-                  style: const TextStyle(fontSize: 64),
-                ),
+                // The celebrating panda only for a genuinely good outcome —
+                // perfect run or a fresh achievement — so it stays a reward
+                // rather than decorating every ordinary completion.
+                if (result.perfect || result.newAchievements.isNotEmpty)
+                  Image.asset('assets/mascot/panda_04.png', height: 140)
+                else
+                  const Text('🎉', style: TextStyle(fontSize: 64)),
                 const SizedBox(height: 16),
                 Text(
                   title,

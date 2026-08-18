@@ -15,8 +15,8 @@ class Strings {
     'deckLocked': {AppLocale.ru: 'Заблокировано', AppLocale.en: 'Locked'},
     'deckCompleted': {AppLocale.ru: 'Пройдено', AppLocale.en: 'Completed'},
     'noReviewDue': {
-      AppLocale.ru: 'Нечего повторять — все слова свежие! 🎉',
-      AppLocale.en: 'Nothing to review — everything is fresh! 🎉',
+      AppLocale.ru: 'Нечего повторять — все слова свежие!',
+      AppLocale.en: 'Nothing to review — everything is fresh!',
     },
 
     // Exercise UI

@@ -71,9 +71,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           SizedBox(
                             height: 400,
                             child: Center(
-                              child: Text(
-                                settings.t('noReviewDue'),
-                                textAlign: TextAlign.center,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Image.asset(
+                                    'assets/mascot/panda_02.png',
+                                    height: 140,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    settings.t('noReviewDue'),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
