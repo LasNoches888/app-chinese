@@ -54,8 +54,9 @@ class _ReviewScreenState extends State<ReviewScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
@@ -70,8 +71,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
                           SizedBox(
                             height: 400,
                             child: Center(
-                                child: Text(settings.t('noReviewDue'),
-                                    textAlign: TextAlign.center)),
+                              child: Text(
+                                settings.t('noReviewDue'),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ),
                         ],
                       )
@@ -83,16 +87,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
                               padding: const EdgeInsets.all(24),
                               child: Column(
                                 children: [
-                                  Icon(Icons.refresh,
-                                      size: 48,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
+                                  Icon(
+                                    Icons.refresh,
+                                    size: 48,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary,
+                                  ),
                                   const SizedBox(height: 12),
                                   Text(
                                     '${_dueWordIds!.length} ${settings.t('due')}',
-                                    style:
-                                        Theme.of(context).textTheme.titleLarge,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge,
                                   ),
                                   const SizedBox(height: 16),
                                   FilledButton(

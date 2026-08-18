@@ -33,10 +33,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   void initState() {
     super.initState();
-    _controller =
-        TextEditingController(text: context.read<AppSettings>().baseUrl);
-    _hfTokenController =
-        TextEditingController(text: context.read<AppSettings>().hfToken);
+    _controller = TextEditingController(
+      text: context.read<AppSettings>().baseUrl,
+    );
+    _hfTokenController = TextEditingController(
+      text: context.read<AppSettings>().hfToken,
+    );
   }
 
   @override
@@ -75,7 +77,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _pickTime(AppSettings settings) async {
     final picked = await showTimePicker(
-        context: context, initialTime: settings.reminderTime);
+      context: context,
+      initialTime: settings.reminderTime,
+    );
     if (picked == null) return;
     await settings.setReminder(enabled: settings.reminderEnabled, time: picked);
     if (settings.reminderEnabled) {
@@ -99,8 +103,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await context.read<AppRepositories>().chat.clearHistory();
     LocalLlmService.resetSession();
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(settings.t('done'))));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
   Future<void> _confirmResetProgress(AppSettings settings) async {
@@ -112,8 +117,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text(settings.t('resetProgressConfirmBody')),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: Text(settings.t('cancel'))),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(settings.t('cancel')),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(ctx, true),
@@ -126,14 +132,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     await repos.stats.resetAllProgress();
     await _loadStats();
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(settings.t('done'))));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
   Future<void> _downloadLocalModel(AppSettings settings) async {
     final token = _hfTokenController.text.trim();
-    if (token.isEmpty) return;
-    await settings.setHfToken(token);
+    if (token.isNotEmpty) await settings.setHfToken(token);
     setState(() {
       _downloading = true;
       _downloadProgress = 0;
@@ -141,7 +147,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     });
     try {
       await LocalLlmService.downloadModel(
-        huggingFaceToken: token,
+        huggingFaceToken: token.isEmpty ? null : token,
         onProgress: (p) {
           if (mounted) setState(() => _downloadProgress = p);
         },
@@ -186,9 +192,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     showSelectedIcon: false,
                     segments: const [
                       ButtonSegment(
-                          value: AppLocale.ru, label: Text('Русский')),
+                        value: AppLocale.ru,
+                        label: Text('Русский'),
+                      ),
                       ButtonSegment(
-                          value: AppLocale.en, label: Text('English')),
+                        value: AppLocale.en,
+                        label: Text('English'),
+                      ),
                     ],
                     selected: {settings.locale},
                     onSelectionChanged: (s) =>
@@ -261,7 +271,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: Text(settings.t('reminderTime')),
                           trailing: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: _brandStart.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
@@ -269,8 +281,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             child: Text(
                               settings.reminderTime.format(context),
                               style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: _brandStart),
+                                fontWeight: FontWeight.w700,
+                                color: _brandStart,
+                              ),
                             ),
                           ),
                           onTap: () => _pickTime(settings),
@@ -299,9 +312,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: settings.t('chatSourceServer'),
                           subtitle: settings.t('chatSourceServerDesc'),
                           selected: settings.chatMode == ChatMode.server,
-                          onTap: () => context
-                              .read<AppSettings>()
-                              .setChatMode(ChatMode.server),
+                          onTap: () => context.read<AppSettings>().setChatMode(
+                            ChatMode.server,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -312,9 +325,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           title: settings.t('chatSourceLocal'),
                           subtitle: settings.t('chatSourceLocalDesc'),
                           selected: settings.chatMode == ChatMode.local,
-                          onTap: () => context
-                              .read<AppSettings>()
-                              .setChatMode(ChatMode.local),
+                          onTap: () => context.read<AppSettings>().setChatMode(
+                            ChatMode.local,
+                          ),
                         ),
                       ),
                     ],
@@ -331,10 +344,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 220),
                     switchInCurve: Curves.easeOut,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    transitionBuilder: (child, animation) =>
+                        FadeTransition(opacity: animation, child: child),
                     child: KeyedSubtree(
                       key: ValueKey<ChatMode>(settings.chatMode),
                       child: settings.chatMode == ChatMode.server
@@ -401,12 +412,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: _accentBlue,
               padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             onPressed: () {
               context.read<AppSettings>().setBaseUrl(_controller.text.trim());
-              ScaffoldMessenger.of(context)
-                  .showSnackBar(SnackBar(content: Text(settings.t('saved'))));
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(settings.t('saved'))));
             },
             icon: const Icon(Icons.save_outlined),
             label: Text(settings.t('save')),
@@ -469,8 +482,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Text(
                   settings.t('nearbyFriendNeedsSetup'),
-                  style: theme.textTheme.titleSmall
-                      ?.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -482,7 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 18),
           Text(
-            settings.t('hfTokenLabel'),
+            settings.t('hfTokenLabelOptional'),
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
@@ -498,8 +512,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             enabled: !_downloading,
             obscureText: true,
             decoration: InputDecoration(
-              border:
-                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               prefixIcon: const Icon(Icons.vpn_key_outlined),
               hintText: 'hf_...',
               isDense: true,
@@ -520,23 +535,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 8),
             Text('${settings.t('trainingInProgress')}… $_downloadProgress%'),
           ] else
-            ValueListenableBuilder<TextEditingValue>(
-              valueListenable: _hfTokenController,
-              builder: (context, value, _) => SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: _accentGreen,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: _accentGreen,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  onPressed: value.text.trim().isEmpty
-                      ? null
-                      : () => _downloadLocalModel(settings),
-                  icon: const Icon(Icons.download_outlined),
-                  label: Text(settings.t('startTraining')),
                 ),
+                onPressed: () => _downloadLocalModel(settings),
+                icon: const Icon(Icons.download_outlined),
+                label: Text(settings.t('startTraining')),
               ),
             ),
           if (_downloadError != null) ...[
@@ -603,8 +614,10 @@ class _BrandHeader extends StatelessWidget {
                         SizedBox(height: 2),
                         Text(
                           '学中文 · 每天一点',
-                          style:
-                              TextStyle(color: Color(0xE6FFFFFF), fontSize: 13),
+                          style: TextStyle(
+                            color: Color(0xE6FFFFFF),
+                            fontSize: 13,
+                          ),
                         ),
                       ],
                     ),
@@ -682,8 +695,9 @@ class _SectionCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       title,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ],
@@ -715,10 +729,9 @@ class _SettingTile extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 10),
           SizedBox(width: double.infinity, child: child),
@@ -783,8 +796,9 @@ class _ChatModeCard extends StatelessWidget {
               : null,
           color: selected
               ? null
-              : theme.colorScheme.surfaceContainerHighest
-                  .withValues(alpha: 0.45),
+              : theme.colorScheme.surfaceContainerHighest.withValues(
+                  alpha: 0.45,
+                ),
           border: Border.all(
             color: selected
                 ? Colors.transparent

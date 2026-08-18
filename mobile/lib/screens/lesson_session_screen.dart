@@ -131,8 +131,9 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     }
 
     final latestStats = await repos.stats.getStats();
-    final newAchievements =
-        await repos.achievements.evaluateAndUnlock(latestStats);
+    final newAchievements = await repos.achievements.evaluateAndUnlock(
+      latestStats,
+    );
     final mistakeWords = await repos.words.getWordsByIds(_mistakeIds.toList());
 
     if (!mounted) return;
@@ -199,7 +200,8 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
               Expanded(
                 child: Center(
                   child: SingleChildScrollView(
-                      child: _buildExercise(question, settings)),
+                    child: _buildExercise(question, settings),
+                  ),
                 ),
               ),
             ],
@@ -273,11 +275,15 @@ class _OutOfHeartsView extends StatelessWidget {
               children: [
                 const Icon(Icons.favorite_border, size: 72, color: Colors.red),
                 const SizedBox(height: 16),
-                Text(settings.t('outOfHearts'),
-                    style: Theme.of(context).textTheme.headlineSmall),
+                Text(
+                  settings.t('outOfHearts'),
+                  style: Theme.of(context).textTheme.headlineSmall,
+                ),
                 const SizedBox(height: 8),
-                Text(settings.t('outOfHeartsBody'),
-                    textAlign: TextAlign.center),
+                Text(
+                  settings.t('outOfHeartsBody'),
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 24),
                 FilledButton(
                   onPressed: () => Navigator.of(context).pop(),

@@ -19,32 +19,32 @@ class StatsRepository {
 
   Future<UserStats> _applyHeartRegenIfNeeded(UserStats stats) async {
     final (newHearts, newUpdatedAt) = HeartsService.applyRegen(
-        hearts: stats.heartsCurrent, updatedAt: stats.heartsUpdatedAt);
+      hearts: stats.heartsCurrent,
+      updatedAt: stats.heartsUpdatedAt,
+    );
     if (newHearts == stats.heartsCurrent) return stats;
-    final updated =
-        stats.copyWith(heartsCurrent: newHearts, heartsUpdatedAt: newUpdatedAt);
+    final updated = stats.copyWith(
+      heartsCurrent: newHearts,
+      heartsUpdatedAt: newUpdatedAt,
+    );
     await _save(updated);
     return updated;
   }
 
   Future<void> _save(UserStats stats) async {
-    await db.update(
-      'user_stats',
-      {
-        'total_xp': stats.totalXp,
-        'current_streak': stats.currentStreak,
-        'longest_streak': stats.longestStreak,
-        'last_activity_date': stats.lastActivityDate?.toIso8601String(),
-        'hearts_current': stats.heartsCurrent,
-        'hearts_max': stats.heartsMax,
-        'hearts_updated_at': stats.heartsUpdatedAt.millisecondsSinceEpoch,
-        'daily_goal_xp': stats.dailyGoalXp,
-        'xp_today': stats.xpToday,
-        'xp_today_date': stats.xpTodayDate,
-        'perfect_lessons_count': stats.perfectLessonsCount,
-      },
-      where: 'id = 1',
-    );
+    await db.update('user_stats', {
+      'total_xp': stats.totalXp,
+      'current_streak': stats.currentStreak,
+      'longest_streak': stats.longestStreak,
+      'last_activity_date': stats.lastActivityDate?.toIso8601String(),
+      'hearts_current': stats.heartsCurrent,
+      'hearts_max': stats.heartsMax,
+      'hearts_updated_at': stats.heartsUpdatedAt.millisecondsSinceEpoch,
+      'daily_goal_xp': stats.dailyGoalXp,
+      'xp_today': stats.xpToday,
+      'xp_today_date': stats.xpTodayDate,
+      'perfect_lessons_count': stats.perfectLessonsCount,
+    }, where: 'id = 1');
   }
 
   String _dateKey(DateTime d) =>
@@ -92,7 +92,9 @@ class StatsRepository {
   Future<UserStats> restoreHeartsFully() async {
     var stats = await getStats();
     stats = stats.copyWith(
-        heartsCurrent: stats.heartsMax, heartsUpdatedAt: DateTime.now());
+      heartsCurrent: stats.heartsMax,
+      heartsUpdatedAt: DateTime.now(),
+    );
     await _save(stats);
     return stats;
   }
@@ -120,7 +122,9 @@ class StatsRepository {
     await db.delete('completed_lessons');
     await db.delete('achievements_unlocked');
     await db.delete('user_stats');
-    await db.insert('user_stats',
-        {'id': 1, 'hearts_updated_at': DateTime.now().millisecondsSinceEpoch});
+    await db.insert('user_stats', {
+      'id': 1,
+      'hearts_updated_at': DateTime.now().millisecondsSinceEpoch,
+    });
   }
 }

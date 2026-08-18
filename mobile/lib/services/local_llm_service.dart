@@ -1,57 +1,48 @@
 import 'dart:convert';
 
-import 'package:flutter_gemma/flutter_gemma.dart';
-import 'package:flutter_gemma_mediapipe/flutter_gemma_mediapipe.dart';
+import 'package:llamadart/llamadart.dart';
 
-/// Wraps flutter_gemma for a fully offline, on-device chat tutor. The model
-/// file itself must be downloaded once (needs a HuggingFace token — Gemma
-/// weights are gated); after that, every message is generated locally, no
-/// network involved.
+/// Wraps llamadart (llama.cpp) for a fully offline, on-device chat tutor —
+/// running the user's own fine-tuned Qwen 1.5B (distilled from the server's
+/// Qwen model, quantized to GGUF), not a stock model. The weights are
+/// hosted on the user's own HuggingFace repo and downloaded once; after
+/// that, every message is generated locally, no network involved.
 ///
 /// Unlike the stateless server /chat endpoint (which rebuilds its system
 /// prompt fresh every call so it never has to store anything), a local
 /// session lives entirely on-device — so it keeps one real multi-turn
-/// [InferenceChat] alive across the whole app session instead of
-/// recreating it per message, giving the local tutor actual conversation
-/// memory the server path doesn't have.
+/// [ChatSession] alive across the whole app session instead of recreating
+/// it per message, giving the local tutor actual conversation memory the
+/// server path doesn't have.
 class LocalLlmService {
-  // int4-quantized, MediaPipe .task format — the mobile-native path (as
-  // opposed to .litertlm, which this package suite treats as the
-  // desktop-oriented format). ~500MB on disk.
-  static const modelUrl =
-      'https://huggingface.co/litert-community/Gemma3-1B-IT/resolve/main/gemma3-1b-it-int4.task';
+  // TODO: replace with the real HF repo once the fine-tuned GGUF is
+  // uploaded (huggingface-cli upload <repo> tutor-v2-qwen1.5b-Q4_K_M.gguf).
+  static const modelSource =
+      'hf://REPLACE_ME/uchi-tutor-qwen1.5b/tutor-v2-qwen1.5b-Q4_K_M.gguf';
 
-  static bool _engineRegistered = false;
-  static InferenceChat? _chat;
+  static LlamaEngine? _engine;
+  static ChatSession? _chat;
 
-  static void ensureEngineRegistered() {
-    if (_engineRegistered) return;
-    _engineRegistered = true;
-    FlutterGemma.initialize(inferenceEngines: [const MediaPipeEngine()]);
-  }
-
-  /// Safe to call before the model has ever been downloaded — makes sure the
-  /// inference engine is registered first (flutter_gemma throws if you query
-  /// model state before that) and treats any unexpected native error as
-  /// "not ready" instead of letting it crash whatever screen checks this.
-  static bool get isModelReady {
-    try {
-      ensureEngineRegistered();
-      return FlutterGemma.hasActiveModel();
-    } catch (_) {
-      return false;
-    }
-  }
+  static bool get isModelReady => _chat != null;
 
   static Future<void> downloadModel({
-    required String huggingFaceToken,
     required void Function(int percent) onProgress,
+    String? huggingFaceToken,
   }) async {
-    ensureEngineRegistered();
-    await FlutterGemma.installModel(modelType: ModelType.gemmaIt)
-        .fromNetwork(modelUrl, token: huggingFaceToken)
-        .withProgress(onProgress)
-        .install();
+    final engine = _engine ??= LlamaEngine(LlamaBackend());
+    await engine.loadModelSource(
+      ModelSource.parse(modelSource),
+      modelParams: const ModelParams(contextSize: 4096, gpuLayers: 0),
+      options: ModelLoadOptions(
+        bearerToken: (huggingFaceToken?.isEmpty ?? true)
+            ? null
+            : huggingFaceToken,
+      ),
+      onProgress: (progress) {
+        final fraction = progress.fraction;
+        if (fraction != null) onProgress((fraction * 100).round());
+      },
+    );
   }
 
   /// Drops the current chat session (and its conversation memory) so the
@@ -59,29 +50,31 @@ class LocalLlmService {
   /// call this whenever the learner's known/weak word set has moved on
   /// enough to matter, or when chat history is cleared.
   static void resetSession() {
-    _chat?.close();
     _chat = null;
   }
 
-  static Future<InferenceChat> _getOrCreateChat(String systemPrompt) async {
-    final existing = _chat;
-    if (existing != null) return existing;
-    final model = await FlutterGemma.getActiveModel(maxTokens: 2048);
-    final chat = await model.createChat(systemInstruction: systemPrompt);
-    _chat = chat;
-    return chat;
+  static ChatSession _getOrCreateChat(String systemPrompt) {
+    final engine = _engine;
+    if (engine == null) {
+      throw StateError('Model not loaded — call downloadModel() first.');
+    }
+    return _chat ??= ChatSession(engine, systemPrompt: systemPrompt);
   }
 
   /// Sends one user turn and returns the model's raw text reply (still
-  /// needs [extractReplyJson] applied — a 1B model is much less reliable
+  /// needs [extractReplyJson] applied — a 1.5B model is much less reliable
   /// at strict JSON formatting than the 7B server model).
-  static Future<String> sendMessage(String userText,
-      {required String systemPrompt}) async {
-    final chat = await _getOrCreateChat(systemPrompt);
-    await chat.addQueryChunk(Message.text(text: userText, isUser: true));
-    final response = await chat.generateChatResponse();
-    if (response is TextResponse) return response.token;
-    return '';
+  static Future<String> sendMessage(
+    String userText, {
+    required String systemPrompt,
+  }) async {
+    final session = _getOrCreateChat(systemPrompt);
+    final buffer = StringBuffer();
+    await for (final chunk in session.create([LlamaTextContent(userText)])) {
+      final text = chunk.choices.first.delta.content;
+      if (text != null) buffer.write(text);
+    }
+    return buffer.toString();
   }
 
   /// Same lenient extraction the backend does for the server model
@@ -97,8 +90,10 @@ class LocalLlmService {
       // fall through to the more lenient extraction below
     }
 
-    final fenced = RegExp(r'```(?:json)?\s*(\{.*?\})\s*```', dotAll: true)
-        .firstMatch(text);
+    final fenced = RegExp(
+      r'```(?:json)?\s*(\{.*?\})\s*```',
+      dotAll: true,
+    ).firstMatch(text);
     if (fenced != null) {
       try {
         final decoded = jsonDecode(fenced.group(1)!);

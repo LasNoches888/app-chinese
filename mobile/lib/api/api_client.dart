@@ -40,6 +40,7 @@ class ChatApiClient {
       throw Exception('API error ${res.statusCode}: ${res.body}');
     }
     return ChatMessage.fromReplyJson(
-        jsonDecode(res.body) as Map<String, dynamic>);
+      jsonDecode(res.body) as Map<String, dynamic>,
+    );
   }
 }

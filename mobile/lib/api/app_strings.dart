@@ -22,25 +22,25 @@ class Strings {
     // Exercise UI
     'tapToReveal': {
       AppLocale.ru: 'Нажмите, чтобы перевернуть',
-      AppLocale.en: 'Tap to reveal'
+      AppLocale.en: 'Tap to reveal',
     },
     'iKnowIt': {AppLocale.ru: 'Знаю', AppLocale.en: 'I know it'},
     'iDontKnow': {AppLocale.ru: 'Не знаю', AppLocale.en: "I don't know"},
     'chooseTranslationPrompt': {
       AppLocale.ru: 'Выберите перевод',
-      AppLocale.en: 'Choose the translation'
+      AppLocale.en: 'Choose the translation',
     },
     'chooseHanziPrompt': {
       AppLocale.ru: 'Выберите иероглиф',
-      AppLocale.en: 'Choose the character'
+      AppLocale.en: 'Choose the character',
     },
     'buildSentencePrompt': {
       AppLocale.ru: 'Соберите предложение',
-      AppLocale.en: 'Build the sentence'
+      AppLocale.en: 'Build the sentence',
     },
     'typePinyinPrompt': {
       AppLocale.ru: 'Введите пиньинь',
-      AppLocale.en: 'Type the pinyin'
+      AppLocale.en: 'Type the pinyin',
     },
     'typePinyinHint': {
       AppLocale.ru: 'например: ni3 hao3 или ni hao',
@@ -49,12 +49,12 @@ class Strings {
     'check': {AppLocale.ru: 'Проверить', AppLocale.en: 'Check'},
     'writeHanziPrompt': {
       AppLocale.ru: 'Напишите иероглиф',
-      AppLocale.en: 'Write the character'
+      AppLocale.en: 'Write the character',
     },
     'hint': {AppLocale.ru: 'Подсказка', AppLocale.en: 'Hint'},
     'correctAnswerIs': {
       AppLocale.ru: 'Правильный ответ',
-      AppLocale.en: 'Correct answer'
+      AppLocale.en: 'Correct answer',
     },
     'due': {AppLocale.ru: 'осталось', AppLocale.en: 'due'},
 
@@ -71,32 +71,32 @@ class Strings {
     },
     'nextHeartIn': {
       AppLocale.ru: 'Следующее сердце через',
-      AppLocale.en: 'Next heart in'
+      AppLocale.en: 'Next heart in',
     },
     'backToLessons': {
       AppLocale.ru: 'К урокам',
-      AppLocale.en: 'Back to lessons'
+      AppLocale.en: 'Back to lessons',
     },
     'lessonComplete': {
       AppLocale.ru: 'Урок завершён!',
-      AppLocale.en: 'Lesson complete!'
+      AppLocale.en: 'Lesson complete!',
     },
     'perfectLesson': {
       AppLocale.ru: 'Идеальный урок!',
-      AppLocale.en: 'Perfect lesson!'
+      AppLocale.en: 'Perfect lesson!',
     },
     'reviewComplete': {
       AppLocale.ru: 'Повторение завершено!',
-      AppLocale.en: 'Review complete!'
+      AppLocale.en: 'Review complete!',
     },
     'mistakesToReview': {
       AppLocale.ru: 'Слова с ошибками',
-      AppLocale.en: 'Words to review'
+      AppLocale.en: 'Words to review',
     },
     'continueLabel': {AppLocale.ru: 'Продолжить', AppLocale.en: 'Continue'},
     'newAchievement': {
       AppLocale.ru: 'Новое достижение!',
-      AppLocale.en: 'New achievement!'
+      AppLocale.en: 'New achievement!',
     },
 
     // Progress screen
@@ -105,67 +105,67 @@ class Strings {
     'dailyGoal': {AppLocale.ru: 'Дневная цель', AppLocale.en: 'Daily goal'},
     'streakDays': {
       AppLocale.ru: 'Текущая серия',
-      AppLocale.en: 'Current streak'
+      AppLocale.en: 'Current streak',
     },
     'longestStreak': {
       AppLocale.ru: 'Рекордная серия',
-      AppLocale.en: 'Longest streak'
+      AppLocale.en: 'Longest streak',
     },
     'wordsLearned': {
       AppLocale.ru: 'Слов выучено',
-      AppLocale.en: 'Words learned'
+      AppLocale.en: 'Words learned',
     },
     'accuracyAllTime': {
       AppLocale.ru: 'Точность (всё время)',
-      AppLocale.en: 'Accuracy (all time)'
+      AppLocale.en: 'Accuracy (all time)',
     },
     'accuracy7d': {
       AppLocale.ru: 'Точность (7 дней)',
-      AppLocale.en: 'Accuracy (7 days)'
+      AppLocale.en: 'Accuracy (7 days)',
     },
     'achievements': {AppLocale.ru: 'Достижения', AppLocale.en: 'Achievements'},
     'streakCalendar': {
       AppLocale.ru: 'Календарь серии (30 дней)',
-      AppLocale.en: 'Streak calendar (30 days)'
+      AppLocale.en: 'Streak calendar (30 days)',
     },
 
     // Achievements
     'achStreak3': {AppLocale.ru: '3 дня подряд', AppLocale.en: '3-day streak'},
     'achStreak3Desc': {
       AppLocale.ru: 'Занимайтесь 3 дня подряд',
-      AppLocale.en: 'Study 3 days in a row'
+      AppLocale.en: 'Study 3 days in a row',
     },
     'achStreak7': {AppLocale.ru: '7 дней подряд', AppLocale.en: '7-day streak'},
     'achStreak7Desc': {
       AppLocale.ru: 'Занимайтесь 7 дней подряд',
-      AppLocale.en: 'Study 7 days in a row'
+      AppLocale.en: 'Study 7 days in a row',
     },
     'achStreak30': {
       AppLocale.ru: '30 дней подряд',
-      AppLocale.en: '30-day streak'
+      AppLocale.en: '30-day streak',
     },
     'achStreak30Desc': {
       AppLocale.ru: 'Занимайтесь 30 дней подряд',
-      AppLocale.en: 'Study 30 days in a row'
+      AppLocale.en: 'Study 30 days in a row',
     },
     'achWords50': {AppLocale.ru: '50 слов', AppLocale.en: '50 words'},
     'achWords50Desc': {
       AppLocale.ru: 'Выучите 50 слов',
-      AppLocale.en: 'Learn 50 words'
+      AppLocale.en: 'Learn 50 words',
     },
     'achWords100': {AppLocale.ru: '100 слов', AppLocale.en: '100 words'},
     'achWords100Desc': {
       AppLocale.ru: 'Выучите 100 слов',
-      AppLocale.en: 'Learn 100 words'
+      AppLocale.en: 'Learn 100 words',
     },
     'achWords300': {AppLocale.ru: '300 слов', AppLocale.en: '300 words'},
     'achWords300Desc': {
       AppLocale.ru: 'Выучите 300 слов',
-      AppLocale.en: 'Learn 300 words'
+      AppLocale.en: 'Learn 300 words',
     },
     'achPerfectLesson': {
       AppLocale.ru: 'Идеальный урок',
-      AppLocale.en: 'Perfect lesson'
+      AppLocale.en: 'Perfect lesson',
     },
     'achPerfectLessonDesc': {
       AppLocale.ru: 'Пройдите урок без единой ошибки',
@@ -180,11 +180,11 @@ class Strings {
     // Chat
     'chatHint': {
       AppLocale.ru: 'Пишите по-китайски...',
-      AppLocale.en: 'Type in Chinese...'
+      AppLocale.en: 'Type in Chinese...',
     },
     'chatTitle': {
       AppLocale.ru: 'Чат с Xiao Qiao',
-      AppLocale.en: 'Chat with Xiao Qiao'
+      AppLocale.en: 'Chat with Xiao Qiao',
     },
     'tryRecast': {AppLocale.ru: 'Лучше сказать', AppLocale.en: 'Try'},
     'offlineBanner': {
@@ -195,7 +195,7 @@ class Strings {
     'offline': {AppLocale.ru: 'Не в сети', AppLocale.en: 'Offline'},
     'chatSource': {
       AppLocale.ru: 'Источник ответов чата',
-      AppLocale.en: 'Chat source'
+      AppLocale.en: 'Chat source',
     },
     'chatSourceServer': {AppLocale.ru: 'Профессор', AppLocale.en: 'Professor'},
     'chatSourceServerDesc': {
@@ -204,7 +204,7 @@ class Strings {
     },
     'chatSourceLocal': {
       AppLocale.ru: 'Друг поблизости',
-      AppLocale.en: 'Nearby friend'
+      AppLocale.en: 'Nearby friend',
     },
     'chatSourceLocalDesc': {
       AppLocale.ru: 'Живёт у вас в телефоне — работает офлайн',
@@ -216,32 +216,32 @@ class Strings {
     },
     'nearbyFriendIntro': {
       AppLocale.ru:
-          'Друг поблизости (Gemma 3, 1B) живёт прямо на телефоне и болтает совсем без интернета — но сначала его нужно один раз позвать в гости: скачать модель (~500 МБ). Дальше сеть не понадобится вообще.',
+          'Друг поблизости — это ваш собственный младший наставник (Qwen 1.5B), обученный на диалогах старшего профессора. Живёт прямо на телефоне и болтает совсем без интернета — но сначала его нужно один раз позвать в гости: скачать модель (~1 ГБ). Дальше сеть не понадобится вообще.',
       AppLocale.en:
-          'Your nearby friend (Gemma 3, 1B) lives right on your phone and chats with zero internet — but first you need to invite them over once: download the model (~500 MB). After that, no network needed at all.',
+          'Your nearby friend is your own smaller tutor (Qwen 1.5B), distilled from the big professor\'s conversations. It lives right on your phone and chats with zero internet — but first you need to invite them over once: download the model (~1 GB). After that, no network needed at all.',
     },
     'nearbyFriendReady': {
       AppLocale.ru: 'Друг поблизости зашёл в гости и готов болтать офлайн 👋',
       AppLocale.en:
           'Your nearby friend has settled in and is ready to chat offline 👋',
     },
-    'hfTokenLabel': {
-      AppLocale.ru: 'Токен HuggingFace',
-      AppLocale.en: 'HuggingFace token'
+    'hfTokenLabelOptional': {
+      AppLocale.ru: 'Токен HuggingFace (не обязательно)',
+      AppLocale.en: 'HuggingFace token (optional)',
     },
     'hfTokenHint': {
       AppLocale.ru:
-          'Модель Gemma закрыта лицензией Google — примите условия на странице модели на huggingface.co и создайте read-токен (Settings → Access Tokens).',
+          'Нужен, только если репозиторий с моделью сделан приватным — тогда создайте read-токен на huggingface.co (Settings → Access Tokens). Для публичного репозитория поле можно оставить пустым.',
       AppLocale.en:
-          'Gemma is gated by Google\'s license — accept the terms on the model page on huggingface.co and create a read token (Settings → Access Tokens).',
+          'Only needed if the model repo is private — create a read token on huggingface.co (Settings → Access Tokens). Leave this blank for a public repo.',
     },
     'startTraining': {
       AppLocale.ru: 'Позвать в гости',
-      AppLocale.en: 'Invite them over'
+      AppLocale.en: 'Invite them over',
     },
     'trainingInProgress': {
       AppLocale.ru: 'Идёт в гости',
-      AppLocale.en: 'On their way'
+      AppLocale.en: 'On their way',
     },
     'localModelUnavailable': {
       AppLocale.ru: 'Друг поблизости ещё не зашёл в гости — откройте Настройки',
@@ -253,29 +253,29 @@ class Strings {
     'appearance': {AppLocale.ru: 'Внешний вид', AppLocale.en: 'Appearance'},
     'goalsSection': {
       AppLocale.ru: 'Цели и напоминания',
-      AppLocale.en: 'Goals & reminders'
+      AppLocale.en: 'Goals & reminders',
     },
     'dataSection': {AppLocale.ru: 'Данные', AppLocale.en: 'Data'},
     'backendUrl': {
       AppLocale.ru: 'Адрес сервера чата',
-      AppLocale.en: 'Chat backend URL'
+      AppLocale.en: 'Chat backend URL',
     },
     'save': {AppLocale.ru: 'Сохранить', AppLocale.en: 'Save'},
     'saved': {AppLocale.ru: 'Сохранено', AppLocale.en: 'Saved'},
     'language': {
       AppLocale.ru: 'Язык интерфейса',
-      AppLocale.en: 'Interface language'
+      AppLocale.en: 'Interface language',
     },
     'theme': {AppLocale.ru: 'Тема оформления', AppLocale.en: 'Theme'},
     'themeLight': {AppLocale.ru: 'Светлая', AppLocale.en: 'Light'},
     'themeDark': {AppLocale.ru: 'Тёмная', AppLocale.en: 'Dark'},
     'dailyReminder': {
       AppLocale.ru: 'Ежедневное напоминание',
-      AppLocale.en: 'Daily reminder'
+      AppLocale.en: 'Daily reminder',
     },
     'reminderTime': {
       AppLocale.ru: 'Время напоминания',
-      AppLocale.en: 'Reminder time'
+      AppLocale.en: 'Reminder time',
     },
     'reminderBody': {
       AppLocale.ru: 'Не теряй серию — позанимайся сегодня 🔥',
@@ -283,11 +283,11 @@ class Strings {
     },
     'clearChatHistory': {
       AppLocale.ru: 'Очистить историю чата',
-      AppLocale.en: 'Clear chat history'
+      AppLocale.en: 'Clear chat history',
     },
     'resetProgress': {
       AppLocale.ru: 'Сбросить прогресс',
-      AppLocale.en: 'Reset progress'
+      AppLocale.en: 'Reset progress',
     },
     'resetProgressConfirmTitle': {
       AppLocale.ru: 'Сбросить весь прогресс?',

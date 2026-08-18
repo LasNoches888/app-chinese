@@ -4,7 +4,7 @@ enum ExerciseType {
   chooseHanzi,
   buildSentence,
   typePinyin,
-  writeHanzi
+  writeHanzi,
 }
 
 class ExerciseQuestion {

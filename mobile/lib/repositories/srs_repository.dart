@@ -16,11 +16,11 @@ class WordSrsState {
   });
 
   factory WordSrsState.fresh() => WordSrsState(
-        repetitions: 0,
-        easeFactor: SrsService.defaultEaseFactor,
-        intervalDays: 0,
-        nextReviewAt: DateTime.now(),
-      );
+    repetitions: 0,
+    easeFactor: SrsService.defaultEaseFactor,
+    intervalDays: 0,
+    nextReviewAt: DateTime.now(),
+  );
 }
 
 /// Owns review_history (the SRS event log), completed_lessons, and the
@@ -50,8 +50,9 @@ class SrsRepository {
       repetitions: r['repetitions'] as int,
       easeFactor: r['ease_factor'] as double,
       intervalDays: r['interval_days'] as int,
-      nextReviewAt:
-          DateTime.fromMillisecondsSinceEpoch(r['next_review_at'] as int),
+      nextReviewAt: DateTime.fromMillisecondsSinceEpoch(
+        r['next_review_at'] as int,
+      ),
     );
   }
 
@@ -96,9 +97,11 @@ class SrsRepository {
     final effectiveNow = now ?? DateTime.now();
     final latest = await _latestRowPerWord();
     return latest.entries
-        .where((e) =>
-            (e.value['next_review_at'] as int) <=
-            effectiveNow.millisecondsSinceEpoch)
+        .where(
+          (e) =>
+              (e.value['next_review_at'] as int) <=
+              effectiveNow.millisecondsSinceEpoch,
+        )
         .map((e) => e.key)
         .toList();
   }
@@ -133,7 +136,8 @@ class SrsRepository {
 
   Future<int> countTotalReviews() async {
     return Sqflite.firstIntValue(
-            await db.rawQuery('SELECT COUNT(*) FROM review_history')) ??
+          await db.rawQuery('SELECT COUNT(*) FROM review_history'),
+        ) ??
         0;
   }
 
@@ -144,8 +148,11 @@ class SrsRepository {
       where = 'reviewed_at >= ?';
       args = [DateTime.now().subtract(within).millisecondsSinceEpoch];
     }
-    final rows =
-        await db.query('review_history', where: where, whereArgs: args);
+    final rows = await db.query(
+      'review_history',
+      where: where,
+      whereArgs: args,
+    );
     if (rows.isEmpty) return 0;
     final correct = rows.where((r) => (r['was_correct'] as int) == 1).length;
     return correct / rows.length * 100;
@@ -174,13 +181,9 @@ class SrsRepository {
   }
 
   Future<void> markLessonCompleted(String deckId) async {
-    await db.insert(
-      'completed_lessons',
-      {
-        'deck_id': deckId,
-        'completed_at': DateTime.now().millisecondsSinceEpoch
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('completed_lessons', {
+      'deck_id': deckId,
+      'completed_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 }
