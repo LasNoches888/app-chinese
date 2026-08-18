@@ -8,6 +8,7 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
+import '../services/speech_service.dart';
 
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
@@ -237,6 +238,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
             _SectionCard(
+              icon: Icons.volume_up_outlined,
+              accent: _accentGreen,
+              title: settings.t('speechSection'),
+              children: [_buildSpeechSection(settings)],
+            ),
+            _SectionCard(
               icon: Icons.local_fire_department_outlined,
               accent: _brandStart,
               title: settings.t('goalsSection'),
@@ -416,6 +423,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildSpeechSection(AppSettings settings) {
+    return FutureBuilder<bool>(
+      future: SpeechService.ensureInitialized(),
+      builder: (context, snapshot) {
+        // Telling the learner *why* there's no audio, and how to fix it, is
+        // the whole point — a silently missing control would just look like
+        // the feature doesn't exist.
+        if (snapshot.hasData && snapshot.data != true) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.info_outline, size: 20, color: Colors.orange),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    settings.t('speechUnavailable'),
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            _SettingTile(
+              label: settings.t('speechSpeed'),
+              child: SegmentedButton<SpeechSpeed>(
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: SpeechSpeed.slow,
+                    label: Text(settings.t('speechSlow')),
+                  ),
+                  ButtonSegment(
+                    value: SpeechSpeed.normal,
+                    label: Text(settings.t('speechNormal')),
+                  ),
+                ],
+                selected: {settings.speechSpeed},
+                onSelectionChanged: (s) =>
+                    context.read<AppSettings>().setSpeechSpeed(s.first),
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => SpeechService.speak(
+                  '你好，我们一起学中文吧',
+                  rate: settings.speechSpeed.rate,
+                ),
+                icon: const Icon(Icons.play_circle_outline),
+                label: Text(settings.t('speechSample')),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

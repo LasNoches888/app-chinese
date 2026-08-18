@@ -254,6 +254,27 @@ class Strings {
     },
 
     // Settings
+    'listen': {AppLocale.ru: 'Прослушать', AppLocale.en: 'Listen'},
+    'speechSection': {
+      AppLocale.ru: 'Произношение',
+      AppLocale.en: 'Pronunciation',
+    },
+    'speechSpeed': {
+      AppLocale.ru: 'Скорость речи',
+      AppLocale.en: 'Speech speed',
+    },
+    'speechSlow': {AppLocale.ru: 'Медленно', AppLocale.en: 'Slow'},
+    'speechNormal': {AppLocale.ru: 'Обычно', AppLocale.en: 'Normal'},
+    'speechSample': {
+      AppLocale.ru: 'Проверить голос',
+      AppLocale.en: 'Test the voice',
+    },
+    'speechUnavailable': {
+      AppLocale.ru:
+          'На устройстве нет китайского голоса. Установите его в настройках Android: Система → Язык и ввод → Синтез речи → скачать 中文.',
+      AppLocale.en:
+          'No Mandarin voice on this device. Install one in Android settings: System → Languages & input → Text-to-speech → download 中文.',
+    },
     'appearance': {AppLocale.ru: 'Внешний вид', AppLocale.en: 'Appearance'},
     'goalsSection': {
       AppLocale.ru: 'Цели и напоминания',

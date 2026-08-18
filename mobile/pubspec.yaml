@@ -19,6 +19,7 @@ dependencies:
   connectivity_plus: ^6.1.3
   stroke_order_animator: ^3.3.1
   llamadart: ^0.8.19
+  flutter_tts: ^4.2.5
 
 dev_dependencies:
   flutter_test:

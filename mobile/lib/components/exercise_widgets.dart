@@ -5,6 +5,7 @@ import 'package:stroke_order_animator/stroke_order_animator.dart';
 
 import '../api/app_settings.dart';
 import '../models/exercise_question.dart';
+import 'speak_button.dart';
 
 /// Flashcard flip: tap to reveal, then self-report "know it" / "don't
 /// know it" (spec 4.2.1) — no automatic right/wrong grading, the learner
@@ -50,9 +51,16 @@ class _FlipExerciseWidgetState extends State<FlipExerciseWidget> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    q.hanzi ?? '',
-                    style: Theme.of(context).textTheme.displaySmall,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        q.hanzi ?? '',
+                        style: Theme.of(context).textTheme.displaySmall,
+                      ),
+                      const SizedBox(width: 8),
+                      SpeakButton(text: q.hanzi ?? '', size: 26),
+                    ],
                   ),
                   if (_revealed) ...[
                     const SizedBox(height: 12),
@@ -160,11 +168,30 @@ class _ChoiceExerciseWidgetState extends State<ChoiceExerciseWidget> {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
-        Text(
-          promptText,
-          style: Theme.of(context).textTheme.displaySmall,
-          textAlign: TextAlign.center,
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                promptText,
+                style: Theme.of(context).textTheme.displaySmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            // Only when the prompt itself is Chinese. In the reverse
+            // exercise the prompt is the learner's own language, and the
+            // Chinese answer is exactly what they're being asked to recall —
+            // playing it here would give the answer away.
+            if (q.type == ExerciseType.chooseTranslation) ...[
+              const SizedBox(width: 8),
+              SpeakButton(text: promptText, size: 26),
+            ],
+          ],
         ),
+        // Once they've answered, the correct hanzi is on screen anyway, so
+        // hearing it is the useful part rather than a giveaway.
+        if (q.type == ExerciseType.chooseHanzi && _selected != null)
+          SpeakButton(text: q.correctOption ?? '', size: 26),
         const SizedBox(height: 24),
         for (final option in q.options ?? const [])
           Padding(
@@ -427,6 +454,10 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
           widget.question.hanzi ?? '',
           style: Theme.of(context).textTheme.displaySmall,
         ),
+        // Deliberately only offered after checking: the pinyin *is* the
+        // answer here, so hearing it read aloud beforehand would turn the
+        // exercise into a dictation.
+        if (_checked) SpeakButton(text: widget.question.hanzi ?? '', size: 26),
         const SizedBox(height: 20),
         TextField(
           controller: _controller,

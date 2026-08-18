@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/speak_button.dart';
 import '../models/chat_message.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
@@ -303,6 +304,13 @@ class _MessageBubble extends StatelessWidget {
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
                   ),
+                ),
+              // Only the tutor's turns: the learner's own message is
+              // whatever they typed, which may not be Chinese at all.
+              if (!message.fromUser)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: SpeakButton(text: message.text, size: 20),
                 ),
             ],
           ),

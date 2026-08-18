@@ -6,6 +6,16 @@ import 'app_strings.dart';
 
 enum ChatMode { server, local }
 
+/// How fast the tutor's Mandarin is read aloud. Beginners routinely can't
+/// separate tones at native pace, so slow is the default.
+enum SpeechSpeed {
+  slow,
+  normal;
+
+  /// Platform speech rate, where the engine treats 0.5 as normal speed.
+  double get rate => this == SpeechSpeed.slow ? 0.35 : 0.5;
+}
+
 /// App-wide UI preferences that don't belong in the learning-data database:
 /// chat backend URL, interface language/theme, flashcard front-side
 /// preference, and daily reminder settings. None of this is required for
@@ -20,6 +30,7 @@ class AppSettings extends ChangeNotifier {
   static const _reminderMinuteKey = 'reminder_minute';
   static const _chatModeKey = 'chat_mode';
   static const _hfTokenKey = 'hf_token';
+  static const _speechSpeedKey = 'speech_speed';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
 
   String _baseUrl = defaultBaseUrl;
@@ -46,6 +57,9 @@ class AppSettings extends ChangeNotifier {
   String _hfToken = '';
   String get hfToken => _hfToken;
 
+  SpeechSpeed _speechSpeed = SpeechSpeed.slow;
+  SpeechSpeed get speechSpeed => _speechSpeed;
+
   ChatApiClient get chatClient => ChatApiClient(baseUrl: _baseUrl);
 
   String t(String key) => Strings.of(_locale, key);
@@ -69,7 +83,20 @@ class AppSettings extends ChangeNotifier {
         ? ChatMode.local
         : ChatMode.server;
     _hfToken = prefs.getString(_hfTokenKey) ?? '';
+    _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
+        ? SpeechSpeed.normal
+        : SpeechSpeed.slow;
     notifyListeners();
+  }
+
+  Future<void> setSpeechSpeed(SpeechSpeed speed) async {
+    _speechSpeed = speed;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _speechSpeedKey,
+      speed == SpeechSpeed.normal ? 'normal' : 'slow',
+    );
   }
 
   Future<void> setBaseUrl(String url) async {
