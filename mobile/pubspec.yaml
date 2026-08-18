@@ -35,6 +35,7 @@ flutter:
     - assets/seed/decks.json
     - assets/seed/stroke_data.json
     - assets/images/
+    - assets/mascot/
 
 flutter_launcher_icons:
   android: true

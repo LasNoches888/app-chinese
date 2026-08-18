@@ -166,44 +166,60 @@ class _ProgressScreenState extends State<ProgressScreen> {
         ? (stats.xpToday / stats.dailyGoalXp).clamp(0.0, 1.0)
         : 0.0;
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // Peeking out from behind the content rather than sized to fit —
+          // it's a decorative flourish, not information, so it shouldn't
+          // compete with the level/XP numbers for attention.
+          Positioned(
+            right: -12,
+            bottom: -10,
+            child: Opacity(
+              opacity: 0.85,
+              child: Image.asset('assets/mascot/panda_05.png', height: 96),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(radius: 22, child: Text('$level')),
-                const SizedBox(width: 12),
-                Text(
-                  '${settings.t('level')} $level',
-                  style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  children: [
+                    CircleAvatar(radius: 22, child: Text('$level')),
+                    const SizedBox(width: 12),
+                    Text(
+                      '${settings.t('level')} $level',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${stats.totalXp} XP',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
                 ),
-                const Spacer(),
-                Text(
-                  '${stats.totalXp} XP',
-                  style: Theme.of(context).textTheme.titleMedium,
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(settings.t('dailyGoal')),
+                    Text('${stats.xpToday}/${stats.dailyGoalXp} XP'),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: goalProgress,
+                    minHeight: 10,
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(settings.t('dailyGoal')),
-                Text('${stats.xpToday}/${stats.dailyGoalXp} XP'),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: goalProgress,
-                minHeight: 10,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
