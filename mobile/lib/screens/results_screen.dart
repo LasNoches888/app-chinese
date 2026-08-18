@@ -37,8 +37,8 @@ class ResultsScreen extends StatelessWidget {
     final title = result.isReview
         ? settings.t('reviewComplete')
         : (result.perfect
-            ? settings.t('perfectLesson')
-            : settings.t('lessonComplete'));
+              ? settings.t('perfectLesson')
+              : settings.t('lessonComplete'));
 
     return Scaffold(
       body: SafeArea(
@@ -48,16 +48,22 @@ class ResultsScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(result.perfect ? '🏆' : '🎉',
-                    style: const TextStyle(fontSize: 64)),
+                Text(
+                  result.perfect ? '🏆' : '🎉',
+                  style: const TextStyle(fontSize: 64),
+                ),
                 const SizedBox(height: 16),
-                Text(title,
-                    style: Theme.of(context).textTheme.headlineSmall,
-                    textAlign: TextAlign.center),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.headlineSmall,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 16),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(16),
@@ -65,14 +71,17 @@ class ResultsScreen extends StatelessWidget {
                   child: Text(
                     '+${result.xpEarned} XP',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.amber.shade800,
-                        fontWeight: FontWeight.bold),
+                      color: Colors.amber.shade800,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (result.newAchievements.isNotEmpty) ...[
                   const SizedBox(height: 20),
-                  Text(settings.t('newAchievement'),
-                      style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    settings.t('newAchievement'),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const SizedBox(height: 8),
                   Wrap(
                     spacing: 8,
@@ -91,8 +100,10 @@ class ResultsScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(settings.t('mistakesToReview'),
-                        style: Theme.of(context).textTheme.titleMedium),
+                    child: Text(
+                      settings.t('mistakesToReview'),
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Card(
@@ -107,11 +118,16 @@ class ResultsScreen extends StatelessWidget {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(w.hanzi,
-                                      style: const TextStyle(fontSize: 18)),
-                                  Text(w.pinyin,
-                                      style: TextStyle(
-                                          color: Colors.grey.shade600)),
+                                  Text(
+                                    w.hanzi,
+                                    style: const TextStyle(fontSize: 18),
+                                  ),
+                                  Text(
+                                    w.pinyin,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
                                   Text(w.translationRu),
                                 ],
                               ),
@@ -125,8 +141,11 @@ class ResultsScreen extends StatelessWidget {
                 FilledButton(
                   onPressed: onContinue,
                   style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 40, vertical: 14)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 40,
+                      vertical: 14,
+                    ),
+                  ),
                   child: Text(settings.t('continueLabel')),
                 ),
               ],

@@ -33,53 +33,71 @@ class ExerciseGenerator {
 
       switch (type) {
         case ExerciseType.flip:
-          questions.add(ExerciseQuestion(
-            id: id,
-            wordId: word.id,
-            type: ExerciseType.flip,
-            hanzi: word.hanzi,
-            pinyin: word.pinyin,
-            translation: word.translationRu,
-          ));
+          questions.add(
+            ExerciseQuestion(
+              id: id,
+              wordId: word.id,
+              type: ExerciseType.flip,
+              hanzi: word.hanzi,
+              pinyin: word.pinyin,
+              translation: word.translationRu,
+            ),
+          );
           break;
         case ExerciseType.chooseTranslation:
           {
-            final distractors =
-                _distractors(word, allWords, (w) => w.translationRu, rng, 3);
+            final distractors = _distractors(
+              word,
+              allWords,
+              (w) => w.translationRu,
+              rng,
+              3,
+            );
             final options = [word.translationRu, ...distractors]..shuffle(rng);
-            questions.add(ExerciseQuestion(
-              id: id,
-              wordId: word.id,
-              type: ExerciseType.chooseTranslation,
-              hanzi: word.hanzi,
-              options: options,
-              correctOption: word.translationRu,
-            ));
+            questions.add(
+              ExerciseQuestion(
+                id: id,
+                wordId: word.id,
+                type: ExerciseType.chooseTranslation,
+                hanzi: word.hanzi,
+                options: options,
+                correctOption: word.translationRu,
+              ),
+            );
           }
           break;
         case ExerciseType.chooseHanzi:
           {
-            final distractors =
-                _distractors(word, allWords, (w) => w.hanzi, rng, 3);
+            final distractors = _distractors(
+              word,
+              allWords,
+              (w) => w.hanzi,
+              rng,
+              3,
+            );
             final options = [word.hanzi, ...distractors]..shuffle(rng);
-            questions.add(ExerciseQuestion(
-              id: id,
-              wordId: word.id,
-              type: ExerciseType.chooseHanzi,
-              translation: word.translationRu,
-              options: options,
-              correctOption: word.hanzi,
-            ));
+            questions.add(
+              ExerciseQuestion(
+                id: id,
+                wordId: word.id,
+                type: ExerciseType.chooseHanzi,
+                translation: word.translationRu,
+                options: options,
+                correctOption: word.hanzi,
+              ),
+            );
           }
           break;
         case ExerciseType.typePinyin:
-          questions.add(ExerciseQuestion(
-            id: id,
-            wordId: word.id,
-            type: ExerciseType.typePinyin,
-            hanzi: word.hanzi,
-            correctPinyin: word.pinyin,
-          ));
+          questions.add(
+            ExerciseQuestion(
+              id: id,
+              wordId: word.id,
+              type: ExerciseType.typePinyin,
+              hanzi: word.hanzi,
+              correctPinyin: word.pinyin,
+            ),
+          );
           break;
         case ExerciseType.buildSentence:
         case ExerciseType.writeHanzi:
@@ -87,21 +105,25 @@ class ExerciseGenerator {
       }
     }
 
-    final withSentences = lessonWords
-        .where(
-            (w) => w.exampleSentence != null && w.exampleSentence!.isNotEmpty)
-        .toList()
-      ..shuffle(rng);
+    final withSentences =
+        lessonWords
+            .where(
+              (w) => w.exampleSentence != null && w.exampleSentence!.isNotEmpty,
+            )
+            .toList()
+          ..shuffle(rng);
     for (final word in withSentences.take(sentenceQuestionCap)) {
       final tiles = word.exampleSentence!.split('').toList()..shuffle(rng);
-      questions.add(ExerciseQuestion(
-        id: 'sentence-${word.id}',
-        wordId: word.id,
-        type: ExerciseType.buildSentence,
-        tiles: tiles,
-        correctOrder: word.exampleSentence!.split(''),
-        sentenceTranslation: word.exampleTranslation,
-      ));
+      questions.add(
+        ExerciseQuestion(
+          id: 'sentence-${word.id}',
+          wordId: word.id,
+          type: ExerciseType.buildSentence,
+          tiles: tiles,
+          correctOrder: word.exampleSentence!.split(''),
+          sentenceTranslation: word.exampleTranslation,
+        ),
+      );
     }
 
     if (availableStrokeChars.isNotEmpty) {
@@ -119,13 +141,15 @@ class ExerciseGenerator {
       final chars = charToWord.keys.toList()..shuffle(rng);
       for (final ch in chars.take(writeHanziCap)) {
         final word = charToWord[ch]!;
-        questions.add(ExerciseQuestion(
-          id: 'write-$ch',
-          wordId: word.id,
-          type: ExerciseType.writeHanzi,
-          hanzi: ch,
-          translation: word.translationRu,
-        ));
+        questions.add(
+          ExerciseQuestion(
+            id: 'write-$ch',
+            wordId: word.id,
+            type: ExerciseType.writeHanzi,
+            hanzi: ch,
+            translation: word.translationRu,
+          ),
+        );
       }
     }
 

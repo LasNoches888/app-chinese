@@ -27,9 +27,10 @@ class StreakService {
 
     if (lastActivityDate == null) {
       return StreakUpdate(
-          currentStreak: 1,
-          longestStreak: math.max(1, longestStreak),
-          lastActivityDate: today);
+        currentStreak: 1,
+        longestStreak: math.max(1, longestStreak),
+        lastActivityDate: today,
+      );
     }
 
     final last = _dateOnly(lastActivityDate);
@@ -38,9 +39,10 @@ class StreakService {
     if (dayDiff <= 0) {
       // Same day (or a clock going backwards) — no change to the streak.
       return StreakUpdate(
-          currentStreak: currentStreak,
-          longestStreak: longestStreak,
-          lastActivityDate: last);
+        currentStreak: currentStreak,
+        longestStreak: longestStreak,
+        lastActivityDate: last,
+      );
     }
     if (dayDiff == 1) {
       final newStreak = currentStreak + 1;
@@ -52,9 +54,10 @@ class StreakService {
     }
     // A day (or more) was skipped: streak resets.
     return StreakUpdate(
-        currentStreak: 1,
-        longestStreak: math.max(longestStreak, 1),
-        lastActivityDate: today);
+      currentStreak: 1,
+      longestStreak: math.max(longestStreak, 1),
+      lastActivityDate: today,
+    );
   }
 
   /// True once more than one full day has passed since the last logged

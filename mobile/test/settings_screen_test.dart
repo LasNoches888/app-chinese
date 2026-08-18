@@ -47,8 +47,9 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
   }
 
-  testWidgets('renders every settings section, not just the background',
-      (tester) async {
+  testWidgets('renders every settings section, not just the background', (
+    tester,
+  ) async {
     await pumpSettings(tester);
 
     expect(find.text('Uchi'), findsOneWidget);
@@ -73,8 +74,9 @@ void main() {
     expect(find.text('Сбросить прогресс'), findsOneWidget);
   });
 
-  testWidgets('switching to the local model swaps in its setup panel',
-      (tester) async {
+  testWidgets('switching to the local model swaps in its setup panel', (
+    tester,
+  ) async {
     await pumpSettings(tester);
 
     // Server mode is the default, so its URL field shows first.
@@ -84,6 +86,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Адрес сервера чата'), findsNothing);
-    expect(find.text('Токен HuggingFace'), findsOneWidget);
+    expect(find.text('Токен HuggingFace (не обязательно)'), findsOneWidget);
   });
 }

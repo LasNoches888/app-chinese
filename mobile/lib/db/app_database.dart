@@ -72,7 +72,8 @@ class AppDatabase {
       )
     ''');
     await db.execute(
-        'CREATE INDEX idx_review_word ON review_history(word_id, reviewed_at)');
+      'CREATE INDEX idx_review_word ON review_history(word_id, reviewed_at)',
+    );
     await db.execute('''
       CREATE TABLE user_stats (
         id INTEGER PRIMARY KEY CHECK (id = 1),

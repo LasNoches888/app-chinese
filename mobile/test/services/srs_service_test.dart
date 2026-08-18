@@ -66,24 +66,25 @@ void main() {
     });
 
     test(
-        'a good-but-not-perfect answer (quality 3) still grows the ease factor slightly',
-        () {
-      final result = SrsService.review(
-        prevRepetitions: 2,
-        prevEaseFactor: 2.5,
-        prevIntervalDays: 6,
-        quality: 5,
-        now: now,
-      );
-      final resultLower = SrsService.review(
-        prevRepetitions: 2,
-        prevEaseFactor: 2.5,
-        prevIntervalDays: 6,
-        quality: 3,
-        now: now,
-      );
-      expect(resultLower.easeFactor, lessThan(result.easeFactor));
-    });
+      'a good-but-not-perfect answer (quality 3) still grows the ease factor slightly',
+      () {
+        final result = SrsService.review(
+          prevRepetitions: 2,
+          prevEaseFactor: 2.5,
+          prevIntervalDays: 6,
+          quality: 5,
+          now: now,
+        );
+        final resultLower = SrsService.review(
+          prevRepetitions: 2,
+          prevEaseFactor: 2.5,
+          prevIntervalDays: 6,
+          quality: 3,
+          now: now,
+        );
+        expect(resultLower.easeFactor, lessThan(result.easeFactor));
+      },
+    );
   });
 
   group('SrsService.isLearned', () {

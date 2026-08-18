@@ -50,15 +50,21 @@ class _FlipExerciseWidgetState extends State<FlipExerciseWidget> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(q.hanzi ?? '',
-                      style: Theme.of(context).textTheme.displaySmall),
+                  Text(
+                    q.hanzi ?? '',
+                    style: Theme.of(context).textTheme.displaySmall,
+                  ),
                   if (_revealed) ...[
                     const SizedBox(height: 12),
-                    Text(q.pinyin ?? '',
-                        style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      q.pinyin ?? '',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
-                    Text(q.translation ?? '',
-                        style: Theme.of(context).textTheme.bodyLarge),
+                    Text(
+                      q.translation ?? '',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
                   ] else
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -154,9 +160,11 @@ class _ChoiceExerciseWidgetState extends State<ChoiceExerciseWidget> {
           style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 8),
-        Text(promptText,
-            style: Theme.of(context).textTheme.displaySmall,
-            textAlign: TextAlign.center),
+        Text(
+          promptText,
+          style: Theme.of(context).textTheme.displaySmall,
+          textAlign: TextAlign.center,
+        ),
         const SizedBox(height: 24),
         for (final option in q.options ?? const [])
           Padding(
@@ -251,12 +259,16 @@ class _BuildSentenceExerciseWidgetState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(widget.settings.t('buildSentencePrompt'),
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          widget.settings.t('buildSentencePrompt'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 4),
         if (widget.question.sentenceTranslation != null)
-          Text(widget.question.sentenceTranslation!,
-              textAlign: TextAlign.center),
+          Text(
+            widget.question.sentenceTranslation!,
+            textAlign: TextAlign.center,
+          ),
         const SizedBox(height: 16),
         Container(
           constraints: const BoxConstraints(minHeight: 64),
@@ -276,8 +288,10 @@ class _BuildSentenceExerciseWidgetState
             children: [
               for (var i = 0; i < _selected.length; i++)
                 ActionChip(
-                  label:
-                      Text(_selected[i], style: const TextStyle(fontSize: 20)),
+                  label: Text(
+                    _selected[i],
+                    style: const TextStyle(fontSize: 20),
+                  ),
                   onPressed: () => _unpick(i),
                 ),
             ],
@@ -292,8 +306,10 @@ class _BuildSentenceExerciseWidgetState
             for (var i = 0; i < _remaining.length; i++)
               OutlinedButton(
                 onPressed: () => _pick(i),
-                child:
-                    Text(_remaining[i], style: const TextStyle(fontSize: 20)),
+                child: Text(
+                  _remaining[i],
+                  style: const TextStyle(fontSize: 20),
+                ),
               ),
           ],
         ),
@@ -378,7 +394,8 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
   }
 
   void _check() {
-    final correct = _normalize(_controller.text) ==
+    final correct =
+        _normalize(_controller.text) ==
         _normalize(widget.question.correctPinyin ?? '');
     setState(() {
       _checked = true;
@@ -401,11 +418,15 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(widget.settings.t('typePinyinPrompt'),
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          widget.settings.t('typePinyinPrompt'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 12),
-        Text(widget.question.hanzi ?? '',
-            style: Theme.of(context).textTheme.displaySmall),
+        Text(
+          widget.question.hanzi ?? '',
+          style: Theme.of(context).textTheme.displaySmall,
+        ),
         const SizedBox(height: 20),
         TextField(
           controller: _controller,
@@ -485,15 +506,19 @@ class _WriteHanziExerciseWidgetState extends State<WriteHanziExerciseWidget>
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(widget.settings.t('writeHanziPrompt'),
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          widget.settings.t('writeHanziPrompt'),
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: 4),
         Text(widget.question.translation ?? '', textAlign: TextAlign.center),
         const SizedBox(height: 16),
         Container(
           decoration: BoxDecoration(
             border: Border.all(
-                color: Theme.of(context).colorScheme.outlineVariant, width: 2),
+              color: Theme.of(context).colorScheme.outlineVariant,
+              width: 2,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: StrokeOrderAnimator(_controller, size: const Size(260, 260)),

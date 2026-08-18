@@ -14,20 +14,20 @@ class Deck {
   });
 
   factory Deck.fromMap(Map<String, Object?> map) => Deck(
-        id: map['id'] as String,
-        title: map['title'] as String,
-        topic: map['topic'] as String,
-        hskLevel: map['hsk_level'] as int,
-        wordCount: map['word_count'] as int,
-      );
+    id: map['id'] as String,
+    title: map['title'] as String,
+    topic: map['topic'] as String,
+    hskLevel: map['hsk_level'] as int,
+    wordCount: map['word_count'] as int,
+  );
 
   Map<String, Object?> toMap() => {
-        'id': id,
-        'title': title,
-        'topic': topic,
-        'hsk_level': hskLevel,
-        'word_count': wordCount,
-      };
+    'id': id,
+    'title': title,
+    'topic': topic,
+    'hsk_level': hskLevel,
+    'word_count': wordCount,
+  };
 }
 
 class DeckProgress {
@@ -35,6 +35,9 @@ class DeckProgress {
   final bool completed;
   final bool unlocked;
 
-  const DeckProgress(
-      {required this.deck, required this.completed, required this.unlocked});
+  const DeckProgress({
+    required this.deck,
+    required this.completed,
+    required this.unlocked,
+  });
 }

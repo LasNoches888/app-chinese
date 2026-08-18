@@ -16,8 +16,10 @@ class WordRepository {
   WordRepository(this.db);
 
   Future<void> seedIfNeeded() async {
-    final count = Sqflite.firstIntValue(
-            await db.rawQuery('SELECT COUNT(*) FROM decks')) ??
+    final count =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM decks'),
+        ) ??
         0;
     if (count > 0) return;
 
@@ -68,8 +70,11 @@ class WordRepository {
   }
 
   Future<List<Word>> getWordsForDeck(String deckId) async {
-    final rows =
-        await db.query('words', where: 'deck_id = ?', whereArgs: [deckId]);
+    final rows = await db.query(
+      'words',
+      where: 'deck_id = ?',
+      whereArgs: [deckId],
+    );
     return rows.map(Word.fromMap).toList();
   }
 
@@ -82,8 +87,11 @@ class WordRepository {
   Future<List<Word>> getWordsByIds(List<String> ids) async {
     if (ids.isEmpty) return [];
     final placeholders = List.filled(ids.length, '?').join(',');
-    final rows =
-        await db.query('words', where: 'id IN ($placeholders)', whereArgs: ids);
+    final rows = await db.query(
+      'words',
+      where: 'id IN ($placeholders)',
+      whereArgs: ids,
+    );
     return rows.map(Word.fromMap).toList();
   }
 
@@ -94,14 +102,17 @@ class WordRepository {
 
   Future<int> countAllWords() async {
     return Sqflite.firstIntValue(
-            await db.rawQuery('SELECT COUNT(*) FROM words')) ??
+          await db.rawQuery('SELECT COUNT(*) FROM words'),
+        ) ??
         0;
   }
 
   /// Random distractor words from anywhere in the word bank (excluding
   /// [excludeWordId]), used to build multiple-choice options.
-  Future<List<Word>> randomDistractors(String excludeWordId,
-      {required int count}) async {
+  Future<List<Word>> randomDistractors(
+    String excludeWordId, {
+    required int count,
+  }) async {
     final all = await getAllWords();
     all.removeWhere((w) => w.id == excludeWordId);
     all.shuffle(Random());

@@ -107,12 +107,24 @@ class _ScenePainter extends CustomPainter {
       Paint()..color = _coral.withValues(alpha: 0.09),
     );
 
-    _cloud(canvas, Offset(w * 0.22, h * 0.13), w * 0.10,
-        _violet.withValues(alpha: 0.13));
-    _cloud(canvas, Offset(w * 0.52, h * 0.26), w * 0.07,
-        _violet.withValues(alpha: 0.10));
-    _cloud(canvas, Offset(w * 0.86, h * 0.34), w * 0.08,
-        _coral.withValues(alpha: 0.10));
+    _cloud(
+      canvas,
+      Offset(w * 0.22, h * 0.13),
+      w * 0.10,
+      _violet.withValues(alpha: 0.13),
+    );
+    _cloud(
+      canvas,
+      Offset(w * 0.52, h * 0.26),
+      w * 0.07,
+      _violet.withValues(alpha: 0.10),
+    );
+    _cloud(
+      canvas,
+      Offset(w * 0.86, h * 0.34),
+      w * 0.08,
+      _coral.withValues(alpha: 0.10),
+    );
 
     // Far ridge — palest and highest, then two closer, darker ranges.
     canvas.drawPath(
@@ -168,8 +180,12 @@ class _HeaderArtPainter extends CustomPainter {
       Paint()..color = Colors.white.withValues(alpha: 0.22),
     );
 
-    _cloud(canvas, Offset(w * 0.30, h * 0.24), h * 0.13,
-        Colors.white.withValues(alpha: 0.16));
+    _cloud(
+      canvas,
+      Offset(w * 0.30, h * 0.24),
+      h * 0.13,
+      Colors.white.withValues(alpha: 0.16),
+    );
 
     canvas.drawPath(
       _ridge(w, h, const [
@@ -205,7 +221,11 @@ class _HeaderArtPainter extends CustomPainter {
           ..moveTo(at.dx - s, at.dy)
           ..quadraticBezierTo(at.dx - s * 0.5, at.dy - s * 0.55, at.dx, at.dy)
           ..quadraticBezierTo(
-              at.dx + s * 0.5, at.dy - s * 0.55, at.dx + s, at.dy),
+            at.dx + s * 0.5,
+            at.dy - s * 0.55,
+            at.dx + s,
+            at.dy,
+          ),
         bird,
       );
     }

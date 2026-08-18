@@ -17,17 +17,17 @@ Future<void> main() async {
   // makes it possible to screenshot and report exactly what broke, rather
   // than just "the screen doesn't open".
   ErrorWidget.builder = (details) => Material(
-        color: Colors.red.shade50,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              '${details.exception}\n\n${details.stack}',
-              style: const TextStyle(color: Colors.red, fontSize: 12),
-            ),
-          ),
+    color: Colors.red.shade50,
+    child: SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Text(
+          '${details.exception}\n\n${details.stack}',
+          style: const TextStyle(color: Colors.red, fontSize: 12),
         ),
-      );
+      ),
+    ),
+  );
 
   final settings = AppSettings();
   await settings.load();
@@ -68,8 +68,10 @@ class AppChinese extends StatelessWidget {
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {TargetPlatform.android: ZoomPageTransitionsBuilder()},
       ),
-      appBarTheme:
-          const AppBarTheme(centerTitle: false, scrolledUnderElevation: 0),
+      appBarTheme: const AppBarTheme(
+        centerTitle: false,
+        scrolledUnderElevation: 0,
+      ),
     );
   }
 

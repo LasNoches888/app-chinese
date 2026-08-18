@@ -80,19 +80,24 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final knownIds = await repos.srs.getKnownWordIds();
       final weakIds = await repos.srs.getWeakWordIds();
-      final knownWords = (await repos.words.getWordsByIds(knownIds))
-          .map((w) => w.hanzi)
-          .toList();
-      final weakWords = (await repos.words.getWordsByIds(weakIds))
-          .map((w) => w.hanzi)
-          .toList();
+      final knownWords = (await repos.words.getWordsByIds(
+        knownIds,
+      )).map((w) => w.hanzi).toList();
+      final weakWords = (await repos.words.getWordsByIds(
+        weakIds,
+      )).map((w) => w.hanzi).toList();
 
       final ChatMessage reply;
       if (settings.chatMode == ChatMode.local) {
         final prompt = buildTutorSystemPrompt(
-            hskLevel: 1, knownWords: knownWords, weakWords: weakWords);
-        final raw =
-            await LocalLlmService.sendMessage(text, systemPrompt: prompt);
+          hskLevel: 1,
+          knownWords: knownWords,
+          weakWords: weakWords,
+        );
+        final raw = await LocalLlmService.sendMessage(
+          text,
+          systemPrompt: prompt,
+        );
         final json = LocalLlmService.extractReplyJson(raw);
         reply = json != null
             ? ChatMessage.fromReplyJson(json)
@@ -109,8 +114,11 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() => _messages.add(saved));
     } catch (e) {
       if (!mounted) return;
-      setState(() => _messages.add(
-          ChatMessage(fromUser: false, text: '${settings.t('error')}: $e')));
+      setState(
+        () => _messages.add(
+          ChatMessage(fromUser: false, text: '${settings.t('error')}: $e'),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _sending = false);
     }
@@ -156,8 +164,9 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.settings),
             tooltip: settings.t('settings'),
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
@@ -188,8 +197,10 @@ class _ChatScreenState extends State<ChatScreen> {
             if (_sending) const LinearProgressIndicator(),
             SafeArea(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -227,8 +238,9 @@ class _MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final align =
-        message.fromUser ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final align = message.fromUser
+        ? CrossAxisAlignment.end
+        : CrossAxisAlignment.start;
     final color = message.fromUser
         ? Theme.of(context).colorScheme.primaryContainer
         : Theme.of(context).colorScheme.surfaceContainerHighest;
@@ -241,7 +253,9 @@ class _MessageBubble extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           constraints: const BoxConstraints(maxWidth: 320),
           decoration: BoxDecoration(
-              color: color, borderRadius: BorderRadius.circular(12)),
+            color: color,
+            borderRadius: BorderRadius.circular(12),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -252,9 +266,9 @@ class _MessageBubble extends StatelessWidget {
                   child: Text(
                     message.pinyin!,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontStyle: FontStyle.italic,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                   ),
                 ),
             ],
@@ -276,8 +290,11 @@ class _MessageBubble extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.lightbulb_outline,
-                    size: 16, color: Colors.amber),
+                const Icon(
+                  Icons.lightbulb_outline,
+                  size: 16,
+                  color: Colors.amber,
+                ),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(

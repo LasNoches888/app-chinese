@@ -54,8 +54,9 @@ class AppSettings extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _baseUrl = prefs.getString(_baseUrlKey) ?? defaultBaseUrl;
     _locale = prefs.getString(_localeKey) == 'en' ? AppLocale.en : AppLocale.ru;
-    _themeMode =
-        prefs.getString(_themeKey) == 'dark' ? ThemeMode.dark : ThemeMode.light;
+    _themeMode = prefs.getString(_themeKey) == 'dark'
+        ? ThemeMode.dark
+        : ThemeMode.light;
     _cardFrontSide = prefs.getString(_cardFrontKey) == 'translation'
         ? CardFrontSide.translation
         : CardFrontSide.hanzi;
@@ -107,7 +108,9 @@ class AppSettings extends ChangeNotifier {
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(
-        _chatModeKey, mode == ChatMode.local ? 'local' : 'server');
+      _chatModeKey,
+      mode == ChatMode.local ? 'local' : 'server',
+    );
   }
 
   Future<void> setHfToken(String token) async {
@@ -117,8 +120,10 @@ class AppSettings extends ChangeNotifier {
     await prefs.setString(_hfTokenKey, token);
   }
 
-  Future<void> setReminder(
-      {required bool enabled, required TimeOfDay time}) async {
+  Future<void> setReminder({
+    required bool enabled,
+    required TimeOfDay time,
+  }) async {
     _reminderEnabled = enabled;
     _reminderTime = time;
     notifyListeners();

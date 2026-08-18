@@ -26,21 +26,22 @@ class UserStats {
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
-        totalXp: map['total_xp'] as int,
-        currentStreak: map['current_streak'] as int,
-        longestStreak: map['longest_streak'] as int,
-        lastActivityDate: map['last_activity_date'] == null
-            ? null
-            : DateTime.parse(map['last_activity_date'] as String),
-        heartsCurrent: map['hearts_current'] as int,
-        heartsMax: map['hearts_max'] as int,
-        heartsUpdatedAt: DateTime.fromMillisecondsSinceEpoch(
-            map['hearts_updated_at'] as int),
-        dailyGoalXp: map['daily_goal_xp'] as int,
-        xpToday: map['xp_today'] as int,
-        xpTodayDate: map['xp_today_date'] as String?,
-        perfectLessonsCount: map['perfect_lessons_count'] as int,
-      );
+    totalXp: map['total_xp'] as int,
+    currentStreak: map['current_streak'] as int,
+    longestStreak: map['longest_streak'] as int,
+    lastActivityDate: map['last_activity_date'] == null
+        ? null
+        : DateTime.parse(map['last_activity_date'] as String),
+    heartsCurrent: map['hearts_current'] as int,
+    heartsMax: map['hearts_max'] as int,
+    heartsUpdatedAt: DateTime.fromMillisecondsSinceEpoch(
+      map['hearts_updated_at'] as int,
+    ),
+    dailyGoalXp: map['daily_goal_xp'] as int,
+    xpToday: map['xp_today'] as int,
+    xpTodayDate: map['xp_today_date'] as String?,
+    perfectLessonsCount: map['perfect_lessons_count'] as int,
+  );
 
   UserStats copyWith({
     int? totalXp,

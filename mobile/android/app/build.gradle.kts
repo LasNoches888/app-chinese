@@ -26,8 +26,8 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // flutter_gemma's MediaPipe native libraries only ship for arm64 —
-        // restrict native ABIs so the build doesn't fail looking for x86/armv7 .so files.
+        // llamadart's llama.cpp native runtime ships for arm64/x64 — real
+        // phones are arm64, so restrict to that and skip x86/armv7 .so files.
         ndk {
             abiFilters += listOf("arm64-v8a")
         }
@@ -52,8 +52,8 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
-            // flutter_gemma / MediaPipe resolve a lot of native and model
-            // classes reflectively, which R8 can't see and would strip.
+            // llamadart's native bindings and Dart native-assets resolution
+            // rely on reflection R8 can't see and would strip.
             isMinifyEnabled = false
             isShrinkResources = false
         }

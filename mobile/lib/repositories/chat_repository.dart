@@ -56,8 +56,9 @@ class ChatRepository {
 
   ChatMessage _fromRow(Map<String, Object?> row) {
     final role = row['role'] as String;
-    final createdAt =
-        DateTime.fromMillisecondsSinceEpoch(row['created_at'] as int);
+    final createdAt = DateTime.fromMillisecondsSinceEpoch(
+      row['created_at'] as int,
+    );
     if (role == 'user') {
       return ChatMessage(
         id: row['id'] as int,

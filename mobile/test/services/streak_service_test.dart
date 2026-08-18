@@ -53,37 +53,45 @@ void main() {
       expect(result.longestStreak, 10); // longest record is preserved
     });
 
-    test('longest streak updates only when the current streak surpasses it',
-        () {
-      final result = StreakService.recordActivity(
-        lastActivityDate: DateTime(2026, 1, 9),
-        currentStreak: 2,
-        longestStreak: 2,
-        now: DateTime(2026, 1, 10),
-      );
-      expect(result.currentStreak, 3);
-      expect(result.longestStreak, 3);
-    });
+    test(
+      'longest streak updates only when the current streak surpasses it',
+      () {
+        final result = StreakService.recordActivity(
+          lastActivityDate: DateTime(2026, 1, 9),
+          currentStreak: 2,
+          longestStreak: 2,
+          now: DateTime(2026, 1, 10),
+        );
+        expect(result.currentStreak, 3);
+        expect(result.longestStreak, 3);
+      },
+    );
   });
 
   group('StreakService.isBroken', () {
     test('is false with no recorded activity yet', () {
       expect(
-          StreakService.isBroken(
-              lastActivityDate: null, now: DateTime(2026, 1, 10)),
-          isFalse);
+        StreakService.isBroken(
+          lastActivityDate: null,
+          now: DateTime(2026, 1, 10),
+        ),
+        isFalse,
+      );
     });
 
     test('is false the same day or the very next day', () {
       expect(
         StreakService.isBroken(
-            lastActivityDate: DateTime(2026, 1, 10),
-            now: DateTime(2026, 1, 10)),
+          lastActivityDate: DateTime(2026, 1, 10),
+          now: DateTime(2026, 1, 10),
+        ),
         isFalse,
       );
       expect(
         StreakService.isBroken(
-            lastActivityDate: DateTime(2026, 1, 9), now: DateTime(2026, 1, 10)),
+          lastActivityDate: DateTime(2026, 1, 9),
+          now: DateTime(2026, 1, 10),
+        ),
         isFalse,
       );
     });
@@ -91,7 +99,9 @@ void main() {
     test('is true once a full day has been skipped', () {
       expect(
         StreakService.isBroken(
-            lastActivityDate: DateTime(2026, 1, 8), now: DateTime(2026, 1, 10)),
+          lastActivityDate: DateTime(2026, 1, 8),
+          now: DateTime(2026, 1, 10),
+        ),
         isTrue,
       );
     });

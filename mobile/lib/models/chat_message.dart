@@ -3,8 +3,11 @@ class NewWord {
   final String pinyin;
   final String translation;
 
-  NewWord(
-      {required this.word, required this.pinyin, required this.translation});
+  NewWord({
+    required this.word,
+    required this.pinyin,
+    required this.translation,
+  });
 
   factory NewWord.fromJson(Map<String, dynamic> json) {
     return NewWord(
@@ -14,8 +17,11 @@ class NewWord {
     );
   }
 
-  Map<String, dynamic> toJson() =>
-      {'word': word, 'pinyin': pinyin, 'translation': translation};
+  Map<String, dynamic> toJson() => {
+    'word': word,
+    'pinyin': pinyin,
+    'translation': translation,
+  };
 }
 
 class ChatMessage {
@@ -50,20 +56,20 @@ class ChatMessage {
   }
 
   factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-        fromUser: json['from_user'] as bool,
-        text: json['text'] as String,
-        pinyin: json['pinyin'] as String?,
-        grammarRecast: json['grammar_recast'] as String?,
-        newWords: (json['new_words'] as List<dynamic>? ?? [])
-            .map((e) => NewWord.fromJson(e as Map<String, dynamic>))
-            .toList(),
-      );
+    fromUser: json['from_user'] as bool,
+    text: json['text'] as String,
+    pinyin: json['pinyin'] as String?,
+    grammarRecast: json['grammar_recast'] as String?,
+    newWords: (json['new_words'] as List<dynamic>? ?? [])
+        .map((e) => NewWord.fromJson(e as Map<String, dynamic>))
+        .toList(),
+  );
 
   Map<String, dynamic> toJson() => {
-        'from_user': fromUser,
-        'text': text,
-        'pinyin': pinyin,
-        'grammar_recast': grammarRecast,
-        'new_words': newWords.map((w) => w.toJson()).toList(),
-      };
+    'from_user': fromUser,
+    'text': text,
+    'pinyin': pinyin,
+    'grammar_recast': grammarRecast,
+    'new_words': newWords.map((w) => w.toJson()).toList(),
+  };
 }

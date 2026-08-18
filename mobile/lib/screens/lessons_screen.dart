@@ -32,8 +32,13 @@ class _LessonsScreenState extends State<LessonsScreen> {
     for (var i = 0; i < decks.length; i++) {
       final isCompleted = completed.contains(decks[i].id);
       final isUnlocked = i == 0 || completed.contains(decks[i - 1].id);
-      result.add(DeckProgress(
-          deck: decks[i], completed: isCompleted, unlocked: isUnlocked));
+      result.add(
+        DeckProgress(
+          deck: decks[i],
+          completed: isCompleted,
+          unlocked: isUnlocked,
+        ),
+      );
     }
     if (!mounted) return;
     setState(() => _decks = result);
@@ -64,8 +69,9 @@ class _LessonsScreenState extends State<LessonsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
           ),
         ],
       ),
@@ -79,9 +85,10 @@ class _LessonsScreenState extends State<LessonsScreen> {
                   children: [
                     for (final dp in _decks!)
                       _DeckTile(
-                          deckProgress: dp,
-                          settings: settings,
-                          onTap: _openDeck),
+                        deckProgress: dp,
+                        settings: settings,
+                        onTap: _openDeck,
+                      ),
                   ],
                 ),
               ),
@@ -95,10 +102,11 @@ class _DeckTile extends StatelessWidget {
   final AppSettings settings;
   final void Function(Deck) onTap;
 
-  const _DeckTile(
-      {required this.deckProgress,
-      required this.settings,
-      required this.onTap});
+  const _DeckTile({
+    required this.deckProgress,
+    required this.settings,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -106,8 +114,8 @@ class _DeckTile extends StatelessWidget {
     final color = deckProgress.completed
         ? Colors.green
         : deckProgress.unlocked
-            ? Theme.of(context).colorScheme.primary
-            : Colors.grey;
+        ? Theme.of(context).colorScheme.primary
+        : Colors.grey;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -120,15 +128,19 @@ class _DeckTile extends StatelessWidget {
               deckProgress.completed
                   ? Icons.check_circle
                   : deckProgress.unlocked
-                      ? Icons.menu_book
-                      : Icons.lock,
+                  ? Icons.menu_book
+                  : Icons.lock,
               color: color,
             ),
           ),
           title: Text(deck.title),
           subtitle: Text(
             'HSK${deck.hskLevel} · ${deck.wordCount} '
-            '${deckProgress.completed ? "· ${settings.t('deckCompleted')}" : deckProgress.unlocked ? "" : "· ${settings.t('deckLocked')}"}',
+            '${deckProgress.completed
+                ? "· ${settings.t('deckCompleted')}"
+                : deckProgress.unlocked
+                ? ""
+                : "· ${settings.t('deckLocked')}"}',
           ),
           onTap: deckProgress.unlocked ? () => onTap(deck) : null,
         ),
