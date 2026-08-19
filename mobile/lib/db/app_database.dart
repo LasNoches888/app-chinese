@@ -11,16 +11,25 @@ class AppDatabase {
 
   static Database? _instance;
 
-  static Future<Database> open() async {
-    if (_instance != null) return _instance!;
+  /// Opens the app's database, reusing one shared connection.
+  ///
+  /// [overridePath] opens a separate database at that path instead, and is
+  /// deliberately not cached. Tests that need to *mutate* content (rather
+  /// than just read it) use this: `flutter test` runs test files
+  /// concurrently, and they'd otherwise all share the one on-disk
+  /// app_chinese.db, so a file that clears a table can yank the data out
+  /// from under an unrelated test mid-run.
+  static Future<Database> open({String? overridePath}) async {
+    if (overridePath == null && _instance != null) return _instance!;
     // Go through the *current* databaseFactory explicitly rather than the
     // bare top-level getDatabasesPath()/openDatabase() facade functions —
     // those don't reliably follow a reassigned databaseFactory (e.g.
     // sqflite_common_ffi in tests) and end up hitting a real platform
     // channel that has nothing to answer it.
-    final dbPath = await databaseFactory.getDatabasesPath();
-    final path = join(dbPath, _dbName);
-    _instance = await databaseFactory.openDatabase(
+    final path =
+        overridePath ??
+        join(await databaseFactory.getDatabasesPath(), _dbName);
+    final db = await databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(
         version: _schemaVersion,
@@ -30,7 +39,8 @@ class AppDatabase {
         onUpgrade: (db, oldVersion, newVersion) async {},
       ),
     );
-    return _instance!;
+    if (overridePath == null) _instance = db;
+    return db;
   }
 
   static Future<void> _onCreate(Database db, int version) async {

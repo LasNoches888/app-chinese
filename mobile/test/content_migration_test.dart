@@ -14,15 +14,18 @@ import 'package:app_chinese/services/srs_service.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  // AppDatabase.open() hands back one shared connection, so each test
-  // reuses it and resets the tables it cares about instead of opening and
-  // closing its own (closing it would break every later test in the file).
+  // A private in-memory database, not the shared on-disk one every other
+  // test file gets from AppDatabase.open(). These tests clear tables to
+  // simulate older installs, and `flutter test` runs files concurrently —
+  // against the shared database that wiped content out from under
+  // unrelated tests mid-run (which only showed up on CI, where the
+  // scheduling differs from a local run).
   late Database db;
 
   setUpAll(() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfiNoIsolate;
-    db = await AppDatabase.open();
+    db = await AppDatabase.open(overridePath: inMemoryDatabasePath);
   });
 
   setUp(() async {
