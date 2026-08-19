@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../models/user_stats.dart';
-import '../services/srs_service.dart';
 import 'srs_repository.dart';
 import 'word_repository.dart';
 
@@ -27,15 +26,17 @@ class AchievementsRepository {
   }
 
   Future<bool> _isHsk1Complete() async {
-    final hsk1Words = (await words.getAllWords())
+    final hsk1Ids = (await words.getAllWords())
         .where((w) => w.hskLevel == 1)
-        .toList();
-    if (hsk1Words.isEmpty) return false;
-    for (final w in hsk1Words) {
-      final state = await srs.getState(w.id);
-      if (!SrsService.isLearned(state.repetitions)) return false;
-    }
-    return true;
+        .map((w) => w.id)
+        .toSet();
+    if (hsk1Ids.isEmpty) return false;
+    // One query for the whole known-word set rather than getState() per
+    // word: this runs after every finished lesson, and the per-word loop
+    // meant ~157 sequential SQL round-trips once the bundled vocabulary
+    // grew past a token starter set.
+    final known = (await srs.getKnownWordIds()).toSet();
+    return hsk1Ids.every(known.contains);
   }
 
   /// Evaluates all achievement thresholds and persists any newly-unlocked
@@ -51,7 +52,7 @@ class AchievementsRepository {
       'streak_30': stats.currentStreak >= 30,
       'words_50': learnedWords >= 50,
       'words_100': learnedWords >= 100,
-      'words_300': learnedWords >= 300,
+      'words_250': learnedWords >= 250,
       'perfect_lesson': stats.perfectLessonsCount >= 1,
       'hsk1_complete': await _isHsk1Complete(),
     };

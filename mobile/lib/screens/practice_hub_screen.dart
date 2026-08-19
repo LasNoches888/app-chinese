@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../components/app_background.dart';
+import 'dictionary_screen.dart';
 import 'listening_screen.dart';
 import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
@@ -89,6 +90,16 @@ class PracticeHubScreen extends StatelessWidget {
               ),
             ),
             const Divider(height: 32),
+            _PracticeCard(
+              emoji: '🔍',
+              title: settings.t('dictionaryTitle'),
+              subtitle: settings.t('dictionaryCardDesc'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const DictionaryScreen(),
+                ),
+              ),
+            ),
             _PracticeCard(
               emoji: '📝',
               title: settings.t('placementTitle'),
