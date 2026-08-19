@@ -247,6 +247,10 @@ class _TodayCard extends StatelessWidget {
                         _Pill(icon: '🔥', label: '${s?.currentStreak ?? 0}'),
                         const SizedBox(width: 8),
                         _Pill(icon: '⭐', label: '${s?.xpToday ?? 0} XP'),
+                        if ((s?.streakFreezes ?? 0) > 0) ...[
+                          const SizedBox(width: 8),
+                          _Pill(icon: '🧊', label: '${s!.streakFreezes}'),
+                        ],
                         if (dueCount > 0) ...[
                           const SizedBox(width: 8),
                           _Pill(icon: '🔄', label: '$dueCount'),

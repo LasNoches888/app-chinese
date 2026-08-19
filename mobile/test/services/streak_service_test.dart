@@ -68,6 +68,85 @@ void main() {
     );
   });
 
+  group('StreakService.recordActivity with a banked freeze', () {
+    test(
+      'a single missed day is covered by one freeze and the streak grows',
+      () {
+        final result = StreakService.recordActivity(
+          lastActivityDate: DateTime(2026, 1, 8),
+          currentStreak: 5,
+          longestStreak: 10,
+          freezesAvailable: 1,
+          now: DateTime(2026, 1, 10),
+        );
+        expect(result.currentStreak, 6);
+        expect(result.longestStreak, 10);
+        expect(result.freezesUsed, 1);
+      },
+    );
+
+    test('two missed days need two freezes, not one', () {
+      final result = StreakService.recordActivity(
+        lastActivityDate: DateTime(2026, 1, 5),
+        currentStreak: 5,
+        longestStreak: 10,
+        freezesAvailable: 1,
+        now: DateTime(2026, 1, 10),
+      );
+      expect(result.currentStreak, 1);
+      expect(result.freezesUsed, 0);
+    });
+
+    test('a single missed day with zero freezes still resets', () {
+      final result = StreakService.recordActivity(
+        lastActivityDate: DateTime(2026, 1, 8),
+        currentStreak: 5,
+        longestStreak: 10,
+        now: DateTime(2026, 1, 10),
+      );
+      expect(result.currentStreak, 1);
+      expect(result.freezesUsed, 0);
+    });
+  });
+
+  group('StreakService.maybeAwardFreeze', () {
+    test('awards a freeze on a genuine 7-day milestone', () {
+      final freezes = StreakService.maybeAwardFreeze(
+        newStreak: 7,
+        previousStreak: 6,
+        currentFreezes: 0,
+      );
+      expect(freezes, 1);
+    });
+
+    test('does not award off a non-multiple-of-7 streak', () {
+      final freezes = StreakService.maybeAwardFreeze(
+        newStreak: 8,
+        previousStreak: 7,
+        currentFreezes: 0,
+      );
+      expect(freezes, 0);
+    });
+
+    test('does not award on a same-day repeat (streak unchanged)', () {
+      final freezes = StreakService.maybeAwardFreeze(
+        newStreak: 7,
+        previousStreak: 7,
+        currentFreezes: 0,
+      );
+      expect(freezes, 0);
+    });
+
+    test('caps at maxFreezes', () {
+      final freezes = StreakService.maybeAwardFreeze(
+        newStreak: 14,
+        previousStreak: 13,
+        currentFreezes: StreakService.maxFreezes,
+      );
+      expect(freezes, StreakService.maxFreezes);
+    });
+  });
+
   group('StreakService.isBroken', () {
     test('is false with no recorded activity yet', () {
       expect(
@@ -100,6 +179,28 @@ void main() {
       expect(
         StreakService.isBroken(
           lastActivityDate: DateTime(2026, 1, 8),
+          now: DateTime(2026, 1, 10),
+        ),
+        isTrue,
+      );
+    });
+
+    test('a banked freeze covers a single missed day', () {
+      expect(
+        StreakService.isBroken(
+          lastActivityDate: DateTime(2026, 1, 8),
+          freezesAvailable: 1,
+          now: DateTime(2026, 1, 10),
+        ),
+        isFalse,
+      );
+    });
+
+    test('a banked freeze does not cover two missed days', () {
+      expect(
+        StreakService.isBroken(
+          lastActivityDate: DateTime(2026, 1, 7),
+          freezesAvailable: 1,
           now: DateTime(2026, 1, 10),
         ),
         isTrue,

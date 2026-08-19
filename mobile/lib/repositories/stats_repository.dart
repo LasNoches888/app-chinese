@@ -44,6 +44,7 @@ class StatsRepository {
       'xp_today': stats.xpToday,
       'xp_today_date': stats.xpTodayDate,
       'perfect_lessons_count': stats.perfectLessonsCount,
+      'streak_freezes': stats.streakFreezes,
     }, where: 'id = 1');
   }
 
@@ -62,7 +63,14 @@ class StatsRepository {
       lastActivityDate: stats.lastActivityDate,
       currentStreak: stats.currentStreak,
       longestStreak: stats.longestStreak,
+      freezesAvailable: stats.streakFreezes,
       now: effectiveNow,
+    );
+    final remainingFreezes = stats.streakFreezes - streakUpdate.freezesUsed;
+    final newFreezeCount = StreakService.maybeAwardFreeze(
+      newStreak: streakUpdate.currentStreak,
+      previousStreak: stats.currentStreak,
+      currentFreezes: remainingFreezes,
     );
 
     stats = stats.copyWith(
@@ -72,6 +80,7 @@ class StatsRepository {
       currentStreak: streakUpdate.currentStreak,
       longestStreak: streakUpdate.longestStreak,
       lastActivityDate: streakUpdate.lastActivityDate,
+      streakFreezes: newFreezeCount,
     );
     await _save(stats);
     return stats;
