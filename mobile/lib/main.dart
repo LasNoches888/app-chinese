@@ -5,6 +5,7 @@ import 'api/app_settings.dart';
 import 'app_repositories.dart';
 import 'screens/chat_screen.dart';
 import 'screens/lessons_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'screens/practice_hub_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/review_screen.dart';
@@ -86,8 +87,37 @@ class AppChinese extends StatelessWidget {
       themeMode: settings.themeMode,
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
-      home: const HomeShell(),
+      home: const _RootScreen(),
     );
+  }
+}
+
+/// Gates the first launch behind [OnboardingScreen] — everyone after that
+/// (the `onboarded` flag persists) goes straight to [HomeShell] like
+/// before. A separate widget rather than a condition inside HomeShell so
+/// completing onboarding is a real navigation transition, not a rebuild
+/// that just swaps what a StatefulWidget's build() returns underneath the
+/// same route.
+class _RootScreen extends StatefulWidget {
+  const _RootScreen();
+
+  @override
+  State<_RootScreen> createState() => _RootScreenState();
+}
+
+class _RootScreenState extends State<_RootScreen> {
+  late bool _onboarded;
+
+  @override
+  void initState() {
+    super.initState();
+    _onboarded = context.read<AppSettings>().onboarded;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_onboarded) return const HomeShell();
+    return OnboardingScreen(onDone: () => setState(() => _onboarded = true));
   }
 }
 

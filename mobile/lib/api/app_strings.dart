@@ -283,6 +283,20 @@ class Strings {
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
+    'onboardingPitch': {
+      AppLocale.ru:
+          'Учи китайский с интервальными повторениями и AI-репетитором, который работает даже офлайн, прямо на телефоне.',
+      AppLocale.en:
+          "Learn Chinese with spaced repetition and an AI tutor that works offline, right on your phone.",
+    },
+    'onboardingPlacementCta': {
+      AppLocale.ru: 'Проверить свой уровень',
+      AppLocale.en: 'Check my level',
+    },
+    'onboardingSkipCta': {
+      AppLocale.ru: 'Начать с нуля',
+      AppLocale.en: 'Start from scratch',
+    },
     'practiceHeaderSubtitle': {
       AppLocale.ru: 'Тренируй то, чего нет в обычных уроках',
       AppLocale.en: "Drill what regular lessons don't cover",

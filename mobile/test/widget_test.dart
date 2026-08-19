@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'package:app_chinese/api/app_settings.dart';
@@ -20,6 +21,7 @@ void main() {
   testWidgets('App shows bottom navigation with five tabs', (
     WidgetTester tester,
   ) async {
+    SharedPreferences.setMockInitialValues({});
     late AppSettings settings;
     late AppRepositories repos;
 
@@ -29,6 +31,9 @@ void main() {
     // steps outside it to let the real database open complete.
     await tester.runAsync(() async {
       settings = AppSettings();
+      // This test covers the tab shell, not the first-launch onboarding
+      // screen (see onboarding_screen_test.dart) — skip straight past it.
+      await settings.setOnboarded();
       repos = await AppRepositories.initialize(
         overridePath: inMemoryDatabasePath,
       );
