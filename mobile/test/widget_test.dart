@@ -17,7 +17,7 @@ void main() {
     databaseFactory = databaseFactoryFfiNoIsolate;
   });
 
-  testWidgets('App shows bottom navigation with four tabs', (
+  testWidgets('App shows bottom navigation with five tabs', (
     WidgetTester tester,
   ) async {
     late AppSettings settings;
@@ -46,6 +46,7 @@ void main() {
 
     expect(find.text('Уроки'), findsWidgets);
     expect(find.text('Повторить'), findsWidgets);
+    expect(find.text('Практика'), findsWidgets);
     expect(find.text('Прогресс'), findsWidgets);
     expect(find.text('Чат'), findsWidgets);
   });

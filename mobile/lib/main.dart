@@ -5,6 +5,7 @@ import 'api/app_settings.dart';
 import 'app_repositories.dart';
 import 'screens/chat_screen.dart';
 import 'screens/lessons_screen.dart';
+import 'screens/practice_hub_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/review_screen.dart';
 
@@ -103,6 +104,7 @@ class _HomeShellState extends State<HomeShell> {
   static const _screens = [
     LessonsScreen(),
     ReviewScreen(),
+    PracticeHubScreen(),
     ProgressScreen(),
     ChatScreen(),
   ];
@@ -145,6 +147,11 @@ class _HomeShellState extends State<HomeShell> {
             icon: const Icon(Icons.refresh_outlined),
             selectedIcon: const Icon(Icons.refresh),
             label: settings.t('review'),
+          ),
+          NavigationDestination(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            selectedIcon: const Icon(Icons.auto_awesome),
+            label: settings.t('practiceHub'),
           ),
           NavigationDestination(
             icon: const Icon(Icons.bar_chart_outlined),

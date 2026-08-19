@@ -1,0 +1,74 @@
+[
+  {
+    "id": "dlg_greetings",
+    "topic": "greetings",
+    "lines": [
+      {"speaker": "A", "hanzi": "你好！", "pinyin": "Nǐ hǎo!", "translation_ru": "Привет!"},
+      {"speaker": "B", "hanzi": "你好！你好吗？", "pinyin": "Nǐ hǎo! Nǐ hǎo ma?", "translation_ru": "Привет! Как дела?"},
+      {"speaker": "A", "hanzi": "我很好，谢谢。你呢？", "pinyin": "Wǒ hěn hǎo, xièxie. Nǐ ne?", "translation_ru": "У меня всё хорошо, спасибо. А у тебя?"},
+      {"speaker": "B", "hanzi": "也很好。再见！", "pinyin": "Yě hěn hǎo. Zàijiàn!", "translation_ru": "Тоже хорошо. До свидания!"}
+    ],
+    "question": "Как себя чувствует говорящий A?",
+    "options": ["Хорошо", "Плохо", "Не сказал"],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_people",
+    "topic": "people",
+    "lines": [
+      {"speaker": "A", "hanzi": "你是学生吗？", "pinyin": "Nǐ shì xuésheng ma?", "translation_ru": "Ты студент?"},
+      {"speaker": "B", "hanzi": "是，我是学生。你是老师吗？", "pinyin": "Shì, wǒ shì xuésheng. Nǐ shì lǎoshī ma?", "translation_ru": "Да, я студент. Ты учитель?"},
+      {"speaker": "A", "hanzi": "是，我是老师。", "pinyin": "Shì, wǒ shì lǎoshī.", "translation_ru": "Да, я учитель."}
+    ],
+    "question": "Кто говорящий B?",
+    "options": ["Учитель", "Студент", "Друг"],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_family",
+    "topic": "family",
+    "lines": [
+      {"speaker": "A", "hanzi": "这是我爸爸，这是我妈妈。", "pinyin": "Zhè shì wǒ bàba, zhè shì wǒ māma.", "translation_ru": "Это мой папа, это моя мама."},
+      {"speaker": "B", "hanzi": "你有哥哥吗？", "pinyin": "Nǐ yǒu gēge ma?", "translation_ru": "У тебя есть старший брат?"},
+      {"speaker": "A", "hanzi": "没有哥哥，我有姐姐。", "pinyin": "Méiyǒu gēge, wǒ yǒu jiějie.", "translation_ru": "Старшего брата нет, есть старшая сестра."}
+    ],
+    "question": "Кто есть у говорящего A?",
+    "options": ["Старший брат", "Старшая сестра", "Младшая сестра"],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_food",
+    "topic": "food",
+    "lines": [
+      {"speaker": "A", "hanzi": "你想喝什么？咖啡还是茶？", "pinyin": "Nǐ xiǎng hē shénme? Kāfēi háishi chá?", "translation_ru": "Что будешь пить — кофе или чай?"},
+      {"speaker": "B", "hanzi": "我想喝茶，谢谢。你吃苹果吗？", "pinyin": "Wǒ xiǎng hē chá, xièxie. Nǐ chī píngguǒ ma?", "translation_ru": "Я буду чай, спасибо. Ты ешь яблоко?"},
+      {"speaker": "A", "hanzi": "好，苹果很好吃。", "pinyin": "Hǎo, píngguǒ hěn hǎochī.", "translation_ru": "Хорошо, яблоко очень вкусное."}
+    ],
+    "question": "Что выбрал говорящий B?",
+    "options": ["Кофе", "Чай", "Молоко"],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_time",
+    "topic": "time",
+    "lines": [
+      {"speaker": "A", "hanzi": "你今天忙吗？", "pinyin": "Nǐ jīntiān máng ma?", "translation_ru": "Ты сегодня занят?"},
+      {"speaker": "B", "hanzi": "今天不忙，明天很忙。", "pinyin": "Jīntiān bù máng, míngtiān hěn máng.", "translation_ru": "Сегодня не занят, завтра очень занят."}
+    ],
+    "question": "Когда говорящий B занят?",
+    "options": ["Сегодня", "Завтра", "Вчера"],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_movement",
+    "topic": "movement",
+    "lines": [
+      {"speaker": "A", "hanzi": "你去哪儿？", "pinyin": "Nǐ qù nǎr?", "translation_ru": "Куда ты идёшь?"},
+      {"speaker": "B", "hanzi": "我去上班，然后回家。你呢？", "pinyin": "Wǒ qù shàngbān, ránhòu huíjiā. Nǐ ne?", "translation_ru": "Я иду на работу, потом домой. А ты?"},
+      {"speaker": "A", "hanzi": "我走去朋友家。", "pinyin": "Wǒ zǒu qù péngyou jiā.", "translation_ru": "Я иду пешком к другу."}
+    ],
+    "question": "Куда говорящий B идёт сначала?",
+    "options": ["Домой", "На работу", "К другу"],
+    "correct_index": 1
+  }
+]
