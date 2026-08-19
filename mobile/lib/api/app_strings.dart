@@ -275,6 +275,86 @@ class Strings {
       AppLocale.en:
           'No Mandarin voice on this device. Install one in Android settings: System → Languages & input → Text-to-speech → download 中文.',
     },
+    // Practice hub
+    'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
+    'toneTrainerTitle': {
+      AppLocale.ru: 'Тренажёр тонов',
+      AppLocale.en: 'Tone trainer',
+    },
+    'toneTrainerCardDesc': {
+      AppLocale.ru: 'Различай тоны на слух',
+      AppLocale.en: 'Tell tones apart by ear',
+    },
+    'toneTrainerPrompt': {
+      AppLocale.ru: 'Какой иероглиф я произнёс?',
+      AppLocale.en: 'Which character did I say?',
+    },
+    'toneTrainerDone': {
+      AppLocale.ru: 'Раунд завершён',
+      AppLocale.en: 'Round complete',
+    },
+    'placementTitle': {
+      AppLocale.ru: 'Проверка уровня',
+      AppLocale.en: 'Placement test',
+    },
+    'placementCardDesc': {
+      AppLocale.ru: 'Отметь слова, которые уже знаешь',
+      AppLocale.en: 'Mark the words you already know',
+    },
+    'placementPrompt': {
+      AppLocale.ru: 'Нажми на карточку, чтобы увидеть перевод, и оцени честно',
+      AppLocale.en: 'Tap the card to see the translation, then answer honestly',
+    },
+    'placementKnow': {AppLocale.ru: 'Знаю', AppLocale.en: 'I know it'},
+    'placementDontKnow': {
+      AppLocale.ru: 'Не знаю',
+      AppLocale.en: "I don't know",
+    },
+    'placementDoneTitle': {AppLocale.ru: 'Готово!', AppLocale.en: 'All done!'},
+    'placementDoneBody': {
+      AppLocale.ru: 'Отмечено как известные: {count} слов',
+      AppLocale.en: 'Marked as known: {count} words',
+    },
+    'listeningTitle': {AppLocale.ru: 'Аудирование', AppLocale.en: 'Listening'},
+    'listeningCardDesc': {
+      AppLocale.ru: 'Послушай диалог и ответь на вопрос',
+      AppLocale.en: 'Listen to a dialogue and answer a question',
+    },
+    'listeningReplay': {
+      AppLocale.ru: 'Прослушать снова',
+      AppLocale.en: 'Replay',
+    },
+    'listeningNext': {
+      AppLocale.ru: 'Следующий диалог',
+      AppLocale.en: 'Next dialogue',
+    },
+    'readingTitle': {AppLocale.ru: 'Чтение', AppLocale.en: 'Reading'},
+    'readingCardDesc': {
+      AppLocale.ru: 'Короткие тексты на твоём уровне',
+      AppLocale.en: 'Short passages matched to your level',
+    },
+    'readingKnownWords': {
+      AppLocale.ru: 'известных слов',
+      AppLocale.en: 'known words',
+    },
+    'readingShowTranslation': {
+      AppLocale.ru: 'Показать перевод',
+      AppLocale.en: 'Show translation',
+    },
+    'scenariosTitle': {
+      AppLocale.ru: 'Ролевые сценарии',
+      AppLocale.en: 'Roleplay',
+    },
+    'scenariosCardDesc': {
+      AppLocale.ru: 'Поговори с ботом в живой ситуации',
+      AppLocale.en: 'Talk to the tutor in a real-life situation',
+    },
+    'scenariosNeedLocalModel': {
+      AppLocale.ru:
+          'Ролевые сценарии работают только с локальной моделью («Друг поблизости») — она полностью управляет своим системным промптом. Скачайте её в Настройках.',
+      AppLocale.en:
+          'Roleplay only works with the local model ("Nearby friend") — it fully controls its own system prompt. Download it in Settings.',
+    },
     'appearance': {AppLocale.ru: 'Внешний вид', AppLocale.en: 'Appearance'},
     'goalsSection': {
       AppLocale.ru: 'Цели и напоминания',

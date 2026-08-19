@@ -3,6 +3,8 @@ import 'package:sqflite/sqflite.dart';
 import 'db/app_database.dart';
 import 'repositories/achievements_repository.dart';
 import 'repositories/chat_repository.dart';
+import 'repositories/dialogue_repository.dart';
+import 'repositories/reading_repository.dart';
 import 'repositories/srs_repository.dart';
 import 'repositories/stats_repository.dart';
 import 'repositories/stroke_data_repository.dart';
@@ -18,6 +20,8 @@ class AppRepositories {
   final AchievementsRepository achievements;
   final ChatRepository chat;
   final StrokeDataRepository strokeData;
+  final DialogueRepository dialogues;
+  final ReadingRepository reading;
 
   AppRepositories._(
     this.db,
@@ -27,6 +31,8 @@ class AppRepositories {
     this.achievements,
     this.chat,
     this.strokeData,
+    this.dialogues,
+    this.reading,
   );
 
   static Future<AppRepositories> initialize() async {
@@ -38,6 +44,8 @@ class AppRepositories {
     final achievements = AchievementsRepository(db, srs, words);
     final chat = ChatRepository(db);
     final strokeData = await StrokeDataRepository.load();
+    final dialogues = await DialogueRepository.load();
+    final reading = await ReadingRepository.load();
     return AppRepositories._(
       db,
       words,
@@ -46,6 +54,8 @@ class AppRepositories {
       achievements,
       chat,
       strokeData,
+      dialogues,
+      reading,
     );
   }
 }

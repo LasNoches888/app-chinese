@@ -84,6 +84,22 @@ class SrsRepository {
     });
   }
 
+  /// Fast-forwards a word straight past the "learned" threshold, for the
+  /// placement test — the learner has told us they already know it, so it
+  /// shouldn't show up as a brand-new lesson word. Reuses the normal SM-2
+  /// review path (two full-quality reviews back to back) rather than a
+  /// special-cased state write, so the resulting interval/ease-factor stay
+  /// consistent with a word that was actually reviewed twice.
+  Future<void> markKnownFromPlacement(String wordId) async {
+    for (var i = 0; i < 2; i++) {
+      await recordReview(
+        wordId: wordId,
+        wasCorrect: true,
+        exerciseType: 'placement',
+      );
+    }
+  }
+
   Future<Map<String, Map<String, Object?>>> _latestRowPerWord() async {
     final rows = await db.query('review_history', orderBy: 'reviewed_at ASC');
     final latest = <String, Map<String, Object?>>{};
