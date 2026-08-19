@@ -158,10 +158,10 @@ class Strings {
       AppLocale.ru: 'Выучите 100 слов',
       AppLocale.en: 'Learn 100 words',
     },
-    'achWords300': {AppLocale.ru: '300 слов', AppLocale.en: '300 words'},
-    'achWords300Desc': {
-      AppLocale.ru: 'Выучите 300 слов',
-      AppLocale.en: 'Learn 300 words',
+    'achWords250': {AppLocale.ru: '250 слов', AppLocale.en: '250 words'},
+    'achWords250Desc': {
+      AppLocale.ru: 'Выучите 250 слов',
+      AppLocale.en: 'Learn 250 words',
     },
     'achPerfectLesson': {
       AppLocale.ru: 'Идеальный урок',
@@ -277,6 +277,27 @@ class Strings {
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
+    'dictionaryTitle': {AppLocale.ru: 'Словарь', AppLocale.en: 'Dictionary'},
+    'dictionaryCardDesc': {
+      AppLocale.ru: 'Найди любое слово, послушай, посмотри черты',
+      AppLocale.en: 'Look up any word, hear it, see its strokes',
+    },
+    'dictionarySearchHint': {
+      AppLocale.ru: 'Иероглиф, пиньинь или перевод',
+      AppLocale.en: 'Character, pinyin or translation',
+    },
+    'dictionaryNothingFound': {
+      AppLocale.ru: 'Ничего не нашлось',
+      AppLocale.en: 'Nothing found',
+    },
+    'wordExample': {AppLocale.ru: 'Пример', AppLocale.en: 'Example'},
+    'wordStrokeOrder': {
+      AppLocale.ru: 'Порядок черт',
+      AppLocale.en: 'Stroke order',
+    },
+    'wordStatusNew': {AppLocale.ru: 'Новое', AppLocale.en: 'New'},
+    'wordStatusLearning': {AppLocale.ru: 'Учится', AppLocale.en: 'Learning'},
+    'wordStatusLearned': {AppLocale.ru: 'Выучено', AppLocale.en: 'Learned'},
     'memoryMatchTitle': {
       AppLocale.ru: 'Найди пару',
       AppLocale.en: 'Memory match',

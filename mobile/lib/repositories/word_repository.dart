@@ -15,20 +15,40 @@ class WordRepository {
 
   WordRepository(this.db);
 
+  /// Loads the bundled decks/words into the database, upserting rather than
+  /// only running on an empty database.
+  ///
+  /// This runs on every launch on purpose: an app update that ships new
+  /// vocabulary has to reach existing installs too, and a first-run-only
+  /// seed would leave everyone who already had the app stuck on whatever
+  /// word list shipped the day they installed it. Rows are replaced by
+  /// primary key, so learning progress — which lives in review_history,
+  /// keyed by word id — is untouched.
   Future<void> seedIfNeeded() async {
-    final count =
-        Sqflite.firstIntValue(
-          await db.rawQuery('SELECT COUNT(*) FROM decks'),
-        ) ??
-        0;
-    if (count > 0) return;
-
     final decksJson =
         jsonDecode(await rootBundle.loadString('assets/seed/decks.json'))
             as List<dynamic>;
     final wordsJson =
         jsonDecode(await rootBundle.loadString('assets/seed/words.json'))
             as List<dynamic>;
+
+    // Skip the write entirely when the bundled content is already fully
+    // loaded, so the common case (no new content in this launch) doesn't
+    // pay for a few hundred redundant upserts.
+    final existingWords =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM words'),
+        ) ??
+        0;
+    final existingDecks =
+        Sqflite.firstIntValue(
+          await db.rawQuery('SELECT COUNT(*) FROM decks'),
+        ) ??
+        0;
+    if (existingWords >= wordsJson.length &&
+        existingDecks >= decksJson.length) {
+      return;
+    }
 
     final batch = db.batch();
     for (final d in decksJson) {
@@ -39,7 +59,7 @@ class WordRepository {
         'topic': map['topic'],
         'hsk_level': map['hsk_level'],
         'word_count': map['word_count'],
-      });
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     for (final w in wordsJson) {
       final map = w as Map<String, dynamic>;
@@ -53,7 +73,7 @@ class WordRepository {
         'hsk_level': map['hsk_level'],
         'topic': map['topic'],
         'deck_id': map['deck_id'],
-      });
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
     }
     await batch.commit(noResult: true);
   }

@@ -1,10 +1,149 @@
 [
-  { "id": "greetings", "title": "Приветствия", "topic": "greetings", "hsk_level": 1, "word_count": 8 },
-  { "id": "numbers", "title": "Числа", "topic": "numbers", "hsk_level": 1, "word_count": 10 },
-  { "id": "people", "title": "Люди", "topic": "people", "hsk_level": 1, "word_count": 11 },
-  { "id": "family", "title": "Семья", "topic": "family", "hsk_level": 1, "word_count": 10 },
-  { "id": "food", "title": "Еда", "topic": "food", "hsk_level": 1, "word_count": 11 },
-  { "id": "time", "title": "Время", "topic": "time", "hsk_level": 1, "word_count": 10 },
-  { "id": "colors", "title": "Цвета", "topic": "colors", "hsk_level": 2, "word_count": 7 },
-  { "id": "movement", "title": "Движение", "topic": "movement", "hsk_level": 2, "word_count": 8 }
+  {
+    "id": "greetings",
+    "title": "Приветствия",
+    "topic": "greetings",
+    "hsk_level": 1,
+    "word_count": 10
+  },
+  {
+    "id": "numbers",
+    "title": "Числа",
+    "topic": "numbers",
+    "hsk_level": 1,
+    "word_count": 14
+  },
+  {
+    "id": "people",
+    "title": "Люди и местоимения",
+    "topic": "people",
+    "hsk_level": 1,
+    "word_count": 14
+  },
+  {
+    "id": "family",
+    "title": "Семья",
+    "topic": "family",
+    "hsk_level": 1,
+    "word_count": 10
+  },
+  {
+    "id": "food",
+    "title": "Еда и напитки",
+    "topic": "food",
+    "hsk_level": 1,
+    "word_count": 10
+  },
+  {
+    "id": "time",
+    "title": "Время",
+    "topic": "time",
+    "hsk_level": 1,
+    "word_count": 14
+  },
+  {
+    "id": "questions",
+    "title": "Вопросы",
+    "topic": "questions",
+    "hsk_level": 1,
+    "word_count": 8
+  },
+  {
+    "id": "verbs1",
+    "title": "Глаголы: основа",
+    "topic": "verbs1",
+    "hsk_level": 1,
+    "word_count": 22
+  },
+  {
+    "id": "adjectives1",
+    "title": "Признаки",
+    "topic": "adjectives1",
+    "hsk_level": 1,
+    "word_count": 13
+  },
+  {
+    "id": "places1",
+    "title": "Места",
+    "topic": "places1",
+    "hsk_level": 1,
+    "word_count": 11
+  },
+  {
+    "id": "objects1",
+    "title": "Предметы",
+    "topic": "objects1",
+    "hsk_level": 1,
+    "word_count": 12
+  },
+  {
+    "id": "grammar1",
+    "title": "Служебные слова",
+    "topic": "grammar1",
+    "hsk_level": 1,
+    "word_count": 19
+  },
+  {
+    "id": "colors",
+    "title": "Цвета",
+    "topic": "colors",
+    "hsk_level": 2,
+    "word_count": 7
+  },
+  {
+    "id": "movement",
+    "title": "Движение",
+    "topic": "movement",
+    "hsk_level": 2,
+    "word_count": 10
+  },
+  {
+    "id": "food2",
+    "title": "Еда: продолжение",
+    "topic": "food2",
+    "hsk_level": 2,
+    "word_count": 10
+  },
+  {
+    "id": "study2",
+    "title": "Учёба",
+    "topic": "study2",
+    "hsk_level": 2,
+    "word_count": 12
+  },
+  {
+    "id": "shopping2",
+    "title": "Покупки",
+    "topic": "shopping2",
+    "hsk_level": 2,
+    "word_count": 10
+  },
+  {
+    "id": "body2",
+    "title": "Тело и здоровье",
+    "topic": "body2",
+    "hsk_level": 2,
+    "word_count": 10
+  },
+  {
+    "id": "transport2",
+    "title": "Транспорт и город",
+    "topic": "transport2",
+    "hsk_level": 2,
+    "word_count": 11
+  },
+  {
+    "id": "adverbs2",
+    "title": "Наречия и связки",
+    "topic": "adverbs2",
+    "hsk_level": 2,
+    "word_count": 16
+  },
+  {
+    "id": "daily2",
+    "title": "Повседневное",
+    "topic": "daily2",
+    "hsk_level": 2,
+    "word_count": 20
+  }
 ]

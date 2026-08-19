@@ -48,10 +48,10 @@ const List<AchievementDef> kAchievementDefs = [
     descriptionKey: 'achWords100Desc',
   ),
   AchievementDef(
-    code: 'words_300',
+    code: 'words_250',
     icon: '📚',
-    titleKey: 'achWords300',
-    descriptionKey: 'achWords300Desc',
+    titleKey: 'achWords250',
+    descriptionKey: 'achWords250Desc',
   ),
   AchievementDef(
     code: 'perfect_lesson',
