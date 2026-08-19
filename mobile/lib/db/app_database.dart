@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 /// for any of it; the backend is only ever consulted for `/chat`.
 class AppDatabase {
   static const _dbName = 'app_chinese.db';
-  static const _schemaVersion = 1;
+  static const _schemaVersion = 2;
 
   static Database? _instance;
 
@@ -35,7 +35,13 @@ class AppDatabase {
         onCreate: _onCreate,
         // Future schema changes go here as `if (oldVersion < N) { ... }`
         // blocks so existing installs migrate forward without losing data.
-        onUpgrade: (db, oldVersion, newVersion) async {},
+        onUpgrade: (db, oldVersion, newVersion) async {
+          if (oldVersion < 2) {
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN streak_freezes INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+        },
       ),
     );
     if (overridePath == null) _instance = db;
@@ -96,7 +102,8 @@ class AppDatabase {
         daily_goal_xp INTEGER NOT NULL DEFAULT 20,
         xp_today INTEGER NOT NULL DEFAULT 0,
         xp_today_date TEXT,
-        perfect_lessons_count INTEGER NOT NULL DEFAULT 0
+        perfect_lessons_count INTEGER NOT NULL DEFAULT 0,
+        streak_freezes INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''

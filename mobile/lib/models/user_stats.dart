@@ -10,6 +10,7 @@ class UserStats {
   final int xpToday;
   final String? xpTodayDate;
   final int perfectLessonsCount;
+  final int streakFreezes;
 
   const UserStats({
     required this.totalXp,
@@ -23,6 +24,7 @@ class UserStats {
     required this.xpToday,
     required this.xpTodayDate,
     required this.perfectLessonsCount,
+    required this.streakFreezes,
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
@@ -41,6 +43,7 @@ class UserStats {
     xpToday: map['xp_today'] as int,
     xpTodayDate: map['xp_today_date'] as String?,
     perfectLessonsCount: map['perfect_lessons_count'] as int,
+    streakFreezes: map['streak_freezes'] as int? ?? 0,
   );
 
   UserStats copyWith({
@@ -55,6 +58,7 @@ class UserStats {
     int? xpToday,
     String? xpTodayDate,
     int? perfectLessonsCount,
+    int? streakFreezes,
   }) {
     return UserStats(
       totalXp: totalXp ?? this.totalXp,
@@ -68,6 +72,7 @@ class UserStats {
       xpToday: xpToday ?? this.xpToday,
       xpTodayDate: xpTodayDate ?? this.xpTodayDate,
       perfectLessonsCount: perfectLessonsCount ?? this.perfectLessonsCount,
+      streakFreezes: streakFreezes ?? this.streakFreezes,
     );
   }
 }

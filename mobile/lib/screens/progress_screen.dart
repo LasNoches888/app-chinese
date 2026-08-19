@@ -128,6 +128,16 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       '${_accuracy7d.toStringAsFixed(0)}%',
                       wide: true,
                     ),
+                    const SizedBox(height: 8),
+                    _statTile(
+                      context,
+                      Icons.ac_unit,
+                      Colors.lightBlue,
+                      settings.t('streakFreezes'),
+                      '${stats.streakFreezes}',
+                      wide: true,
+                      subtitle: settings.t('streakFreezesHint'),
+                    ),
                     const SizedBox(height: 24),
                     Text(
                       settings.t('streakCalendar'),
@@ -235,6 +245,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
     String label,
     String value, {
     bool wide = false,
+    String? subtitle,
   }) {
     return Card(
       child: Padding(
@@ -244,7 +255,21 @@ class _ProgressScreenState extends State<ProgressScreen> {
                 children: [
                   Icon(icon, color: color),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(label)),
+                  Expanded(
+                    child: subtitle == null
+                        ? Text(label)
+                        : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(label),
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                  ),
                   Text(value, style: Theme.of(context).textTheme.titleLarge),
                 ],
               )

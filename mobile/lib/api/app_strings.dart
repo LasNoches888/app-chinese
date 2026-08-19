@@ -117,6 +117,16 @@ class Strings {
       AppLocale.ru: 'Рекордная серия',
       AppLocale.en: 'Longest streak',
     },
+    'streakFreezes': {
+      AppLocale.ru: 'Заморозки серии',
+      AppLocale.en: 'Streak freezes',
+    },
+    'streakFreezesHint': {
+      AppLocale.ru:
+          'Пропустишь день — заморозка спасёт серию сама. Одна выдаётся за каждые 7 дней подряд, максимум 2 про запас.',
+      AppLocale.en:
+          'Miss a day and a freeze saves your streak automatically. You earn one every 7-day run, up to 2 banked.',
+    },
     'wordsLearned': {
       AppLocale.ru: 'Слов выучено',
       AppLocale.en: 'Words learned',
