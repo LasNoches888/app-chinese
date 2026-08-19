@@ -17,11 +17,18 @@ class ListeningScreen extends StatefulWidget {
   State<ListeningScreen> createState() => _ListeningScreenState();
 }
 
-class _ListeningScreenState extends State<ListeningScreen> {
+class _ListeningScreenState extends State<ListeningScreen>
+    with StopSpeechOnDispose {
   late Dialogue _dialogue;
   int _revealedLines = 0;
   bool _playing = false;
   int? _selectedOption;
+
+  /// Bumped whenever playback should be abandoned — leaving the screen, or
+  /// restarting with a new dialogue. A running [_playAll] loop compares
+  /// against it and bails, so a stale loop can't keep speaking lines (or
+  /// revealing them) over whatever replaced it.
+  int _playbackGeneration = 0;
 
   @override
   void didChangeDependencies() {
@@ -35,13 +42,20 @@ class _ListeningScreenState extends State<ListeningScreen> {
 
   bool _initialized = false;
 
+  @override
+  void dispose() {
+    _playbackGeneration++;
+    super.dispose();
+  }
+
   Future<void> _playAll() async {
+    final generation = ++_playbackGeneration;
     setState(() {
       _playing = true;
       _revealedLines = 0;
     });
     for (final line in _dialogue.lines) {
-      if (!mounted) return;
+      if (!mounted || generation != _playbackGeneration) return;
       setState(() => _revealedLines++);
       await SpeechService.speak(line.hanzi, rate: 0.45);
       // speak() returns once playback *starts*, not once it finishes — a
@@ -52,7 +66,9 @@ class _ListeningScreenState extends State<ListeningScreen> {
         Duration(milliseconds: 900 + line.hanzi.length * 260),
       );
     }
-    if (mounted) setState(() => _playing = false);
+    if (mounted && generation == _playbackGeneration) {
+      setState(() => _playing = false);
+    }
   }
 
   void _pickOption(int index) {

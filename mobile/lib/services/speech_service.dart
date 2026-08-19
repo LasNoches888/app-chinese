@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 /// Reads Chinese text aloud through the device's text-to-speech engine.
@@ -65,12 +65,29 @@ class SpeechService {
   }
 
   static Future<void> stop() async {
+    // Clear the "currently playing" state unconditionally, before the
+    // availability check: bailing out early left it stale, so a speaker
+    // button could stay stuck in its playing state with nothing to stop.
+    speaking.value = null;
     if (!_available) return;
     try {
       await _tts.stop();
     } catch (_) {
-      // Nothing to recover from — the UI state is reset either way.
+      // Nothing to recover from — the UI state is already reset.
     }
-    speaking.value = null;
+  }
+}
+
+/// Cuts playback when the screen goes away.
+///
+/// TTS is a process-wide singleton, so audio started on one screen keeps
+/// talking after the user navigates away unless something stops it —
+/// leaving a dialogue reading itself aloud over whatever the learner
+/// opened next. Every screen that can start speech mixes this in.
+mixin StopSpeechOnDispose<T extends StatefulWidget> on State<T> {
+  @override
+  void dispose() {
+    SpeechService.stop();
+    super.dispose();
   }
 }

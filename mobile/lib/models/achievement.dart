@@ -4,11 +4,18 @@ class AchievementDef {
   final String titleKey;
   final String descriptionKey;
 
+  /// Mascot art for the two headline milestones (30-day streak, all of
+  /// HSK1) — reserved for the achievements worth a real illustration
+  /// rather than putting one on all 8, which would just make the emoji
+  /// ones look like an afterthought by comparison.
+  final String? artAsset;
+
   const AchievementDef({
     required this.code,
     required this.icon,
     required this.titleKey,
     required this.descriptionKey,
+    this.artAsset,
   });
 }
 
@@ -34,6 +41,7 @@ const List<AchievementDef> kAchievementDefs = [
     icon: '🔥',
     titleKey: 'achStreak30',
     descriptionKey: 'achStreak30Desc',
+    artAsset: 'assets/mascot/panda_26.png',
   ),
   AchievementDef(
     code: 'words_50',
@@ -64,6 +72,7 @@ const List<AchievementDef> kAchievementDefs = [
     icon: '🏆',
     titleKey: 'achHsk1',
     descriptionKey: 'achHsk1Desc',
+    artAsset: 'assets/mascot/panda_25.png',
   ),
 ];
 
