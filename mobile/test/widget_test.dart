@@ -29,7 +29,9 @@ void main() {
     // steps outside it to let the real database open complete.
     await tester.runAsync(() async {
       settings = AppSettings();
-      repos = await AppRepositories.initialize();
+      repos = await AppRepositories.initialize(
+        overridePath: inMemoryDatabasePath,
+      );
     });
 
     await tester.pumpWidget(

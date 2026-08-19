@@ -35,8 +35,13 @@ class AppRepositories {
     this.reading,
   );
 
-  static Future<AppRepositories> initialize() async {
-    final db = await AppDatabase.open();
+  /// [overridePath] opens an isolated database instead of the shared
+  /// on-disk one — see [AppDatabase.open]. Tests pass an in-memory path so
+  /// concurrently-running test files don't contend over a single SQLite
+  /// file (seeding writes the whole bundled word bank, so two files racing
+  /// on it deadlock rather than just interleaving).
+  static Future<AppRepositories> initialize({String? overridePath}) async {
+    final db = await AppDatabase.open(overridePath: overridePath);
     final words = WordRepository(db);
     await words.seedIfNeeded();
     final srs = SrsRepository(db);
