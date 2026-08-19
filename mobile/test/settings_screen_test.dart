@@ -40,7 +40,9 @@ void main() {
 
     await tester.runAsync(() async {
       settings = AppSettings();
-      repos = await AppRepositories.initialize();
+      repos = await AppRepositories.initialize(
+        overridePath: inMemoryDatabasePath,
+      );
     });
 
     await tester.pumpWidget(
