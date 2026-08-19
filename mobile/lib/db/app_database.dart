@@ -27,8 +27,7 @@ class AppDatabase {
     // sqflite_common_ffi in tests) and end up hitting a real platform
     // channel that has nothing to answer it.
     final path =
-        overridePath ??
-        join(await databaseFactory.getDatabasesPath(), _dbName);
+        overridePath ?? join(await databaseFactory.getDatabasesPath(), _dbName);
     final db = await databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(

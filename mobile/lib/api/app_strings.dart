@@ -13,6 +13,12 @@ class Strings {
 
     // Lessons / deck map
     'deckLocked': {AppLocale.ru: 'Заблокировано', AppLocale.en: 'Locked'},
+    'deckWordsLearned': {
+      AppLocale.ru: 'слов выучено',
+      AppLocale.en: 'words learned',
+    },
+    'todayTitle': {AppLocale.ru: 'Сегодня', AppLocale.en: 'Today'},
+    'continueLearning': {AppLocale.ru: 'Продолжить', AppLocale.en: 'Continue'},
     'deckCompleted': {AppLocale.ru: 'Пройдено', AppLocale.en: 'Completed'},
     'noReviewDue': {
       AppLocale.ru: 'Нечего повторять — все слова свежие!',
