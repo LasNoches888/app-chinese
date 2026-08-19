@@ -31,6 +31,7 @@ class AppSettings extends ChangeNotifier {
   static const _chatModeKey = 'chat_mode';
   static const _hfTokenKey = 'hf_token';
   static const _speechSpeedKey = 'speech_speed';
+  static const _onboardedKey = 'onboarded';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
 
   String _baseUrl = defaultBaseUrl;
@@ -60,6 +61,9 @@ class AppSettings extends ChangeNotifier {
   SpeechSpeed _speechSpeed = SpeechSpeed.slow;
   SpeechSpeed get speechSpeed => _speechSpeed;
 
+  bool _onboarded = false;
+  bool get onboarded => _onboarded;
+
   ChatApiClient get chatClient => ChatApiClient(baseUrl: _baseUrl);
 
   String t(String key) => Strings.of(_locale, key);
@@ -86,7 +90,15 @@ class AppSettings extends ChangeNotifier {
     _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
         ? SpeechSpeed.normal
         : SpeechSpeed.slow;
+    _onboarded = prefs.getBool(_onboardedKey) ?? false;
     notifyListeners();
+  }
+
+  Future<void> setOnboarded() async {
+    _onboarded = true;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardedKey, true);
   }
 
   Future<void> setSpeechSpeed(SpeechSpeed speed) async {
