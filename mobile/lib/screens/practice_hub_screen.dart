@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../components/app_background.dart';
 import 'listening_screen.dart';
+import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
 import 'reading_list_screen.dart';
 import 'scenario_list_screen.dart';
@@ -37,6 +38,16 @@ class PracticeHubScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            _PracticeCard(
+              emoji: '🧠',
+              title: settings.t('memoryMatchTitle'),
+              subtitle: settings.t('memoryMatchCardDesc'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const MemoryMatchScreen(),
+                ),
+              ),
+            ),
             _PracticeCard(
               emoji: '🎵',
               title: settings.t('toneTrainerTitle'),

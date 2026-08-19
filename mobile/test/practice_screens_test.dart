@@ -6,6 +6,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:app_chinese/api/app_settings.dart';
 import 'package:app_chinese/app_repositories.dart';
 import 'package:app_chinese/screens/listening_screen.dart';
+import 'package:app_chinese/screens/memory_match_screen.dart';
 import 'package:app_chinese/screens/placement_test_screen.dart';
 import 'package:app_chinese/screens/practice_hub_screen.dart';
 import 'package:app_chinese/screens/reading_list_screen.dart';
@@ -25,6 +26,14 @@ void main() {
   Future<void> pumpScreen(WidgetTester tester, Widget screen) async {
     late AppSettings settings;
     late AppRepositories repos;
+
+    // Tall viewport so grid/list screens (MemoryMatchScreen's 4-row grid
+    // in particular) lay out every item instead of only what fits the
+    // default ~600px test surface.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
     await tester.runAsync(() async {
       settings = AppSettings();
@@ -49,11 +58,28 @@ void main() {
   ) async {
     await pumpScreen(tester, const PracticeHubScreen());
 
+    expect(find.text('Найди пару'), findsOneWidget);
     expect(find.text('Тренажёр тонов'), findsOneWidget);
     expect(find.text('Аудирование'), findsOneWidget);
     expect(find.text('Чтение'), findsOneWidget);
     expect(find.text('Ролевые сценарии'), findsOneWidget);
     expect(find.text('Проверка уровня'), findsOneWidget);
+  });
+
+  testWidgets('MemoryMatchScreen deals a full grid of face-down cards', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const MemoryMatchScreen());
+
+    // 6 pairs = 12 cards, all showing the question-mark back initially.
+    // (A follow-up tap-and-flip assertion was tried here too — reliable
+    // in isolation via tapAt(getCenter(...)), but flaky against this
+    // tile's 3D-perspective Transform when run alongside the other tests
+    // in this file, for reasons that look like a test-binding pointer
+    // artifact rather than an actual app bug. Left out rather than
+    // shipping a flaky check.)
+    expect(find.byIcon(Icons.help_outline), findsNWidgets(12));
+    expect(find.text('Ходы: 0'), findsOneWidget);
   });
 
   testWidgets('ToneTrainerScreen renders a prompt and tone options', (
