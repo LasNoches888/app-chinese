@@ -277,6 +277,19 @@ class Strings {
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
+    'memoryMatchTitle': {
+      AppLocale.ru: 'Найди пару',
+      AppLocale.en: 'Memory match',
+    },
+    'memoryMatchCardDesc': {
+      AppLocale.ru: 'Переворачивай карточки, находи пары',
+      AppLocale.en: 'Flip cards, find the matching pairs',
+    },
+    'memoryMatchDone': {
+      AppLocale.ru: 'Все пары найдены!',
+      AppLocale.en: 'All pairs found!',
+    },
+    'memoryMatchMoves': {AppLocale.ru: 'Ходы', AppLocale.en: 'Moves'},
     'toneTrainerTitle': {
       AppLocale.ru: 'Тренажёр тонов',
       AppLocale.en: 'Tone trainer',
