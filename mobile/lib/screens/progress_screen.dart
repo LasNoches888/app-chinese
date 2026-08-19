@@ -140,13 +140,17 @@ class _ProgressScreenState extends State<ProgressScreen> {
                       settings.t('achievements'),
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                    const SizedBox(height: 10),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 10,
+                      crossAxisSpacing: 10,
+                      childAspectRatio: 1.35,
                       children: [
                         for (final def in kAchievementDefs)
-                          _achievementChip(settings, def),
+                          _achievementCard(context, settings, def),
                       ],
                     ),
                   ],
@@ -286,13 +290,78 @@ class _ProgressScreenState extends State<ProgressScreen> {
     );
   }
 
-  Widget _achievementChip(AppSettings settings, AchievementDef def) {
+  Widget _achievementCard(
+    BuildContext context,
+    AppSettings settings,
+    AchievementDef def,
+  ) {
     final unlocked = _unlocked.containsKey(def.code);
-    return Chip(
-      avatar: Text(def.icon),
-      label: Text(settings.t(def.titleKey)),
-      backgroundColor: unlocked ? Colors.amber.shade600 : null,
-      labelStyle: unlocked ? const TextStyle(color: Colors.white) : null,
+    final art = def.artAsset;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: unlocked
+            ? const LinearGradient(
+                colors: [Color(0xFFFFB03A), Color(0xFFFF7A59)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : null,
+        color: unlocked
+            ? null
+            : Theme.of(
+                context,
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        border: unlocked
+            ? null
+            : Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Stack(
+        children: [
+          if (art != null && unlocked)
+            Positioned(
+              right: -14,
+              bottom: -12,
+              child: Opacity(opacity: 0.9, child: Image.asset(art, height: 70)),
+            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Text(def.icon, style: const TextStyle(fontSize: 22)),
+                  const Spacer(),
+                  Icon(
+                    unlocked ? Icons.check_circle : Icons.lock_outline,
+                    size: 16,
+                    color: unlocked
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.outline,
+                  ),
+                ],
+              ),
+              Text(
+                settings.t(def.titleKey),
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                  color: unlocked ? Colors.white : null,
+                ),
+              ),
+              if (!unlocked)
+                Text(
+                  settings.t(def.descriptionKey),
+                  style: Theme.of(context).textTheme.bodySmall,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

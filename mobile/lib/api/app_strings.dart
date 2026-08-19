@@ -283,6 +283,10 @@ class Strings {
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
+    'practiceHeaderSubtitle': {
+      AppLocale.ru: 'Тренируй то, чего нет в обычных уроках',
+      AppLocale.en: "Drill what regular lessons don't cover",
+    },
     'dictionaryTitle': {AppLocale.ru: 'Словарь', AppLocale.en: 'Dictionary'},
     'dictionaryCardDesc': {
       AppLocale.ru: 'Найди любое слово, послушай, посмотри черты',

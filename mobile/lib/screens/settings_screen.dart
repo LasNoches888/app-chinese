@@ -23,7 +23,8 @@ class SettingsScreen extends StatefulWidget {
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen>
+    with StopSpeechOnDispose {
   late final TextEditingController _controller;
   late final TextEditingController _hfTokenController;
   UserStats? _stats;

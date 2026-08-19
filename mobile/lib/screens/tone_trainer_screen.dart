@@ -20,7 +20,8 @@ class ToneTrainerScreen extends StatefulWidget {
   State<ToneTrainerScreen> createState() => _ToneTrainerScreenState();
 }
 
-class _ToneTrainerScreenState extends State<ToneTrainerScreen> {
+class _ToneTrainerScreenState extends State<ToneTrainerScreen>
+    with StopSpeechOnDispose {
   final _rng = Random();
   late TonePairSet _set;
   late ToneWord _target;

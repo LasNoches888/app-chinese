@@ -8,6 +8,7 @@ import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/word.dart';
 import '../repositories/srs_repository.dart';
+import '../services/speech_service.dart';
 import '../services/srs_service.dart';
 
 /// Everything the app knows about one word in a single place: audio,
@@ -27,7 +28,7 @@ class WordDetailScreen extends StatefulWidget {
 }
 
 class _WordDetailScreenState extends State<WordDetailScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, StopSpeechOnDispose {
   WordSrsState? _srsState;
 
   @override

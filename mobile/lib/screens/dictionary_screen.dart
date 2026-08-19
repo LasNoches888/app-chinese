@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
+import '../services/speech_service.dart';
 import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/word.dart';
@@ -20,7 +21,8 @@ class DictionaryScreen extends StatefulWidget {
   State<DictionaryScreen> createState() => _DictionaryScreenState();
 }
 
-class _DictionaryScreenState extends State<DictionaryScreen> {
+class _DictionaryScreenState extends State<DictionaryScreen>
+    with StopSpeechOnDispose {
   final TextEditingController _queryCtl = TextEditingController();
   List<Word>? _all;
   String _query = '';

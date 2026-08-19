@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
+import '../services/speech_service.dart';
 import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/reading_passage.dart';
@@ -16,7 +17,8 @@ class ReadingPassageScreen extends StatefulWidget {
   State<ReadingPassageScreen> createState() => _ReadingPassageScreenState();
 }
 
-class _ReadingPassageScreenState extends State<ReadingPassageScreen> {
+class _ReadingPassageScreenState extends State<ReadingPassageScreen>
+    with StopSpeechOnDispose {
   bool _showTranslation = false;
   int? _selectedOption;
   bool _xpAwarded = false;
