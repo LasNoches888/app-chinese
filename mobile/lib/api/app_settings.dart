@@ -31,6 +31,8 @@ class AppSettings extends ChangeNotifier {
   static const _chatModeKey = 'chat_mode';
   static const _speechSpeedKey = 'speech_speed';
   static const _onboardedKey = 'onboarded';
+  static const _dailyChallengeDateKey = 'daily_challenge_completed_date';
+  static const _speedRoundBestKey = 'speed_round_best';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
 
   String _baseUrl = defaultBaseUrl;
@@ -60,6 +62,13 @@ class AppSettings extends ChangeNotifier {
   bool _onboarded = false;
   bool get onboarded => _onboarded;
 
+  String? _dailyChallengeCompletedDate;
+  bool get dailyChallengeCompletedToday =>
+      _dailyChallengeCompletedDate == _todayKey();
+
+  int _speedRoundBest = 0;
+  int get speedRoundBest => _speedRoundBest;
+
   ChatApiClient get chatClient => ChatApiClient(baseUrl: _baseUrl);
 
   String t(String key) => Strings.of(_locale, key);
@@ -86,7 +95,30 @@ class AppSettings extends ChangeNotifier {
         ? SpeechSpeed.normal
         : SpeechSpeed.slow;
     _onboarded = prefs.getBool(_onboardedKey) ?? false;
+    _dailyChallengeCompletedDate = prefs.getString(_dailyChallengeDateKey);
+    _speedRoundBest = prefs.getInt(_speedRoundBestKey) ?? 0;
     notifyListeners();
+  }
+
+  String _todayKey() {
+    final d = DateTime.now();
+    return '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> markDailyChallengeCompleted() async {
+    final key = _todayKey();
+    _dailyChallengeCompletedDate = key;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_dailyChallengeDateKey, key);
+  }
+
+  Future<void> reportSpeedRoundScore(int score) async {
+    if (score <= _speedRoundBest) return;
+    _speedRoundBest = score;
+    notifyListeners();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_speedRoundBestKey, score);
   }
 
   Future<void> setOnboarded() async {

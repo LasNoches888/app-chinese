@@ -18,6 +18,7 @@ class LessonSessionScreen extends StatefulWidget {
   final String title;
   final String? deckIdToComplete;
   final bool isReview;
+  final VoidCallback? onFinished;
 
   const LessonSessionScreen({
     super.key,
@@ -25,6 +26,7 @@ class LessonSessionScreen extends StatefulWidget {
     required this.title,
     this.deckIdToComplete,
     this.isReview = false,
+    this.onFinished,
   });
 
   @override
@@ -135,6 +137,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
       latestStats,
     );
     final mistakeWords = await repos.words.getWordsByIds(_mistakeIds.toList());
+    widget.onFinished?.call();
 
     if (!mounted) return;
     final settings = context.read<AppSettings>();
