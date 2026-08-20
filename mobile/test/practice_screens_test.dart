@@ -9,6 +9,7 @@ import 'package:app_chinese/screens/listening_screen.dart';
 import 'package:app_chinese/screens/memory_match_screen.dart';
 import 'package:app_chinese/screens/placement_test_screen.dart';
 import 'package:app_chinese/screens/practice_hub_screen.dart';
+import 'package:app_chinese/screens/race_screen.dart';
 import 'package:app_chinese/screens/reading_list_screen.dart';
 import 'package:app_chinese/screens/scenario_list_screen.dart';
 import 'package:app_chinese/screens/speed_round_screen.dart';
@@ -70,6 +71,7 @@ void main() {
     expect(find.text('Ежедневное испытание'), findsOneWidget);
     expect(find.text('Слово дня'), findsOneWidget);
     expect(find.text('Игра на время'), findsOneWidget);
+    expect(find.text('Гонка с пандой'), findsOneWidget);
   });
 
   testWidgets('SpeedRoundScreen loads a prompt with four options', (
@@ -78,6 +80,16 @@ void main() {
     await pumpScreen(tester, const SpeedRoundScreen());
 
     expect(find.textContaining('⏱'), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsNWidgets(4));
+  });
+
+  testWidgets('RaceScreen loads a prompt with both racers at the start', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const RaceScreen());
+
+    expect(find.text('Ты'), findsOneWidget);
+    expect(find.text('Панда'), findsOneWidget);
     expect(find.byType(OutlinedButton), findsNWidgets(4));
   });
 

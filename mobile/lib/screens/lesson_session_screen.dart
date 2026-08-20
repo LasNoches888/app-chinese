@@ -18,7 +18,11 @@ class LessonSessionScreen extends StatefulWidget {
   final String title;
   final String? deckIdToComplete;
   final bool isReview;
-  final VoidCallback? onFinished;
+
+  /// Runs before achievements are evaluated, so a counter it bumps (e.g.
+  /// "daily challenges completed") is reflected in *this* session's unlock
+  /// check rather than lagging a session behind.
+  final Future<void> Function()? onFinished;
 
   const LessonSessionScreen({
     super.key,
@@ -132,12 +136,12 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
       await repos.stats.restoreHeartsFully();
     }
 
+    await widget.onFinished?.call();
     final latestStats = await repos.stats.getStats();
     final newAchievements = await repos.achievements.evaluateAndUnlock(
       latestStats,
     );
     final mistakeWords = await repos.words.getWordsByIds(_mistakeIds.toList());
-    widget.onFinished?.call();
 
     if (!mounted) return;
     final settings = context.read<AppSettings>();

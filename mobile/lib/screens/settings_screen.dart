@@ -24,7 +24,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen>
-    with StopSpeechOnDispose {
+    with StopSpeechOnDispose, WidgetsBindingObserver {
   late final TextEditingController _controller;
   UserStats? _stats;
   bool _downloading = false;
@@ -37,6 +37,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     _controller = TextEditingController(
       text: context.read<AppSettings>().baseUrl,
     );
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Coming back from Android's "install voice data" flow is the one case
+    // where speech availability can change without any action inside this
+    // screen — recheck so the panel updates itself instead of needing a
+    // manual refresh.
+    if (state == AppLifecycleState.resumed) setState(() {});
   }
 
   @override
@@ -61,6 +71,7 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controller.dispose();
     super.dispose();
   }
@@ -427,15 +438,33 @@ class _SettingsScreenState extends State<SettingsScreen>
         if (snapshot.hasData && snapshot.data != true) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.info_outline, size: 20, color: Colors.orange),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    settings.t('speechUnavailable'),
-                    style: Theme.of(context).textTheme.bodySmall,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 20,
+                      color: Colors.orange,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        settings.t('speechUnavailable'),
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: SpeechService.openVoiceInstall,
+                    icon: const Icon(Icons.download_outlined),
+                    label: Text(settings.t('installVoice')),
                   ),
                 ),
               ],
