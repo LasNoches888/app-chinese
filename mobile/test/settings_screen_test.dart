@@ -90,13 +90,18 @@ void main() {
   ) async {
     await pumpSettings(tester);
 
-    // Server mode is the default, so its URL field shows first.
-    expect(find.text('Адрес сервера чата'), findsOneWidget);
+    // The server URL field is collapsed by default — advanced/dev only.
+    expect(find.text('Адрес сервера чата'), findsNothing);
 
     await tester.tap(find.text('Друг поблизости'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Адрес сервера чата'), findsNothing);
-    expect(find.text('Позвать в гости'), findsOneWidget);
+    // Status was preset to `absent` (not `unknown`) in setUp, so this
+    // doesn't auto-retry a download — it shows the tap-to-retry panel,
+    // exercising the render path without touching the real network.
+    expect(
+      find.text('Друг заблудился по пути — коснитесь, чтобы позвать снова'),
+      findsOneWidget,
+    );
   });
 }

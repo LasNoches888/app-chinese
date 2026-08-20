@@ -16,6 +16,7 @@ class SpeechService {
   static final FlutterTts _tts = FlutterTts();
   static bool _initialized = false;
   static bool _available = false;
+  static bool _autoInstallAttempted = false;
 
   /// The text currently being spoken, so a button can show a playing state
   /// and callers can tell which of several words is sounding.
@@ -54,7 +55,17 @@ class SpeechService {
   /// learners generally need slower than that to catch tones.
   static Future<void> speak(String text, {double rate = 0.45}) async {
     if (text.trim().isEmpty) return;
-    if (!await ensureInitialized()) return;
+    if (!await ensureInitialized()) {
+      // Rather than sending the learner to Settings to find a "download
+      // voice" button, the first tap on any speak button just quietly
+      // opens the system voice picker itself — once per app session, so
+      // it doesn't keep yanking them out of the app on every retry.
+      if (!_autoInstallAttempted) {
+        _autoInstallAttempted = true;
+        await openVoiceInstall();
+      }
+      return;
+    }
     try {
       // Tapping a second word should switch to it, not queue behind the
       // first — stop before speaking rather than relying on queue mode.
