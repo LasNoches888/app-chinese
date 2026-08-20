@@ -26,7 +26,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen>
     with StopSpeechOnDispose {
   late final TextEditingController _controller;
-  late final TextEditingController _hfTokenController;
   UserStats? _stats;
   bool _downloading = false;
   int _downloadProgress = 0;
@@ -37,9 +36,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     super.initState();
     _controller = TextEditingController(
       text: context.read<AppSettings>().baseUrl,
-    );
-    _hfTokenController = TextEditingController(
-      text: context.read<AppSettings>().hfToken,
     );
   }
 
@@ -66,7 +62,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   void dispose() {
     _controller.dispose();
-    _hfTokenController.dispose();
     super.dispose();
   }
 
@@ -147,9 +142,7 @@ class _SettingsScreenState extends State<SettingsScreen>
     ).showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
-  Future<void> _downloadLocalModel(AppSettings settings) async {
-    final token = _hfTokenController.text.trim();
-    if (token.isNotEmpty) await settings.setHfToken(token);
+  Future<void> _downloadLocalModel() async {
     setState(() {
       _downloading = true;
       _downloadProgress = 0;
@@ -157,7 +150,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     });
     try {
       await LocalLlmService.downloadModel(
-        huggingFaceToken: token.isEmpty ? null : token,
         onProgress: (p) {
           if (mounted) setState(() => _downloadProgress = p);
         },
@@ -177,8 +169,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: false,
       appBar: AppBar(
         title: Text(settings.t('settings')),
         backgroundColor: Colors.transparent,
@@ -630,34 +620,6 @@ class _SettingsScreenState extends State<SettingsScreen>
             settings.t('nearbyFriendIntro'),
             style: theme.textTheme.bodySmall,
           ),
-          const SizedBox(height: 18),
-          Text(
-            settings.t('hfTokenLabelOptional'),
-            style: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            settings.t('hfTokenHint'),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _hfTokenController,
-            enabled: !_downloading,
-            obscureText: true,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              prefixIcon: const Icon(Icons.vpn_key_outlined),
-              hintText: 'hf_...',
-              isDense: true,
-              filled: true,
-              fillColor: theme.colorScheme.surface,
-            ),
-          ),
           const SizedBox(height: 16),
           if (_downloading) ...[
             ClipRRect(
@@ -681,7 +643,7 @@ class _SettingsScreenState extends State<SettingsScreen>
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                onPressed: () => _downloadLocalModel(settings),
+                onPressed: _downloadLocalModel,
                 icon: const Icon(Icons.download_outlined),
                 label: Text(settings.t('startTraining')),
               ),
@@ -689,7 +651,7 @@ class _SettingsScreenState extends State<SettingsScreen>
           if (_downloadError != null) ...[
             const SizedBox(height: 10),
             Text(
-              '${settings.t('error')}: $_downloadError',
+              settings.t('downloadFailed'),
               style: const TextStyle(color: Colors.red, fontSize: 12),
             ),
           ],

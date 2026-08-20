@@ -97,6 +97,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Адрес сервера чата'), findsNothing);
-    expect(find.text('Токен HuggingFace (не обязательно)'), findsOneWidget);
+    expect(find.text('Позвать в гости'), findsOneWidget);
   });
 }
