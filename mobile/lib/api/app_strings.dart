@@ -356,6 +356,44 @@ class Strings {
       AppLocale.ru: 'Раунд завершён',
       AppLocale.en: 'Round complete',
     },
+    'dailyChallengeTitle': {
+      AppLocale.ru: 'Ежедневное испытание',
+      AppLocale.en: 'Daily challenge',
+    },
+    'dailyChallengeCardDesc': {
+      AppLocale.ru: '5 слов, один раз в день, общие для всех',
+      AppLocale.en: '5 words, once a day, the same for everyone',
+    },
+    'dailyChallengeDoneToday': {
+      AppLocale.ru: 'Сделано сегодня — приходи завтра',
+      AppLocale.en: 'Done for today — come back tomorrow',
+    },
+    'wordOfTheDayTitle': {
+      AppLocale.ru: 'Слово дня',
+      AppLocale.en: 'Word of the day',
+    },
+    'wordOfTheDayCardDesc': {
+      AppLocale.ru: 'Одно новое слово каждый день',
+      AppLocale.en: 'One new word, every day',
+    },
+    'speedRoundTitle': {
+      AppLocale.ru: 'Игра на время',
+      AppLocale.en: 'Speed round',
+    },
+    'speedRoundCardDesc': {
+      AppLocale.ru: '60 секунд, сколько слов угадаешь',
+      AppLocale.en: '60 seconds — how many can you get right',
+    },
+    'speedRoundScore': {AppLocale.ru: 'Счёт', AppLocale.en: 'Score'},
+    'speedRoundDone': {
+      AppLocale.ru: 'Время вышло!',
+      AppLocale.en: "Time's up!",
+    },
+    'speedRoundNewBest': {
+      AppLocale.ru: 'Новый рекорд! 🎉',
+      AppLocale.en: 'New personal best! 🎉',
+    },
+    'speedRoundBest': {AppLocale.ru: 'Рекорд', AppLocale.en: 'Best'},
     'placementTitle': {
       AppLocale.ru: 'Проверка уровня',
       AppLocale.en: 'Placement test',

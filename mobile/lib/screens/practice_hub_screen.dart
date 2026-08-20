@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
+import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../services/daily_content_service.dart';
 import 'dictionary_screen.dart';
+import 'lesson_session_screen.dart';
 import 'listening_screen.dart';
 import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
 import 'reading_list_screen.dart';
 import 'scenario_list_screen.dart';
 import 'settings_screen.dart';
+import 'speed_round_screen.dart';
 import 'tone_trainer_screen.dart';
+import 'word_detail_screen.dart';
 
 /// Entry point for the practice modes that sit outside the core SRS lesson
 /// loop: tone drilling, listening, reading, roleplay, and the one-off
@@ -19,6 +24,38 @@ import 'tone_trainer_screen.dart';
 /// review/chat are.
 class PracticeHubScreen extends StatelessWidget {
   const PracticeHubScreen({super.key});
+
+  Future<void> _openDailyChallenge(BuildContext context) async {
+    final repos = context.read<AppRepositories>();
+    final settings = context.read<AppSettings>();
+    final allWords = await repos.words.getAllWords();
+    final wordIds = DailyContentService.dailyChallengeWordIds(
+      allWords.map((w) => w.id).toList(),
+    );
+    if (wordIds.isEmpty || !context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LessonSessionScreen(
+          wordIds: wordIds,
+          title: settings.t('dailyChallengeTitle'),
+          onFinished: () => settings.markDailyChallengeCompleted(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _openWordOfTheDay(BuildContext context) async {
+    final repos = context.read<AppRepositories>();
+    final allWords = await repos.words.getAllWords();
+    final wordId = DailyContentService.wordOfTheDayId(
+      allWords.map((w) => w.id).toList(),
+    );
+    final word = wordId.isEmpty ? null : await repos.words.getWord(wordId);
+    if (word == null || !context.mounted) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => WordDetailScreen(word: word)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,6 +78,34 @@ class PracticeHubScreen extends StatelessWidget {
           children: [
             const _PracticeHeader(),
             const SizedBox(height: 18),
+            _PracticeCard(
+              emoji: '🏆',
+              title: settings.t('dailyChallengeTitle'),
+              subtitle: settings.dailyChallengeCompletedToday
+                  ? settings.t('dailyChallengeDoneToday')
+                  : settings.t('dailyChallengeCardDesc'),
+              done: settings.dailyChallengeCompletedToday,
+              onTap: () => _openDailyChallenge(context),
+            ),
+            _PracticeCard(
+              emoji: '💡',
+              title: settings.t('wordOfTheDayTitle'),
+              subtitle: settings.t('wordOfTheDayCardDesc'),
+              onTap: () => _openWordOfTheDay(context),
+            ),
+            _PracticeCard(
+              emoji: '⚡',
+              title: settings.t('speedRoundTitle'),
+              subtitle: settings.speedRoundBest > 0
+                  ? '${settings.t('speedRoundBest')}: ${settings.speedRoundBest}'
+                  : settings.t('speedRoundCardDesc'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SpeedRoundScreen(),
+                ),
+              ),
+            ),
+            const Divider(height: 32),
             _PracticeCard(
               emoji: '🧠',
               title: settings.t('memoryMatchTitle'),
@@ -181,12 +246,14 @@ class _PracticeCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback onTap;
+  final bool done;
 
   const _PracticeCard({
     required this.emoji,
     required this.title,
     required this.subtitle,
     required this.onTap,
+    this.done = false,
   });
 
   @override
@@ -197,7 +264,9 @@ class _PracticeCard extends StatelessWidget {
         leading: Text(emoji, style: const TextStyle(fontSize: 30)),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
         subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right),
+        trailing: done
+            ? const Icon(Icons.check_circle, color: Colors.green)
+            : const Icon(Icons.chevron_right),
         onTap: onTap,
       ),
     );

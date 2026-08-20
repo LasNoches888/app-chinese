@@ -11,6 +11,7 @@ import 'package:app_chinese/screens/placement_test_screen.dart';
 import 'package:app_chinese/screens/practice_hub_screen.dart';
 import 'package:app_chinese/screens/reading_list_screen.dart';
 import 'package:app_chinese/screens/scenario_list_screen.dart';
+import 'package:app_chinese/screens/speed_round_screen.dart';
 import 'package:app_chinese/screens/tone_trainer_screen.dart';
 
 /// Smoke coverage for the six new practice-mode screens — Settings shipped
@@ -66,6 +67,18 @@ void main() {
     expect(find.text('Чтение'), findsOneWidget);
     expect(find.text('Ролевые сценарии'), findsOneWidget);
     expect(find.text('Проверка уровня'), findsOneWidget);
+    expect(find.text('Ежедневное испытание'), findsOneWidget);
+    expect(find.text('Слово дня'), findsOneWidget);
+    expect(find.text('Игра на время'), findsOneWidget);
+  });
+
+  testWidgets('SpeedRoundScreen loads a prompt with four options', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const SpeedRoundScreen());
+
+    expect(find.textContaining('⏱'), findsOneWidget);
+    expect(find.byType(OutlinedButton), findsNWidgets(4));
   });
 
   testWidgets('MemoryMatchScreen deals a full grid of face-down cards', (
