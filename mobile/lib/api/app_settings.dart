@@ -29,7 +29,6 @@ class AppSettings extends ChangeNotifier {
   static const _reminderHourKey = 'reminder_hour';
   static const _reminderMinuteKey = 'reminder_minute';
   static const _chatModeKey = 'chat_mode';
-  static const _hfTokenKey = 'hf_token';
   static const _speechSpeedKey = 'speech_speed';
   static const _onboardedKey = 'onboarded';
   static const defaultBaseUrl = 'http://10.0.2.2:8000';
@@ -54,9 +53,6 @@ class AppSettings extends ChangeNotifier {
 
   ChatMode _chatMode = ChatMode.server;
   ChatMode get chatMode => _chatMode;
-
-  String _hfToken = '';
-  String get hfToken => _hfToken;
 
   SpeechSpeed _speechSpeed = SpeechSpeed.slow;
   SpeechSpeed get speechSpeed => _speechSpeed;
@@ -86,7 +82,6 @@ class AppSettings extends ChangeNotifier {
     _chatMode = prefs.getString(_chatModeKey) == 'local'
         ? ChatMode.local
         : ChatMode.server;
-    _hfToken = prefs.getString(_hfTokenKey) ?? '';
     _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
         ? SpeechSpeed.normal
         : SpeechSpeed.slow;
@@ -150,13 +145,6 @@ class AppSettings extends ChangeNotifier {
       _chatModeKey,
       mode == ChatMode.local ? 'local' : 'server',
     );
-  }
-
-  Future<void> setHfToken(String token) async {
-    _hfToken = token;
-    notifyListeners();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_hfTokenKey, token);
   }
 
   Future<void> setReminder({

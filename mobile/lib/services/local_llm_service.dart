@@ -34,10 +34,8 @@ enum LocalModelStatus {
 /// it per message, giving the local tutor actual conversation memory the
 /// server path doesn't have.
 class LocalLlmService {
-  // TODO: replace with the real HF repo once the fine-tuned GGUF is
-  // uploaded (hf upload <repo> tutor-v2-qwen1.5b-Q4_K_M.gguf).
   static const modelSource =
-      'hf://REPLACE_ME/uchi-tutor-qwen1.5b/tutor-v2-qwen1.5b-Q4_K_M.gguf';
+      'hf://LasNoches888/ChineseTeacher/tutor-v2-qwen1.5b-Q4_K_M.gguf';
 
   static const _modelParams = ModelParams(contextSize: 4096, gpuLayers: 0);
 
@@ -90,18 +88,12 @@ class LocalLlmService {
 
   static Future<void> downloadModel({
     required void Function(int percent) onProgress,
-    String? huggingFaceToken,
   }) async {
     status.value = LocalModelStatus.downloading;
     try {
       await _sharedEngine.loadModelSource(
         ModelSource.parse(modelSource),
         modelParams: _modelParams,
-        options: ModelLoadOptions(
-          bearerToken: (huggingFaceToken?.isEmpty ?? true)
-              ? null
-              : huggingFaceToken,
-        ),
         onProgress: (progress) {
           final fraction = progress.fraction;
           if (fraction != null) onProgress((fraction * 100).round());

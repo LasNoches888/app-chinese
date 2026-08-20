@@ -245,16 +245,6 @@ class Strings {
       AppLocale.ru: 'Друг поблизости просыпается…',
       AppLocale.en: 'Your nearby friend is waking up…',
     },
-    'hfTokenLabelOptional': {
-      AppLocale.ru: 'Токен HuggingFace (не обязательно)',
-      AppLocale.en: 'HuggingFace token (optional)',
-    },
-    'hfTokenHint': {
-      AppLocale.ru:
-          'Нужен, только если репозиторий с моделью сделан приватным — тогда создайте read-токен на huggingface.co (Settings → Access Tokens). Для публичного репозитория поле можно оставить пустым.',
-      AppLocale.en:
-          'Only needed if the model repo is private — create a read token on huggingface.co (Settings → Access Tokens). Leave this blank for a public repo.',
-    },
     'startTraining': {
       AppLocale.ru: 'Позвать в гости',
       AppLocale.en: 'Invite them over',
@@ -262,6 +252,11 @@ class Strings {
     'trainingInProgress': {
       AppLocale.ru: 'Идёт в гости',
       AppLocale.en: 'On their way',
+    },
+    'downloadFailed': {
+      AppLocale.ru:
+          'Не получилось скачать — проверьте соединение и попробуйте ещё раз',
+      AppLocale.en: 'Download failed — check your connection and try again',
     },
     'localModelUnavailable': {
       AppLocale.ru: 'Друг поблизости ещё не зашёл в гости — откройте Настройки',
