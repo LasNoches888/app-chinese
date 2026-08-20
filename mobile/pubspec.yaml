@@ -43,7 +43,7 @@ flutter:
 flutter_launcher_icons:
   android: true
   image_path: "assets/icon/icon_source.png"
-  adaptive_icon_background: "#6C5CE7"
+  adaptive_icon_background: "assets/icon/icon_background.png"
   adaptive_icon_foreground: "assets/icon/icon_foreground.png"
 
 # Only ship the llama.cpp runtime (not litert_lm, which we don't use) and
