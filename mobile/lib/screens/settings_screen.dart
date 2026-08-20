@@ -29,7 +29,7 @@ class _SettingsScreenState extends State<SettingsScreen>
   UserStats? _stats;
   bool _downloading = false;
   int _downloadProgress = 0;
-  String? _downloadError;
+  bool _showServerUrlField = false;
 
   @override
   void initState() {
@@ -59,8 +59,16 @@ class _SettingsScreenState extends State<SettingsScreen>
     // someone who only ever talks to the server would be pure waste.
     if (context.read<AppSettings>().chatMode == ChatMode.local &&
         LocalLlmService.status.value == LocalModelStatus.unknown) {
-      LocalLlmService.loadFromCacheIfPresent();
+      _ensureLocalModelReady();
     }
+  }
+
+  /// Checks the on-disk cache and, if nothing's there yet, starts the
+  /// download immediately — picking "Nearby friend" is itself the only
+  /// action needed, rather than a separate confirm-to-download step.
+  Future<void> _ensureLocalModelReady() async {
+    final cached = await LocalLlmService.loadFromCacheIfPresent();
+    if (!cached && mounted) _downloadLocalModel();
   }
 
   Future<void> _loadStats() async {
@@ -157,7 +165,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     setState(() {
       _downloading = true;
       _downloadProgress = 0;
-      _downloadError = null;
     });
     try {
       await LocalLlmService.downloadModel(
@@ -167,12 +174,9 @@ class _SettingsScreenState extends State<SettingsScreen>
       );
       if (!mounted) return;
       setState(() => _downloading = false);
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      setState(() {
-        _downloading = false;
-        _downloadError = '$e';
-      });
+      setState(() => _downloading = false);
     }
   }
 
@@ -356,8 +360,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                                   context.read<AppSettings>().setChatMode(
                                     ChatMode.local,
                                   );
+                                  // Only auto-starts on the very first check
+                                  // this session — once a download has
+                                  // failed, re-tapping the mode card
+                                  // shouldn't silently retry behind the
+                                  // learner's back; they tap the retry
+                                  // panel itself instead.
                                   if (modelStatus == LocalModelStatus.unknown) {
-                                    LocalLlmService.loadFromCacheIfPresent();
+                                    _ensureLocalModelReady();
                                   }
                                 },
                               ),
@@ -432,39 +442,25 @@ class _SettingsScreenState extends State<SettingsScreen>
     return FutureBuilder<bool>(
       future: SpeechService.ensureInitialized(),
       builder: (context, snapshot) {
-        // Telling the learner *why* there's no audio, and how to fix it, is
-        // the whole point — a silently missing control would just look like
-        // the feature doesn't exist.
+        // No setup action to offer here on purpose — the first tap on any
+        // ▶ button anywhere in the app quietly triggers the voice install
+        // itself (see SpeechService.speak), so this is just a status note.
         if (snapshot.hasData && snapshot.data != true) {
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
+            child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.info_outline,
-                      size: 20,
-                      color: Colors.orange,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        settings.t('speechUnavailable'),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
+                const Icon(
+                  Icons.bedtime_outlined,
+                  size: 20,
+                  color: Colors.grey,
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: SpeechService.openVoiceInstall,
-                    icon: const Icon(Icons.download_outlined),
-                    label: Text(settings.t('installVoice')),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    settings.t('speechUnavailable'),
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
                 ),
               ],
@@ -514,40 +510,76 @@ class _SettingsScreenState extends State<SettingsScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          settings.t('backendUrl'),
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _controller,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-            prefixIcon: const Icon(Icons.link),
-            hintText: 'http://10.0.2.2:8000',
-            isDense: true,
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: _accentBlue,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                settings.t('professorReady'),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-            onPressed: () {
-              context.read<AppSettings>().setBaseUrl(_controller.text.trim());
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(settings.t('saved'))));
-            },
-            icon: const Icon(Icons.save_outlined),
-            label: Text(settings.t('save')),
-          ),
+            TextButton(
+              onPressed: () =>
+                  setState(() => _showServerUrlField = !_showServerUrlField),
+              child: Text(settings.t('professorAdvanced')),
+            ),
+          ],
+        ),
+        // Off by default — changing the backend address is a dev/testing
+        // action, not something every learner needs to see or touch.
+        AnimatedSize(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          alignment: Alignment.topCenter,
+          child: !_showServerUrlField
+              ? const SizedBox(width: double.infinity)
+              : Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        settings.t('backendUrl'),
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _controller,
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: const Icon(Icons.link),
+                          hintText: 'http://10.0.2.2:8000',
+                          isDense: true,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton.icon(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _accentBlue,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            context.read<AppSettings>().setBaseUrl(
+                              _controller.text.trim(),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(settings.t('saved'))),
+                            );
+                          },
+                          icon: const Icon(Icons.save_outlined),
+                          label: Text(settings.t('save')),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
         ),
       ],
     );
@@ -617,75 +649,75 @@ class _SettingsScreenState extends State<SettingsScreen>
       );
     }
 
-    return Container(
+    final container = Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: _accentGreen.withValues(alpha: 0.4)),
         color: _accentGreen.withValues(alpha: 0.06),
       ),
       padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _EmojiAvatar(
-                emoji: '🚪',
-                background: _accentGreen.withValues(alpha: 0.18),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Text(
-                  settings.t('nearbyFriendNeedsSetup'),
-                  style: theme.textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
+      child: _downloading
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _EmojiAvatar(
+                      emoji: '🚪',
+                      background: _accentGreen.withValues(alpha: 0.18),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Text(
+                        settings.t('nearbyFriendKnocking'),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: _downloadProgress / 100,
+                    minHeight: 10,
+                    color: _accentGreen,
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            settings.t('nearbyFriendIntro'),
-            style: theme.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 16),
-          if (_downloading) ...[
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                value: _downloadProgress / 100,
-                minHeight: 10,
-                color: _accentGreen,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text('${settings.t('trainingInProgress')}… $_downloadProgress%'),
-          ] else
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: _accentGreen,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                const SizedBox(height: 8),
+                Text(
+                  '${settings.t('trainingInProgress')}… $_downloadProgress%',
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            )
+          // Only reachable after a failed attempt — a normal download starts
+          // the moment "Nearby friend" is picked, with no separate button.
+          : Row(
+              children: [
+                _EmojiAvatar(
+                  emoji: '🚪',
+                  background: _accentGreen.withValues(alpha: 0.18),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    settings.t('nearbyFriendRetry'),
+                    style: theme.textTheme.bodySmall,
                   ),
                 ),
-                onPressed: _downloadLocalModel,
-                icon: const Icon(Icons.download_outlined),
-                label: Text(settings.t('startTraining')),
-              ),
+                const Icon(Icons.refresh, color: _accentGreen),
+              ],
             ),
-          if (_downloadError != null) ...[
-            const SizedBox(height: 10),
-            Text(
-              settings.t('downloadFailed'),
-              style: const TextStyle(color: Colors.red, fontSize: 12),
-            ),
-          ],
-        ],
-      ),
+    );
+
+    if (_downloading) return container;
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: _downloadLocalModel,
+      child: container,
     );
   }
 }

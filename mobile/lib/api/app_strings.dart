@@ -237,15 +237,13 @@ class Strings {
       AppLocale.ru: 'Живёт у вас в телефоне — работает офлайн',
       AppLocale.en: 'Lives right on your phone — works offline',
     },
-    'nearbyFriendNeedsSetup': {
-      AppLocale.ru: 'Друг поблизости пока не зашёл в гости',
-      AppLocale.en: 'Your nearby friend hasn\'t stopped by yet',
+    'nearbyFriendKnocking': {
+      AppLocale.ru: 'Друг поблизости стучится в дверь…',
+      AppLocale.en: 'Your nearby friend is knocking at the door…',
     },
-    'nearbyFriendIntro': {
-      AppLocale.ru:
-          'Друг поблизости — это ваш собственный младший наставник (Qwen 1.5B), обученный на диалогах старшего профессора. Живёт прямо на телефоне и болтает совсем без интернета — но сначала его нужно один раз позвать в гости: скачать модель (~1 ГБ). Дальше сеть не понадобится вообще.',
-      AppLocale.en:
-          'Your nearby friend is your own smaller tutor (Qwen 1.5B), distilled from the big professor\'s conversations. It lives right on your phone and chats with zero internet — but first you need to invite them over once: download the model (~1 GB). After that, no network needed at all.',
+    'nearbyFriendRetry': {
+      AppLocale.ru: 'Друг заблудился по пути — коснитесь, чтобы позвать снова',
+      AppLocale.en: 'Your friend got lost on the way — tap to call them again',
     },
     'nearbyFriendReady': {
       AppLocale.ru: 'Друг поблизости зашёл в гости и готов болтать офлайн 👋',
@@ -256,18 +254,9 @@ class Strings {
       AppLocale.ru: 'Друг поблизости просыпается…',
       AppLocale.en: 'Your nearby friend is waking up…',
     },
-    'startTraining': {
-      AppLocale.ru: 'Позвать в гости',
-      AppLocale.en: 'Invite them over',
-    },
     'trainingInProgress': {
       AppLocale.ru: 'Идёт в гости',
       AppLocale.en: 'On their way',
-    },
-    'downloadFailed': {
-      AppLocale.ru:
-          'Не получилось скачать — проверьте соединение и попробуйте ещё раз',
-      AppLocale.en: 'Download failed — check your connection and try again',
     },
     'localModelUnavailable': {
       AppLocale.ru: 'Друг поблизости ещё не зашёл в гости — откройте Настройки',
@@ -292,12 +281,10 @@ class Strings {
       AppLocale.en: 'Test the voice',
     },
     'speechUnavailable': {
-      AppLocale.ru: 'На устройстве нет китайского голоса — его нужно скачать.',
-      AppLocale.en: 'No Mandarin voice on this device — it needs downloading.',
-    },
-    'installVoice': {
-      AppLocale.ru: 'Скачать голос',
-      AppLocale.en: 'Download voice',
+      AppLocale.ru:
+          'Голос ещё спит — проснётся сам, как только вы нажмёте ▶ где-нибудь.',
+      AppLocale.en:
+          'The voice is still asleep — it wakes up the first time you tap ▶ anywhere.',
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
@@ -493,6 +480,14 @@ class Strings {
     'backendUrl': {
       AppLocale.ru: 'Адрес сервера чата',
       AppLocale.en: 'Chat backend URL',
+    },
+    'professorReady': {
+      AppLocale.ru: 'Профессор на месте — просто пишите ему в чате',
+      AppLocale.en: 'The professor is in — just message them in chat',
+    },
+    'professorAdvanced': {
+      AppLocale.ru: 'Свой адрес сервера',
+      AppLocale.en: 'Custom server address',
     },
     'save': {AppLocale.ru: 'Сохранить', AppLocale.en: 'Save'},
     'saved': {AppLocale.ru: 'Сохранено', AppLocale.en: 'Saved'},
