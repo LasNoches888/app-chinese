@@ -45,6 +45,8 @@ class StatsRepository {
       'xp_today_date': stats.xpTodayDate,
       'perfect_lessons_count': stats.perfectLessonsCount,
       'streak_freezes': stats.streakFreezes,
+      'daily_challenges_completed': stats.dailyChallengesCompleted,
+      'race_wins': stats.raceWins,
     }, where: 'id = 1');
   }
 
@@ -118,6 +120,22 @@ class StatsRepository {
   Future<UserStats> recordPerfectLesson() async {
     var stats = await getStats();
     stats = stats.copyWith(perfectLessonsCount: stats.perfectLessonsCount + 1);
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> recordDailyChallengeCompleted() async {
+    var stats = await getStats();
+    stats = stats.copyWith(
+      dailyChallengesCompleted: stats.dailyChallengesCompleted + 1,
+    );
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> recordRaceWin() async {
+    var stats = await getStats();
+    stats = stats.copyWith(raceWins: stats.raceWins + 1);
     await _save(stats);
     return stats;
   }

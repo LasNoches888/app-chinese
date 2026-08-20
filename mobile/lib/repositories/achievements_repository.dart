@@ -55,6 +55,8 @@ class AchievementsRepository {
       'words_250': learnedWords >= 250,
       'perfect_lesson': stats.perfectLessonsCount >= 1,
       'hsk1_complete': await _isHsk1Complete(),
+      'daily_3': stats.dailyChallengesCompleted >= 3,
+      'race_5': stats.raceWins >= 5,
     };
 
     final newlyUnlocked = <String>[];

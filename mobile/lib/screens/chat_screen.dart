@@ -223,12 +223,12 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.all(12),
-                itemCount: _messages.length,
-                itemBuilder: (ctx, i) =>
-                    _MessageBubble(message: _messages[i], settings: settings),
+                itemCount: _messages.length + (_sending ? 1 : 0),
+                itemBuilder: (ctx, i) => i < _messages.length
+                    ? _MessageBubble(message: _messages[i], settings: settings)
+                    : _TypingBubble(label: settings.t('chatThinking')),
               ),
             ),
-            if (_sending) const LinearProgressIndicator(),
             SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -257,6 +257,43 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Stands in for the tutor's turn while a reply is generating — a bare
+/// progress bar at the bottom of the screen read as "something might be
+/// broken" during a slow (multi-second) model response; a bubble in the
+/// same spot the reply will land makes the wait legible as "it's typing".
+class _TypingBubble extends StatelessWidget {
+  final String label;
+
+  const _TypingBubble({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 10),
+            Text(label, style: Theme.of(context).textTheme.bodySmall),
           ],
         ),
       ),

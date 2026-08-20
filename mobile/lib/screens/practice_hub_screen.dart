@@ -10,6 +10,7 @@ import 'lesson_session_screen.dart';
 import 'listening_screen.dart';
 import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
+import 'race_screen.dart';
 import 'reading_list_screen.dart';
 import 'scenario_list_screen.dart';
 import 'settings_screen.dart';
@@ -38,7 +39,10 @@ class PracticeHubScreen extends StatelessWidget {
         builder: (_) => LessonSessionScreen(
           wordIds: wordIds,
           title: settings.t('dailyChallengeTitle'),
-          onFinished: () => settings.markDailyChallengeCompleted(),
+          onFinished: () async {
+            await settings.markDailyChallengeCompleted();
+            await repos.stats.recordDailyChallengeCompleted();
+          },
         ),
       ),
     );
@@ -103,6 +107,14 @@ class PracticeHubScreen extends StatelessWidget {
                 MaterialPageRoute<void>(
                   builder: (_) => const SpeedRoundScreen(),
                 ),
+              ),
+            ),
+            _PracticeCard(
+              emoji: '🏁',
+              title: settings.t('raceTitle'),
+              subtitle: settings.t('raceCardDesc'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const RaceScreen()),
               ),
             ),
             const Divider(height: 32),

@@ -192,6 +192,16 @@ class Strings {
       AppLocale.ru: 'Выучите все слова уровня HSK1',
       AppLocale.en: 'Learn every HSK1 word',
     },
+    'achDaily3': {AppLocale.ru: 'Постоянство', AppLocale.en: 'Consistency'},
+    'achDaily3Desc': {
+      AppLocale.ru: 'Пройдите ежедневное испытание 3 раза',
+      AppLocale.en: 'Complete the daily challenge 3 times',
+    },
+    'achRace5': {AppLocale.ru: 'Чемпион гонки', AppLocale.en: 'Race champion'},
+    'achRace5Desc': {
+      AppLocale.ru: 'Выиграйте гонку с пандой 5 раз',
+      AppLocale.en: 'Win the panda race 5 times',
+    },
 
     // Chat
     'chatHint': {
@@ -202,6 +212,7 @@ class Strings {
       AppLocale.ru: 'Чат с Xiao Qiao',
       AppLocale.en: 'Chat with Xiao Qiao',
     },
+    'chatThinking': {AppLocale.ru: 'печатает…', AppLocale.en: 'typing…'},
     'tryRecast': {AppLocale.ru: 'Лучше сказать', AppLocale.en: 'Try'},
     'offlineBanner': {
       AppLocale.ru: 'Нет подключения к интернету — чат недоступен офлайн',
@@ -281,10 +292,12 @@ class Strings {
       AppLocale.en: 'Test the voice',
     },
     'speechUnavailable': {
-      AppLocale.ru:
-          'На устройстве нет китайского голоса. Установите его в настройках Android: Система → Язык и ввод → Синтез речи → скачать 中文.',
-      AppLocale.en:
-          'No Mandarin voice on this device. Install one in Android settings: System → Languages & input → Text-to-speech → download 中文.',
+      AppLocale.ru: 'На устройстве нет китайского голоса — его нужно скачать.',
+      AppLocale.en: 'No Mandarin voice on this device — it needs downloading.',
+    },
+    'installVoice': {
+      AppLocale.ru: 'Скачать голос',
+      AppLocale.en: 'Download voice',
     },
     // Practice hub
     'practiceHub': {AppLocale.ru: 'Практика', AppLocale.en: 'Practice'},
@@ -394,6 +407,21 @@ class Strings {
       AppLocale.en: 'New personal best! 🎉',
     },
     'speedRoundBest': {AppLocale.ru: 'Рекорд', AppLocale.en: 'Best'},
+    'raceTitle': {
+      AppLocale.ru: 'Гонка с пандой',
+      AppLocale.en: 'Race the panda',
+    },
+    'raceCardDesc': {
+      AppLocale.ru: 'Отвечай быстрее панды — кто первый до финиша',
+      AppLocale.en: 'Answer faster than the panda — first to the finish wins',
+    },
+    'raceYou': {AppLocale.ru: 'Ты', AppLocale.en: 'You'},
+    'racePanda': {AppLocale.ru: 'Панда', AppLocale.en: 'Panda'},
+    'raceWinTitle': {AppLocale.ru: 'Победа! 🎉', AppLocale.en: 'You won! 🎉'},
+    'raceLoseTitle': {
+      AppLocale.ru: 'Панда обогнала',
+      AppLocale.en: 'The panda got there first',
+    },
     'placementTitle': {
       AppLocale.ru: 'Проверка уровня',
       AppLocale.en: 'Placement test',

@@ -94,6 +94,14 @@ class LocalLlmService {
       await _sharedEngine.loadModelSource(
         ModelSource.parse(modelSource),
         modelParams: _modelParams,
+        // A resumed download depends on the server returning the same
+        // validator (ETag/Last-Modified) it gave the first attempt — if an
+        // earlier try was interrupted (app killed, connection dropped) and
+        // that validator no longer matches, resuming can get permanently
+        // stuck instead of falling back to a clean download. Always
+        // starting over from zero is a little slower on a real retry but
+        // guarantees "tap the button again" actually works.
+        options: ModelLoadOptions(resume: false),
         onProgress: (progress) {
           final fraction = progress.fraction;
           if (fraction != null) onProgress((fraction * 100).round());

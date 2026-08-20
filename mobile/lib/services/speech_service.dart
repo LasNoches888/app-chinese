@@ -1,3 +1,6 @@
+import 'package:android_intent_plus/android_intent.dart';
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
@@ -61,6 +64,26 @@ class SpeechService {
       await _tts.speak(text);
     } catch (_) {
       speaking.value = null;
+    }
+  }
+
+  /// Opens Android's own "install voice data" flow for the TTS engine
+  /// (normally Google's), which lands the learner directly on the Mandarin
+  /// voice download rather than making them find System → Language & input
+  /// → Text-to-speech themselves. Resets the cached availability probe so
+  /// the next [ensureInitialized] call actually re-checks instead of
+  /// replaying the "not available" result from before the voice existed.
+  static Future<void> openVoiceInstall() async {
+    _initialized = false;
+    if (defaultTargetPlatform != TargetPlatform.android) return;
+    try {
+      const intent = AndroidIntent(
+        action: 'android.speech.tts.engine.ACTION_INSTALL_TTS_DATA',
+      );
+      await intent.launch();
+    } catch (_) {
+      // No activity can handle the intent (very old/custom ROM) — the
+      // learner just stays without Chinese speech, same as today.
     }
   }
 

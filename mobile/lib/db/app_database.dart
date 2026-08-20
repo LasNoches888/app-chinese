@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 /// for any of it; the backend is only ever consulted for `/chat`.
 class AppDatabase {
   static const _dbName = 'app_chinese.db';
-  static const _schemaVersion = 2;
+  static const _schemaVersion = 3;
 
   static Database? _instance;
 
@@ -39,6 +39,14 @@ class AppDatabase {
           if (oldVersion < 2) {
             await db.execute(
               'ALTER TABLE user_stats ADD COLUMN streak_freezes INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+          if (oldVersion < 3) {
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN daily_challenges_completed INTEGER NOT NULL DEFAULT 0',
+            );
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN race_wins INTEGER NOT NULL DEFAULT 0',
             );
           }
         },
@@ -103,7 +111,9 @@ class AppDatabase {
         xp_today INTEGER NOT NULL DEFAULT 0,
         xp_today_date TEXT,
         perfect_lessons_count INTEGER NOT NULL DEFAULT 0,
-        streak_freezes INTEGER NOT NULL DEFAULT 0
+        streak_freezes INTEGER NOT NULL DEFAULT 0,
+        daily_challenges_completed INTEGER NOT NULL DEFAULT 0,
+        race_wins INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''

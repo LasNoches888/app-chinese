@@ -74,6 +74,18 @@ const List<AchievementDef> kAchievementDefs = [
     descriptionKey: 'achHsk1Desc',
     artAsset: 'assets/mascot/panda_25.png',
   ),
+  AchievementDef(
+    code: 'daily_3',
+    icon: '🗓️',
+    titleKey: 'achDaily3',
+    descriptionKey: 'achDaily3Desc',
+  ),
+  AchievementDef(
+    code: 'race_5',
+    icon: '🏁',
+    titleKey: 'achRace5',
+    descriptionKey: 'achRace5Desc',
+  ),
 ];
 
 class UnlockedAchievement {

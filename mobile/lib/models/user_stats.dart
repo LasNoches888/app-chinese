@@ -11,6 +11,8 @@ class UserStats {
   final String? xpTodayDate;
   final int perfectLessonsCount;
   final int streakFreezes;
+  final int dailyChallengesCompleted;
+  final int raceWins;
 
   const UserStats({
     required this.totalXp,
@@ -25,6 +27,8 @@ class UserStats {
     required this.xpTodayDate,
     required this.perfectLessonsCount,
     required this.streakFreezes,
+    required this.dailyChallengesCompleted,
+    required this.raceWins,
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
@@ -44,6 +48,8 @@ class UserStats {
     xpTodayDate: map['xp_today_date'] as String?,
     perfectLessonsCount: map['perfect_lessons_count'] as int,
     streakFreezes: map['streak_freezes'] as int? ?? 0,
+    dailyChallengesCompleted: map['daily_challenges_completed'] as int? ?? 0,
+    raceWins: map['race_wins'] as int? ?? 0,
   );
 
   UserStats copyWith({
@@ -59,6 +65,8 @@ class UserStats {
     String? xpTodayDate,
     int? perfectLessonsCount,
     int? streakFreezes,
+    int? dailyChallengesCompleted,
+    int? raceWins,
   }) {
     return UserStats(
       totalXp: totalXp ?? this.totalXp,
@@ -73,6 +81,9 @@ class UserStats {
       xpTodayDate: xpTodayDate ?? this.xpTodayDate,
       perfectLessonsCount: perfectLessonsCount ?? this.perfectLessonsCount,
       streakFreezes: streakFreezes ?? this.streakFreezes,
+      dailyChallengesCompleted:
+          dailyChallengesCompleted ?? this.dailyChallengesCompleted,
+      raceWins: raceWins ?? this.raceWins,
     );
   }
 }

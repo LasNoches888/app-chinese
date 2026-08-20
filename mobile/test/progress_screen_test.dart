@@ -42,11 +42,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    // A grid of real cards, not the old Chip row — 8 achievements, all
+    // A grid of real cards, not the old Chip row — 10 achievements, all
     // locked on a fresh profile with no progress yet.
     expect(find.text('30 дней подряд'), findsOneWidget);
     expect(find.text('HSK1 пройден'), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(8));
+    expect(find.text('Чемпион гонки'), findsOneWidget);
+    expect(find.byIcon(Icons.lock_outline), findsNWidgets(10));
     expect(find.byIcon(Icons.check_circle), findsNothing);
   });
 }
