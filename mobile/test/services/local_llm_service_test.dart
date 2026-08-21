@@ -10,21 +10,27 @@ import 'package:app_chinese/services/local_llm_service.dart';
 void main() {
   group('LocalLlmService.isModelReady', () {
     test('is false before anything has been loaded', () {
-      expect(LocalLlmService.isModelReady, isFalse);
+      expect(LocalLlmService.isModelReady(LocalModelVariant.friend), isFalse);
+      expect(LocalLlmService.isModelReady(LocalModelVariant.tutor), isFalse);
     });
 
     test('clearing the chat session does not make the model unavailable', () {
       // resetSession() runs whenever chat history is cleared. It must only
       // drop conversation memory — the weights stay loaded, so readiness
       // must not depend on the session existing.
-      final before = LocalLlmService.isModelReady;
+      const variant = LocalModelVariant.friend;
+      final before = LocalLlmService.isModelReady(variant);
       LocalLlmService.resetSession();
-      expect(LocalLlmService.isModelReady, before);
+      expect(LocalLlmService.isModelReady(variant), before);
     });
 
     test('sending without a loaded model fails loudly, not silently', () async {
       await expectLater(
-        LocalLlmService.sendMessage('你好', systemPrompt: 'test'),
+        LocalLlmService.sendMessage(
+          LocalModelVariant.friend,
+          '你好',
+          systemPrompt: 'test',
+        ),
         throwsA(isA<StateError>()),
       );
     });

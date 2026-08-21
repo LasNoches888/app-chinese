@@ -66,7 +66,11 @@ class _ScenarioChatScreenState extends State<ScenarioChatScreen> {
         topicHintRu: widget.scenario.topicHintRu,
         openingLineZh: widget.scenario.openingLineZh,
       );
-      final raw = await LocalLlmService.sendMessage(text, systemPrompt: prompt);
+      final raw = await LocalLlmService.sendMessage(
+        LocalModelVariant.tutor,
+        text,
+        systemPrompt: prompt,
+      );
       final json = LocalLlmService.extractReplyJson(raw);
       final reply = json != null
           ? ChatMessage.fromReplyJson(json)

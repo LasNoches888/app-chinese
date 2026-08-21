@@ -10,6 +10,7 @@ import '../components/speak_button.dart';
 import '../models/chat_message.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
+import '../services/persona.dart';
 import '../services/system_prompt.dart';
 import 'settings_screen.dart';
 
@@ -41,10 +42,11 @@ class _ChatScreenState extends State<ChatScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // The weights are on disk but not in memory after a cold start — read
-    // them back so the tutor is usable without re-downloading.
-    if (context.read<AppSettings>().chatMode == ChatMode.local &&
-        LocalLlmService.status.value == LocalModelStatus.unknown) {
-      LocalLlmService.loadFromCacheIfPresent();
+    // them back so the active persona is usable without re-downloading.
+    final variant = localVariantFor(context.read<AppSettings>().chatMode);
+    if (variant != null &&
+        LocalLlmService.status[variant]!.value == LocalModelStatus.unknown) {
+      LocalLlmService.loadFromCacheIfPresent(variant);
     }
   }
 
@@ -72,9 +74,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _canSend(AppSettings settings) {
     if (_sending) return false;
-    if (settings.chatMode == ChatMode.local) {
-      return LocalLlmService.isModelReady;
-    }
+    final variant = localVariantFor(settings.chatMode);
+    if (variant != null) return LocalLlmService.isModelReady(variant);
     return _online;
   }
 
@@ -102,13 +103,21 @@ class _ChatScreenState extends State<ChatScreen> {
       )).map((w) => w.hanzi).toList();
 
       final ChatMessage reply;
-      if (settings.chatMode == ChatMode.local) {
-        final prompt = buildTutorSystemPrompt(
-          hskLevel: 1,
-          knownWords: knownWords,
-          weakWords: weakWords,
-        );
+      final variant = localVariantFor(settings.chatMode);
+      if (variant != null) {
+        final prompt = variant == LocalModelVariant.friend
+            ? buildFriendSystemPrompt(
+                hskLevel: 1,
+                knownWords: knownWords,
+                weakWords: weakWords,
+              )
+            : buildTutorSystemPrompt(
+                hskLevel: 1,
+                knownWords: knownWords,
+                weakWords: weakWords,
+              );
         final raw = await LocalLlmService.sendMessage(
+          variant,
           text,
           systemPrompt: prompt,
         );
@@ -149,18 +158,20 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    return ValueListenableBuilder<LocalModelStatus>(
-      valueListenable: LocalLlmService.status,
-      builder: (context, modelStatus, _) =>
-          _buildScaffold(settings, modelStatus),
+    return AnimatedBuilder(
+      animation: Listenable.merge(LocalLlmService.status.values.toList()),
+      builder: (context, _) => _buildScaffold(settings),
     );
   }
 
-  Widget _buildScaffold(AppSettings settings, LocalModelStatus modelStatus) {
-    final isLocal = settings.chatMode == ChatMode.local;
+  Widget _buildScaffold(AppSettings settings) {
+    final variant = localVariantFor(settings.chatMode);
+    final modelStatus = variant == null
+        ? null
+        : LocalLlmService.status[variant]!.value;
     final localReady = modelStatus == LocalModelStatus.ready;
     final canSend = _canSend(settings);
-    final showBlockedBanner = isLocal ? !localReady : !_online;
+    final showBlockedBanner = variant != null ? !localReady : !_online;
 
     return Scaffold(
       appBar: AppBar(
@@ -172,10 +183,11 @@ class _ChatScreenState extends State<ChatScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Center(
-              child: Text(
-                isLocal ? (localReady ? '👋' : '🚪') : '🎓',
-                style: const TextStyle(fontSize: 18),
-              ),
+              child: Text(switch (variant) {
+                null => '🎓',
+                LocalModelVariant.friend => localReady ? '👋' : '🚪',
+                LocalModelVariant.tutor => localReady ? '📖' : '📕',
+              }, style: const TextStyle(fontSize: 18)),
             ),
           ),
           IconButton(
@@ -202,17 +214,25 @@ class _ChatScreenState extends State<ChatScreen> {
                   // showing it in alarming red as "model unavailable" would
                   // read like something is broken.
                   final isWakingUp =
-                      isLocal && modelStatus == LocalModelStatus.loading;
+                      variant != null &&
+                      modelStatus == LocalModelStatus.loading;
                   final color = isWakingUp ? _accentGreen : Colors.red;
+                  final personaLabel = variant == null
+                      ? ''
+                      : personaName(settings, variant);
                   return Container(
                     width: double.infinity,
                     color: color.withValues(alpha: 0.12),
                     padding: const EdgeInsets.all(10),
                     child: Text(
                       isWakingUp
-                          ? settings.t('nearbyFriendWakingUp')
-                          : isLocal
-                          ? settings.t('localModelUnavailable')
+                          ? settings
+                                .t('personaWakingUp')
+                                .replaceFirst('{name}', personaLabel)
+                          : variant != null
+                          ? settings
+                                .t('personaUnavailable')
+                                .replaceFirst('{name}', personaLabel)
                           : settings.t('offlineBanner'),
                       textAlign: TextAlign.center,
                       style: TextStyle(color: color),

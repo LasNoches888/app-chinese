@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'api_client.dart';
 import 'app_strings.dart';
 
-enum ChatMode { server, local }
+/// Professor is the big server-side model; Friend and Tutor are the two
+/// on-device personas (see LocalModelVariant).
+enum ChatMode { server, localFriend, localTutor }
 
 /// How fast the tutor's Mandarin is read aloud. Beginners routinely can't
 /// separate tones at native pace, so slow is the default.
@@ -88,9 +90,15 @@ class AppSettings extends ChangeNotifier {
       hour: prefs.getInt(_reminderHourKey) ?? 19,
       minute: prefs.getInt(_reminderMinuteKey) ?? 0,
     );
-    _chatMode = prefs.getString(_chatModeKey) == 'local'
-        ? ChatMode.local
-        : ChatMode.server;
+    // 'local' is a pre-migration value from when there was only one local
+    // persona — that persona was, behaviorally, the tutor (structured HSK
+    // practice with grammar recasts), so it maps onto Tutor rather than
+    // resetting everyone back to the server on the next launch.
+    _chatMode = switch (prefs.getString(_chatModeKey)) {
+      'localFriend' => ChatMode.localFriend,
+      'localTutor' || 'local' => ChatMode.localTutor,
+      _ => ChatMode.server,
+    };
     _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
         ? SpeechSpeed.normal
         : SpeechSpeed.slow;
@@ -173,10 +181,11 @@ class AppSettings extends ChangeNotifier {
     _chatMode = mode;
     notifyListeners();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      _chatModeKey,
-      mode == ChatMode.local ? 'local' : 'server',
-    );
+    await prefs.setString(_chatModeKey, switch (mode) {
+      ChatMode.localFriend => 'localFriend',
+      ChatMode.localTutor => 'localTutor',
+      ChatMode.server => 'server',
+    });
   }
 
   Future<void> setReminder({

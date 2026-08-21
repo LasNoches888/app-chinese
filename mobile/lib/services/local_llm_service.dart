@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:llamadart/llamadart.dart';
 
-/// Where the local tutor currently stands, from the UI's point of view.
+/// Where a given local model variant currently stands, from the UI's point
+/// of view.
 enum LocalModelStatus {
   /// Nothing checked yet — the app hasn't looked for cached weights.
   unknown,
@@ -21,78 +22,117 @@ enum LocalModelStatus {
   ready,
 }
 
-/// Wraps llamadart (llama.cpp) for a fully offline, on-device chat tutor —
-/// running the user's own fine-tuned Qwen 1.5B (distilled from the server's
-/// Qwen model, quantized to GGUF), not a stock model. The weights are
-/// hosted on the user's own HuggingFace repo and downloaded once; after
-/// that, every message is generated locally, no network involved.
+/// The two on-device personas. Both are Qwen 1.5B GGUF checkpoints (small
+/// enough to run on a phone CPU) but fine-tuned differently: Friend for
+/// loose, casual chat, Tutor for structured HSK-paced practice. The big
+/// server-side model ("Professor") is a separate, much larger checkpoint
+/// that only ever runs on the backend — never a candidate for on-device.
+enum LocalModelVariant { friend, tutor }
+
+/// Wraps llamadart (llama.cpp) for fully offline, on-device chat — running
+/// the user's own fine-tuned checkpoints, not stock models. Weights are
+/// hosted on the user's own HuggingFace repo and downloaded once per
+/// variant; after that, every message for that persona is generated
+/// locally, no network involved.
+///
+/// Only one variant is ever loaded into memory at a time (two 1.5B models
+/// loaded simultaneously would be a needless ~2GB+ RAM footprint on a
+/// phone) — switching personas unloads whichever one is active and loads
+/// the other from its own on-disk cache, which is fast since no network is
+/// involved once both have been downloaded at least once.
 ///
 /// Unlike the stateless server /chat endpoint (which rebuilds its system
 /// prompt fresh every call so it never has to store anything), a local
 /// session lives entirely on-device — so it keeps one real multi-turn
 /// [ChatSession] alive across the whole app session instead of recreating
-/// it per message, giving the local tutor actual conversation memory the
-/// server path doesn't have.
+/// it per message, giving the local personas actual conversation memory
+/// the server path doesn't have.
 class LocalLlmService {
-  static const modelSource =
-      'hf://LasNoches888/ChineseTeacher/tutor-v2-qwen1.5b-Q4_K_M.gguf';
+  static const Map<LocalModelVariant, String> _modelSources = {
+    LocalModelVariant.friend:
+        'hf://LasNoches888/ChineseTeacher/friend-v2-qwen1.5b-Q4_K_M.gguf',
+    LocalModelVariant.tutor:
+        'hf://LasNoches888/ChineseTeacher/tutor-v3-qwen1.5b-Q4_K_M.gguf',
+  };
 
   static const _modelParams = ModelParams(contextSize: 4096, gpuLayers: 0);
 
   static LlamaEngine? _engine;
   static ChatSession? _chat;
 
-  /// Lets screens rebuild the moment the model finishes loading instead of
-  /// polling a getter that only changes as a side effect of other calls.
-  static final ValueNotifier<LocalModelStatus> status =
-      ValueNotifier<LocalModelStatus>(LocalModelStatus.unknown);
+  /// Which variant's weights are currently loaded into [_engine], if any.
+  static LocalModelVariant? _loadedVariant;
 
-  /// Whether the tutor can answer right now.
-  ///
-  /// This tracks the *engine* holding loaded weights, not the chat session:
-  /// the session is created lazily on the first message and thrown away
-  /// whenever history is cleared, so keying readiness off it made the model
-  /// look unavailable both immediately after downloading and after every
-  /// history reset — with the input box disabled, there was no way to
-  /// create the session that would have marked it ready.
-  static bool get isModelReady => _engine?.isReady ?? false;
+  /// Lets screens rebuild the moment a variant's status changes instead of
+  /// polling a getter that only changes as a side effect of other calls.
+  /// Each variant tracks its own status independently — downloading Friend
+  /// doesn't touch Tutor's state, since their weights live in separate
+  /// on-disk cache entries.
+  static final Map<LocalModelVariant, ValueNotifier<LocalModelStatus>> status =
+      {
+        LocalModelVariant.friend: ValueNotifier(LocalModelStatus.unknown),
+        LocalModelVariant.tutor: ValueNotifier(LocalModelStatus.unknown),
+      };
+
+  /// Whether [variant] specifically can answer right now — false both when
+  /// nothing is loaded and when the *other* variant is the one currently
+  /// loaded into the engine.
+  static bool isModelReady(LocalModelVariant variant) =>
+      _loadedVariant == variant && (_engine?.isReady ?? false);
 
   static LlamaEngine get _sharedEngine =>
       _engine ??= LlamaEngine(LlamaBackend());
 
-  /// Loads previously-downloaded weights from llamadart's on-disk cache,
-  /// without touching the network. Returns false when nothing is cached
-  /// yet, which is the signal to show the download panel.
+  /// Unloads whatever's currently loaded so a different variant can take
+  /// its place. No-op if the engine is already empty or already holds
+  /// [target].
+  static Future<void> _ensureUnloadedIfDifferent(
+    LocalModelVariant target,
+  ) async {
+    final engine = _engine;
+    if (engine == null || !engine.isReady || _loadedVariant == target) return;
+    await engine.unloadModel();
+    _loadedVariant = null;
+    _chat = null;
+  }
+
+  /// Loads previously-downloaded weights for [variant] from llamadart's
+  /// on-disk cache, without touching the network. Returns false when
+  /// nothing is cached yet, which is the signal to show the download panel.
   ///
   /// Needed because the loaded model only lives in memory: on a cold start
   /// the weights are still on disk but nothing has read them back, and
   /// without this the app would ask for the ~1GB download all over again.
-  static Future<bool> loadFromCacheIfPresent() async {
-    if (isModelReady) return true;
-    status.value = LocalModelStatus.loading;
+  static Future<bool> loadFromCacheIfPresent(LocalModelVariant variant) async {
+    if (isModelReady(variant)) return true;
+    status[variant]!.value = LocalModelStatus.loading;
     try {
+      await _ensureUnloadedIfDifferent(variant);
       await _sharedEngine.loadModelSource(
-        ModelSource.parse(modelSource),
+        ModelSource.parse(_modelSources[variant]!),
         modelParams: _modelParams,
         options: ModelLoadOptions(cachePolicy: ModelCachePolicy.cacheOnly),
       );
-      status.value = LocalModelStatus.ready;
+      _loadedVariant = variant;
+      status[variant]!.value = LocalModelStatus.ready;
       return true;
     } catch (_) {
       // cacheOnly throws when there's no cached copy — that's the normal
       // "not downloaded yet" path, not an error worth surfacing.
-      status.value = LocalModelStatus.absent;
+      status[variant]!.value = LocalModelStatus.absent;
       return false;
     }
   }
 
-  static Future<void> downloadModel({
+  static Future<void> downloadModel(
+    LocalModelVariant variant, {
     required void Function(int percent) onProgress,
   }) async {
-    status.value = LocalModelStatus.downloading;
+    status[variant]!.value = LocalModelStatus.downloading;
     try {
+      await _ensureUnloadedIfDifferent(variant);
       await _sharedEngine.loadModelSource(
-        ModelSource.parse(modelSource),
+        ModelSource.parse(_modelSources[variant]!),
         modelParams: _modelParams,
         // A resumed download depends on the server returning the same
         // validator (ETag/Last-Modified) it gave the first attempt — if an
@@ -107,9 +147,10 @@ class LocalLlmService {
           if (fraction != null) onProgress((fraction * 100).round());
         },
       );
-      status.value = LocalModelStatus.ready;
+      _loadedVariant = variant;
+      status[variant]!.value = LocalModelStatus.ready;
     } catch (_) {
-      status.value = isModelReady
+      status[variant]!.value = isModelReady(variant)
           ? LocalModelStatus.ready
           : LocalModelStatus.absent;
       rethrow;
@@ -120,27 +161,31 @@ class LocalLlmService {
   /// next message starts a fresh one with an up-to-date system prompt —
   /// call this whenever the learner's known/weak word set has moved on
   /// enough to matter, or when chat history is cleared. The weights stay
-  /// loaded, so the tutor remains usable.
+  /// loaded, so the active persona remains usable.
   static void resetSession() {
     _chat = null;
   }
 
-  static ChatSession _getOrCreateChat(String systemPrompt) {
+  static ChatSession _getOrCreateChat(
+    LocalModelVariant variant,
+    String systemPrompt,
+  ) {
     final engine = _engine;
-    if (engine == null || !engine.isReady) {
+    if (engine == null || !engine.isReady || _loadedVariant != variant) {
       throw StateError('Model not loaded — download it in Settings first.');
     }
     return _chat ??= ChatSession(engine, systemPrompt: systemPrompt);
   }
 
-  /// Sends one user turn and returns the model's raw text reply (still
-  /// needs [extractReplyJson] applied — a 1.5B model is much less reliable
-  /// at strict JSON formatting than the 7B server model).
+  /// Sends one user turn to [variant] and returns the model's raw text
+  /// reply (still needs [extractReplyJson] applied — a 1.5B model is much
+  /// less reliable at strict JSON formatting than the 7B server model).
   static Future<String> sendMessage(
+    LocalModelVariant variant,
     String userText, {
     required String systemPrompt,
   }) async {
-    final session = _getOrCreateChat(systemPrompt);
+    final session = _getOrCreateChat(variant, systemPrompt);
     final buffer = StringBuffer();
     await for (final chunk in session.create([LlamaTextContent(userText)])) {
       final text = chunk.choices.first.delta.content;
