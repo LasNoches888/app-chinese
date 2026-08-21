@@ -8,6 +8,7 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
+import '../services/persona.dart';
 import '../services/speech_service.dart';
 
 const _brandStart = Color(0xFFFF7A59);
@@ -27,8 +28,14 @@ class _SettingsScreenState extends State<SettingsScreen>
     with StopSpeechOnDispose, WidgetsBindingObserver {
   late final TextEditingController _controller;
   UserStats? _stats;
-  bool _downloading = false;
-  int _downloadProgress = 0;
+  final Map<LocalModelVariant, bool> _downloading = {
+    LocalModelVariant.friend: false,
+    LocalModelVariant.tutor: false,
+  };
+  final Map<LocalModelVariant, int> _downloadProgress = {
+    LocalModelVariant.friend: 0,
+    LocalModelVariant.tutor: 0,
+  };
   bool _showServerUrlField = false;
 
   @override
@@ -54,21 +61,22 @@ class _SettingsScreenState extends State<SettingsScreen>
     super.didChangeDependencies();
     _loadStats();
     // Weights survive on disk but not in memory, so on a cold start we have
-    // to read them back before the tutor counts as available. Only probed
-    // when the learner actually uses the local tutor — loading ~1GB for
-    // someone who only ever talks to the server would be pure waste.
-    if (context.read<AppSettings>().chatMode == ChatMode.local &&
-        LocalLlmService.status.value == LocalModelStatus.unknown) {
-      _ensureLocalModelReady();
+    // to read them back before the active persona counts as available.
+    // Only probed for whichever persona is actually selected — loading
+    // ~1GB for a persona nobody's currently using would be pure waste.
+    final variant = localVariantFor(context.read<AppSettings>().chatMode);
+    if (variant != null &&
+        LocalLlmService.status[variant]!.value == LocalModelStatus.unknown) {
+      _ensureLocalModelReady(variant);
     }
   }
 
   /// Checks the on-disk cache and, if nothing's there yet, starts the
-  /// download immediately — picking "Nearby friend" is itself the only
+  /// download immediately — picking a local persona is itself the only
   /// action needed, rather than a separate confirm-to-download step.
-  Future<void> _ensureLocalModelReady() async {
-    final cached = await LocalLlmService.loadFromCacheIfPresent();
-    if (!cached && mounted) _downloadLocalModel();
+  Future<void> _ensureLocalModelReady(LocalModelVariant variant) async {
+    final cached = await LocalLlmService.loadFromCacheIfPresent(variant);
+    if (!cached && mounted) _downloadLocalModel(variant);
   }
 
   Future<void> _loadStats() async {
@@ -161,22 +169,23 @@ class _SettingsScreenState extends State<SettingsScreen>
     ).showSnackBar(SnackBar(content: Text(settings.t('done'))));
   }
 
-  Future<void> _downloadLocalModel() async {
+  Future<void> _downloadLocalModel(LocalModelVariant variant) async {
     setState(() {
-      _downloading = true;
-      _downloadProgress = 0;
+      _downloading[variant] = true;
+      _downloadProgress[variant] = 0;
     });
     try {
       await LocalLlmService.downloadModel(
+        variant,
         onProgress: (p) {
-          if (mounted) setState(() => _downloadProgress = p);
+          if (mounted) setState(() => _downloadProgress[variant] = p);
         },
       );
       if (!mounted) return;
-      setState(() => _downloading = false);
+      setState(() => _downloading[variant] = false);
     } catch (_) {
       if (!mounted) return;
-      setState(() => _downloading = false);
+      setState(() => _downloading[variant] = false);
     }
   }
 
@@ -318,93 +327,142 @@ class _SettingsScreenState extends State<SettingsScreen>
               accent: _accentBlue,
               title: settings.t('chatSource'),
               children: [
-                ValueListenableBuilder<LocalModelStatus>(
-                  valueListenable: LocalLlmService.status,
-                  builder: (context, modelStatus, _) => Column(
-                    children: [
-                      // IntrinsicHeight is what makes `stretch` legal here:
-                      // inside a ListView the Row has unbounded height, and
-                      // stretching a child to that throws "BoxConstraints
-                      // forces an infinite height", which takes the whole
-                      // settings list down with it.
-                      IntrinsicHeight(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Expanded(
-                              child: _ChatModeCard(
-                                emoji: '🎓',
-                                gradient: const [_accentBlue, _brandEnd],
-                                title: settings.t('chatSourceServer'),
-                                subtitle: settings.t('chatSourceServerDesc'),
-                                selected: settings.chatMode == ChatMode.server,
-                                onTap: () => context
-                                    .read<AppSettings>()
-                                    .setChatMode(ChatMode.server),
+                AnimatedBuilder(
+                  animation: Listenable.merge(
+                    LocalLlmService.status.values.toList(),
+                  ),
+                  builder: (context, _) {
+                    final friendStatus =
+                        LocalLlmService.status[LocalModelVariant.friend]!.value;
+                    final tutorStatus =
+                        LocalLlmService.status[LocalModelVariant.tutor]!.value;
+                    final activeVariant = localVariantFor(settings.chatMode);
+                    return Column(
+                      children: [
+                        // IntrinsicHeight is what makes `stretch` legal here:
+                        // inside a ListView the Row has unbounded height, and
+                        // stretching a child to that throws "BoxConstraints
+                        // forces an infinite height", which takes the whole
+                        // settings list down with it.
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(
+                                child: _ChatModeCard(
+                                  emoji: '🎓',
+                                  gradient: const [_accentBlue, _brandEnd],
+                                  title: settings.t('chatSourceServer'),
+                                  subtitle: settings.t('chatSourceServerDesc'),
+                                  selected:
+                                      settings.chatMode == ChatMode.server,
+                                  onTap: () => context
+                                      .read<AppSettings>()
+                                      .setChatMode(ChatMode.server),
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: _ChatModeCard(
-                                emoji: modelStatus == LocalModelStatus.ready
-                                    ? '👋'
-                                    : '🚪',
-                                gradient: const [
-                                  _accentGreen,
-                                  _accentGreenDark,
-                                ],
-                                title: settings.t('chatSourceLocal'),
-                                subtitle: settings.t('chatSourceLocalDesc'),
-                                selected: settings.chatMode == ChatMode.local,
-                                onTap: () {
-                                  context.read<AppSettings>().setChatMode(
-                                    ChatMode.local,
-                                  );
-                                  // Only auto-starts on the very first check
-                                  // this session — once a download has
-                                  // failed, re-tapping the mode card
-                                  // shouldn't silently retry behind the
-                                  // learner's back; they tap the retry
-                                  // panel itself instead.
-                                  if (modelStatus == LocalModelStatus.unknown) {
-                                    _ensureLocalModelReady();
-                                  }
-                                },
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _ChatModeCard(
+                                  emoji: friendStatus == LocalModelStatus.ready
+                                      ? '👋'
+                                      : '🚪',
+                                  gradient: const [
+                                    _accentGreen,
+                                    _accentGreenDark,
+                                  ],
+                                  title: settings.t('chatSourceLocal'),
+                                  subtitle: settings.t('chatSourceLocalDesc'),
+                                  selected:
+                                      settings.chatMode == ChatMode.localFriend,
+                                  onTap: () {
+                                    context.read<AppSettings>().setChatMode(
+                                      ChatMode.localFriend,
+                                    );
+                                    // Only auto-starts on the very first
+                                    // check this session — once a download
+                                    // has failed, re-tapping the mode card
+                                    // shouldn't silently retry behind the
+                                    // learner's back; they tap the retry
+                                    // panel itself instead.
+                                    if (friendStatus ==
+                                        LocalModelStatus.unknown) {
+                                      _ensureLocalModelReady(
+                                        LocalModelVariant.friend,
+                                      );
+                                    }
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      // Server and local panels are very different heights, so
-                      // the card is resized as well as cross-faded — otherwise
-                      // the swap jumps the whole list.
-                      AnimatedSize(
-                        duration: const Duration(milliseconds: 260),
-                        curve: Curves.easeOutCubic,
-                        alignment: Alignment.topCenter,
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 220),
-                          switchInCurve: Curves.easeOut,
-                          transitionBuilder: (child, animation) =>
-                              FadeTransition(opacity: animation, child: child),
-                          child: KeyedSubtree(
-                            key: ValueKey<Object>(
-                              settings.chatMode == ChatMode.server
-                                  ? ChatMode.server
-                                  : modelStatus,
-                            ),
-                            child: settings.chatMode == ChatMode.server
-                                ? _buildServerSection(settings)
-                                : _buildLocalModelSection(
-                                    settings,
-                                    modelStatus,
-                                  ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: _ChatModeCard(
+                                  emoji: tutorStatus == LocalModelStatus.ready
+                                      ? '📖'
+                                      : '📕',
+                                  gradient: const [
+                                    _accentGreenDark,
+                                    _accentGreen,
+                                  ],
+                                  title: settings.t('chatSourceTutor'),
+                                  subtitle: settings.t('chatSourceTutorDesc'),
+                                  selected:
+                                      settings.chatMode == ChatMode.localTutor,
+                                  onTap: () {
+                                    context.read<AppSettings>().setChatMode(
+                                      ChatMode.localTutor,
+                                    );
+                                    if (tutorStatus ==
+                                        LocalModelStatus.unknown) {
+                                      _ensureLocalModelReady(
+                                        LocalModelVariant.tutor,
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(height: 16),
+                        // Panels are very different heights, so the card is
+                        // resized as well as cross-faded — otherwise the
+                        // swap jumps the whole list.
+                        AnimatedSize(
+                          duration: const Duration(milliseconds: 260),
+                          curve: Curves.easeOutCubic,
+                          alignment: Alignment.topCenter,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 220),
+                            switchInCurve: Curves.easeOut,
+                            transitionBuilder: (child, animation) =>
+                                FadeTransition(
+                                  opacity: animation,
+                                  child: child,
+                                ),
+                            child: KeyedSubtree(
+                              key: ValueKey<Object>(
+                                activeVariant == null
+                                    ? ChatMode.server
+                                    : LocalLlmService
+                                          .status[activeVariant]!
+                                          .value,
+                              ),
+                              child: activeVariant == null
+                                  ? _buildServerSection(settings)
+                                  : _buildLocalModelSection(
+                                      settings,
+                                      activeVariant,
+                                      LocalLlmService
+                                          .status[activeVariant]!
+                                          .value,
+                                    ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ],
             ),
@@ -587,9 +645,14 @@ class _SettingsScreenState extends State<SettingsScreen>
 
   Widget _buildLocalModelSection(
     AppSettings settings,
+    LocalModelVariant variant,
     LocalModelStatus modelStatus,
   ) {
     final theme = Theme.of(context);
+    final name = personaName(settings, variant);
+    final knockEmoji = variant == LocalModelVariant.friend ? '🚪' : '📕';
+    final downloading = _downloading[variant]!;
+    final progress = _downloadProgress[variant]!;
 
     // Reading ~1GB of cached weights back into memory takes a moment on a
     // cold start; without this the panel would sit on "not downloaded" and
@@ -613,7 +676,11 @@ class _SettingsScreenState extends State<SettingsScreen>
               ),
             ),
             const SizedBox(width: 16),
-            Expanded(child: Text(settings.t('nearbyFriendWakingUp'))),
+            Expanded(
+              child: Text(
+                settings.t('personaWakingUp').replaceFirst('{name}', name),
+              ),
+            ),
           ],
         ),
       );
@@ -632,11 +699,16 @@ class _SettingsScreenState extends State<SettingsScreen>
         padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
         child: Row(
           children: [
-            Image.asset('assets/mascot/panda_06.png', height: 64),
+            Image.asset(
+              variant == LocalModelVariant.friend
+                  ? 'assets/mascot/panda_06.png'
+                  : 'assets/mascot/panda_25.png',
+              height: 64,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                settings.t('nearbyFriendReady'),
+                settings.t('personaReady').replaceFirst('{name}', name),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
@@ -656,20 +728,22 @@ class _SettingsScreenState extends State<SettingsScreen>
         color: _accentGreen.withValues(alpha: 0.06),
       ),
       padding: const EdgeInsets.all(18),
-      child: _downloading
+      child: downloading
           ? Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
                   children: [
                     _EmojiAvatar(
-                      emoji: '🚪',
+                      emoji: knockEmoji,
                       background: _accentGreen.withValues(alpha: 0.18),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Text(
-                        settings.t('nearbyFriendKnocking'),
+                        settings
+                            .t('personaKnocking')
+                            .replaceFirst('{name}', name),
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -681,30 +755,31 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: LinearProgressIndicator(
-                    value: _downloadProgress / 100,
+                    value: progress / 100,
                     minHeight: 10,
                     color: _accentGreen,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '${settings.t('trainingInProgress')}… $_downloadProgress%',
+                  '${settings.t('trainingInProgress')}… $progress%',
                   style: theme.textTheme.bodySmall,
                 ),
               ],
             )
-          // Only reachable after a failed attempt — a normal download starts
-          // the moment "Nearby friend" is picked, with no separate button.
+          // Only reachable after a failed attempt — a normal download
+          // starts the moment the persona is picked, with no separate
+          // button.
           : Row(
               children: [
                 _EmojiAvatar(
-                  emoji: '🚪',
+                  emoji: knockEmoji,
                   background: _accentGreen.withValues(alpha: 0.18),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    settings.t('nearbyFriendRetry'),
+                    settings.t('personaRetry').replaceFirst('{name}', name),
                     style: theme.textTheme.bodySmall,
                   ),
                 ),
@@ -713,10 +788,10 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
     );
 
-    if (_downloading) return container;
+    if (downloading) return container;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
-      onTap: _downloadLocalModel,
+      onTap: () => _downloadLocalModel(variant),
       child: container,
     );
   }

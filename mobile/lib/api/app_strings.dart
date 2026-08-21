@@ -234,34 +234,43 @@ class Strings {
       AppLocale.en: 'Nearby friend',
     },
     'chatSourceLocalDesc': {
-      AppLocale.ru: 'Живёт у вас в телефоне — работает офлайн',
-      AppLocale.en: 'Lives right on your phone — works offline',
+      AppLocale.ru: 'Болтает просто так — живёт в телефоне, офлайн',
+      AppLocale.en: 'Just chats for fun — lives on your phone, offline',
     },
-    'nearbyFriendKnocking': {
-      AppLocale.ru: 'Друг поблизости стучится в дверь…',
-      AppLocale.en: 'Your nearby friend is knocking at the door…',
+    'chatSourceTutor': {AppLocale.ru: 'Репетитор', AppLocale.en: 'Tutor'},
+    'chatSourceTutorDesc': {
+      AppLocale.ru: 'Ведёт занятие по плану — тоже офлайн',
+      AppLocale.en: 'Runs a structured lesson — also offline',
     },
-    'nearbyFriendRetry': {
-      AppLocale.ru: 'Друг заблудился по пути — коснитесь, чтобы позвать снова',
-      AppLocale.en: 'Your friend got lost on the way — tap to call them again',
+    // {name} is substituted at runtime with the short persona name
+    // ('personaNameFriend'/'personaNameTutor') — kept as templates rather
+    // than four near-duplicate string pairs per persona.
+    'personaKnocking': {
+      AppLocale.ru: '{name} стучится в дверь…',
+      AppLocale.en: '{name} is knocking at the door…',
     },
-    'nearbyFriendReady': {
-      AppLocale.ru: 'Друг поблизости зашёл в гости и готов болтать офлайн 👋',
-      AppLocale.en:
-          'Your nearby friend has settled in and is ready to chat offline 👋',
+    'personaRetry': {
+      AppLocale.ru:
+          '{name} заблудился по пути — коснитесь, чтобы позвать снова',
+      AppLocale.en: '{name} got lost on the way — tap to call them again',
     },
-    'nearbyFriendWakingUp': {
-      AppLocale.ru: 'Друг поблизости просыпается…',
-      AppLocale.en: 'Your nearby friend is waking up…',
+    'personaReady': {
+      AppLocale.ru: '{name} зашёл в гости и готов болтать офлайн 👋',
+      AppLocale.en: '{name} has settled in and is ready to chat offline 👋',
     },
+    'personaWakingUp': {
+      AppLocale.ru: '{name} просыпается…',
+      AppLocale.en: '{name} is waking up…',
+    },
+    'personaUnavailable': {
+      AppLocale.ru: '{name} ещё не готов — откройте Настройки',
+      AppLocale.en: "{name} isn't ready yet — check Settings",
+    },
+    'personaNameFriend': {AppLocale.ru: 'Друг', AppLocale.en: 'Friend'},
+    'personaNameTutor': {AppLocale.ru: 'Репетитор', AppLocale.en: 'Tutor'},
     'trainingInProgress': {
       AppLocale.ru: 'Идёт в гости',
       AppLocale.en: 'On their way',
-    },
-    'localModelUnavailable': {
-      AppLocale.ru: 'Друг поблизости ещё не зашёл в гости — откройте Настройки',
-      AppLocale.en:
-          'Your nearby friend hasn\'t stopped by yet — check Settings',
     },
 
     // Settings

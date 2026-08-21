@@ -23,7 +23,10 @@ void main() {
     // so the screen renders the download panel instead of kicking off a
     // real llamadart cache probe (which would leave a spinner on screen
     // that pumpAndSettle can never settle).
-    LocalLlmService.status.value = LocalModelStatus.absent;
+    LocalLlmService.status[LocalModelVariant.friend]!.value =
+        LocalModelStatus.absent;
+    LocalLlmService.status[LocalModelVariant.tutor]!.value =
+        LocalModelStatus.absent;
   });
 
   Future<void> pumpSettings(WidgetTester tester) async {
@@ -77,9 +80,10 @@ void main() {
     expect(find.text('Русский'), findsOneWidget);
     expect(find.text('English'), findsOneWidget);
 
-    // Both chat-mode cards.
+    // All three chat-mode cards.
     expect(find.text('Профессор'), findsOneWidget);
     expect(find.text('Друг поблизости'), findsOneWidget);
+    expect(find.text('Репетитор'), findsOneWidget);
 
     // Destructive actions at the bottom of the list.
     expect(find.text('Сбросить прогресс'), findsOneWidget);

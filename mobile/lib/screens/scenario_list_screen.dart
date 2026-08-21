@@ -18,7 +18,7 @@ class ScenarioListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    final ready = LocalLlmService.isModelReady;
+    final ready = LocalLlmService.isModelReady(LocalModelVariant.tutor);
 
     return Scaffold(
       appBar: AppBar(title: Text(settings.t('scenariosTitle'))),
