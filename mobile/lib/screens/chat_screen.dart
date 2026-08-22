@@ -15,6 +15,9 @@ import '../services/system_prompt.dart';
 import 'settings_screen.dart';
 
 const _accentGreen = Color(0xFF23C58F);
+const _accentGreenDark = Color(0xFF17A673);
+const _accentBlue = Color(0xFF4E7CFF);
+const _brandEnd = Color(0xFF6C5CE7);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -147,6 +150,21 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _openPersonaPicker() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetContext) => _PersonaPickerSheet(
+        onPicked: () {
+          if (mounted) Navigator.of(sheetContext).pop();
+        },
+      ),
+    );
+  }
+
   Future<void> _clearHistory() async {
     final repos = context.read<AppRepositories>();
     await repos.chat.clearHistory();
@@ -177,17 +195,23 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Text(settings.t('chatTitle'), overflow: TextOverflow.ellipsis),
         actions: [
-          // Just a small emoji badge, not a text label — a full status label
-          // here made the actions row wide enough to overflow the AppBar on
-          // narrow phones and push the settings button off-screen entirely.
+          // Tapping the badge opens the persona picker — a small emoji
+          // rather than a text label, since a full status label made the
+          // actions row wide enough to overflow the AppBar on narrow
+          // phones and push the settings button off-screen entirely.
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Center(
-              child: Text(switch (variant) {
-                null => '🎓',
-                LocalModelVariant.friend => localReady ? '👋' : '🚪',
-                LocalModelVariant.tutor => localReady ? '📖' : '📕',
-              }, style: const TextStyle(fontSize: 18)),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: _openPersonaPicker,
+              child: Padding(
+                padding: const EdgeInsets.all(6),
+                child: Text(switch (variant) {
+                  null => '🎓',
+                  LocalModelVariant.friend => localReady ? '👋' : '🚪',
+                  LocalModelVariant.tutor => localReady ? '📖' : '📕',
+                }, style: const TextStyle(fontSize: 18)),
+              ),
             ),
           ),
           IconButton(
@@ -205,79 +229,353 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       body: AppBackground(
-        child: Column(
-          children: [
-            if (showBlockedBanner)
-              Builder(
-                builder: (context) {
-                  // Loading cached weights is a normal, short-lived state —
-                  // showing it in alarming red as "model unavailable" would
-                  // read like something is broken.
-                  final isWakingUp =
-                      variant != null &&
-                      modelStatus == LocalModelStatus.loading;
-                  final color = isWakingUp ? _accentGreen : Colors.red;
-                  final personaLabel = variant == null
-                      ? ''
-                      : personaName(settings, variant);
-                  return Container(
-                    width: double.infinity,
-                    color: color.withValues(alpha: 0.12),
-                    padding: const EdgeInsets.all(10),
-                    child: Text(
-                      isWakingUp
-                          ? settings
-                                .t('personaWakingUp')
-                                .replaceFirst('{name}', personaLabel)
-                          : variant != null
-                          ? settings
-                                .t('personaUnavailable')
-                                .replaceFirst('{name}', personaLabel)
-                          : settings.t('offlineBanner'),
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: color),
+        child: variant == null
+            ? _ProfessorInDevelopment(
+                settings: settings,
+                onPickAnother: _openPersonaPicker,
+              )
+            : Column(
+                children: [
+                  if (showBlockedBanner)
+                    Builder(
+                      builder: (context) {
+                        // Loading cached weights is a normal, short-lived
+                        // state — showing it in alarming red as "model
+                        // unavailable" would read like something's broken.
+                        final isWakingUp =
+                            modelStatus == LocalModelStatus.loading;
+                        final color = isWakingUp ? _accentGreen : Colors.red;
+                        final personaLabel = personaName(settings, variant);
+                        return InkWell(
+                          onTap: isWakingUp ? null : _openPersonaPicker,
+                          child: Container(
+                            width: double.infinity,
+                            color: color.withValues(alpha: 0.12),
+                            padding: const EdgeInsets.all(10),
+                            child: Text(
+                              (isWakingUp
+                                      ? settings.t('personaWakingUp')
+                                      : settings.t('personaUnavailable'))
+                                  .replaceFirst('{name}', personaLabel),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: color),
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  );
-                },
-              ),
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _messages.length + (_sending ? 1 : 0),
-                itemBuilder: (ctx, i) => i < _messages.length
-                    ? _MessageBubble(message: _messages[i], settings: settings)
-                    : _TypingBubble(label: settings.t('chatThinking')),
-              ),
-            ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _inputCtl,
-                        enabled: canSend,
-                        decoration: InputDecoration(
-                          hintText: settings.t('chatHint'),
-                          border: const OutlineInputBorder(),
-                        ),
-                        onSubmitted: (_) => _send(),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: _messages.length + (_sending ? 1 : 0),
+                      itemBuilder: (ctx, i) => i < _messages.length
+                          ? _MessageBubble(
+                              message: _messages[i],
+                              settings: settings,
+                            )
+                          : _TypingBubble(label: settings.t('chatThinking')),
+                    ),
+                  ),
+                  SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _inputCtl,
+                              enabled: canSend,
+                              decoration: InputDecoration(
+                                hintText: settings.t('chatHint'),
+                                border: const OutlineInputBorder(),
+                              ),
+                              onSubmitted: (_) => _send(),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          IconButton.filled(
+                            icon: const Icon(Icons.send),
+                            onPressed: canSend ? _send : null,
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    IconButton.filled(
-                      icon: const Icon(Icons.send),
-                      onPressed: canSend ? _send : null,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+/// Friendly placeholder shown instead of a real chat when Professor —
+/// the only server-backed persona — is selected. Professor isn't offered
+/// as a choice in the picker anymore (see _PersonaPickerSheet), so this
+/// only appears for someone whose saved chatMode predates that change.
+class _ProfessorInDevelopment extends StatelessWidget {
+  final AppSettings settings;
+  final VoidCallback onPickAnother;
+
+  const _ProfessorInDevelopment({
+    required this.settings,
+    required this.onPickAnother,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/mascot/panda_25.png', height: 140),
+            const SizedBox(height: 20),
+            Text(
+              settings.t('professorInDevTitle'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 10),
+            Text(
+              settings.t('professorInDevBody'),
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              onPressed: onPickAnother,
+              icon: const Icon(Icons.forum_outlined),
+              label: Text(settings.t('switchPersona')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet for picking who to chat with. Professor is shown but
+/// disabled — a coming-soon card rather than a working option — since the
+/// server-hosted model isn't ready to be someone's daily study partner
+/// yet; Friend and Tutor are the two real choices, each downloadable
+/// (and re-downloadable) straight from here.
+class _PersonaPickerSheet extends StatelessWidget {
+  final VoidCallback onPicked;
+
+  const _PersonaPickerSheet({required this.onPicked});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              settings.t('choosePersona'),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 16),
+            _PersonaRow(
+              emoji: '🎓',
+              gradient: const [_accentBlue, _brandEnd],
+              title: settings.t('chatSourceServer'),
+              subtitle: settings.t('professorInDevBadge'),
+              enabled: false,
+              selected: false,
+              onTap: () {},
+            ),
+            const SizedBox(height: 10),
+            _LocalPersonaRow(
+              variant: LocalModelVariant.friend,
+              emoji: '🚪',
+              readyEmoji: '👋',
+              gradient: const [_accentGreen, _accentGreenDark],
+              title: settings.t('chatSourceLocal'),
+              settings: settings,
+              onPicked: onPicked,
+            ),
+            const SizedBox(height: 10),
+            _LocalPersonaRow(
+              variant: LocalModelVariant.tutor,
+              emoji: '📕',
+              readyEmoji: '📖',
+              gradient: const [_accentGreenDark, _accentGreen],
+              title: settings.t('chatSourceTutor'),
+              settings: settings,
+              onPicked: onPicked,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LocalPersonaRow extends StatelessWidget {
+  final LocalModelVariant variant;
+  final String emoji;
+  final String readyEmoji;
+  final List<Color> gradient;
+  final String title;
+  final AppSettings settings;
+  final VoidCallback onPicked;
+
+  const _LocalPersonaRow({
+    required this.variant,
+    required this.emoji,
+    required this.readyEmoji,
+    required this.gradient,
+    required this.title,
+    required this.settings,
+    required this.onPicked,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        LocalLlmService.status[variant]!,
+        LocalLlmService.downloadProgress[variant]!,
+      ]),
+      builder: (context, _) {
+        final status = LocalLlmService.status[variant]!.value;
+        final progress = LocalLlmService.downloadProgress[variant]!.value;
+        final selected = localVariantFor(settings.chatMode) == variant;
+        final subtitle = switch (status) {
+          LocalModelStatus.ready => settings.t('personaReadyShort'),
+          LocalModelStatus.downloading =>
+            '${settings.t('trainingInProgress')}… $progress%',
+          LocalModelStatus.loading =>
+            settings
+                .t('personaWakingUp')
+                .replaceFirst('{name}', personaName(settings, variant)),
+          LocalModelStatus.absent ||
+          LocalModelStatus.unknown => settings.t('personaTapToStart'),
+        };
+        return _PersonaRow(
+          emoji: status == LocalModelStatus.ready ? readyEmoji : emoji,
+          gradient: gradient,
+          title: title,
+          subtitle: subtitle,
+          enabled: true,
+          selected: selected,
+          onTap: () {
+            context.read<AppSettings>().setChatMode(
+              variant == LocalModelVariant.friend
+                  ? ChatMode.localFriend
+                  : ChatMode.localTutor,
+            );
+            if (status == LocalModelStatus.unknown ||
+                status == LocalModelStatus.absent) {
+              LocalLlmService.ensureReady(variant);
+            }
+            onPicked();
+          },
+        );
+      },
+    );
+  }
+}
+
+class _PersonaRow extends StatelessWidget {
+  final String emoji;
+  final List<Color> gradient;
+  final String title;
+  final String subtitle;
+  final bool enabled;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PersonaRow({
+    required this.emoji,
+    required this.gradient,
+    required this.title,
+    required this.subtitle,
+    required this.enabled,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Opacity(
+      opacity: enabled ? 1 : 0.55,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: enabled ? onTap : null,
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: selected ? LinearGradient(colors: gradient) : null,
+            color: selected
+                ? null
+                : theme.colorScheme.surfaceContainerHighest.withValues(
+                    alpha: 0.45,
+                  ),
+            border: Border.all(
+              color: selected
+                  ? Colors.transparent
+                  : theme.colorScheme.outlineVariant,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: selected
+                      ? Colors.white.withValues(alpha: 0.24)
+                      : theme.colorScheme.surface,
+                ),
+                alignment: Alignment.center,
+                child: Text(emoji, style: const TextStyle(fontSize: 20)),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 15,
+                        color: selected ? Colors.white : null,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: selected
+                            ? Colors.white.withValues(alpha: 0.92)
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
               ),
-            ),
-          ],
+              if (selected)
+                const Icon(Icons.check_circle, color: Colors.white, size: 20)
+              else if (enabled)
+                Icon(Icons.chevron_right, color: theme.colorScheme.outline),
+            ],
+          ),
         ),
       ),
     );

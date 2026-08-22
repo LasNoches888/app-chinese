@@ -74,6 +74,15 @@ class LocalLlmService {
         LocalModelVariant.tutor: ValueNotifier(LocalModelStatus.unknown),
       };
 
+  /// Download percent (0-100) for whichever variant is currently
+  /// downloading. Lives here rather than in a screen's State so the persona
+  /// picker can show live progress no matter which screen kicked the
+  /// download off.
+  static final Map<LocalModelVariant, ValueNotifier<int>> downloadProgress = {
+    LocalModelVariant.friend: ValueNotifier(0),
+    LocalModelVariant.tutor: ValueNotifier(0),
+  };
+
   /// Whether [variant] specifically can answer right now — false both when
   /// nothing is loaded and when the *other* variant is the one currently
   /// loaded into the engine.
@@ -124,11 +133,9 @@ class LocalLlmService {
     }
   }
 
-  static Future<void> downloadModel(
-    LocalModelVariant variant, {
-    required void Function(int percent) onProgress,
-  }) async {
+  static Future<void> downloadModel(LocalModelVariant variant) async {
     status[variant]!.value = LocalModelStatus.downloading;
+    downloadProgress[variant]!.value = 0;
     try {
       await _ensureUnloadedIfDifferent(variant);
       await _sharedEngine.loadModelSource(
@@ -144,7 +151,9 @@ class LocalLlmService {
         options: ModelLoadOptions(resume: false),
         onProgress: (progress) {
           final fraction = progress.fraction;
-          if (fraction != null) onProgress((fraction * 100).round());
+          if (fraction != null) {
+            downloadProgress[variant]!.value = (fraction * 100).round();
+          }
         },
       );
       _loadedVariant = variant;
@@ -154,6 +163,23 @@ class LocalLlmService {
           ? LocalModelStatus.ready
           : LocalModelStatus.absent;
       rethrow;
+    }
+  }
+
+  /// Checks the on-disk cache and, if nothing's there, downloads — the
+  /// single entry point screens call after the learner picks a persona, so
+  /// "select the persona" is the only action needed. Swallows download
+  /// failures (status already reflects `absent` for the retry UI to key
+  /// off); callers that want to react to the error should watch [status]
+  /// rather than await this throwing.
+  static Future<void> ensureReady(LocalModelVariant variant) async {
+    final cached = await loadFromCacheIfPresent(variant);
+    if (cached) return;
+    try {
+      await downloadModel(variant);
+    } catch (_) {
+      // status[variant] is already `absent` — the picker's retry row
+      // covers this without needing the exception itself.
     }
   }
 

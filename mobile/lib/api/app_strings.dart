@@ -220,51 +220,22 @@ class Strings {
     },
     'online': {AppLocale.ru: 'В сети', AppLocale.en: 'Online'},
     'offline': {AppLocale.ru: 'Не в сети', AppLocale.en: 'Offline'},
-    'chatSource': {
-      AppLocale.ru: 'Источник ответов чата',
-      AppLocale.en: 'Chat source',
-    },
     'chatSourceServer': {AppLocale.ru: 'Профессор', AppLocale.en: 'Professor'},
-    'chatSourceServerDesc': {
-      AppLocale.ru: 'Большая модель на сервере — нужен интернет',
-      AppLocale.en: 'Big model on the server — needs internet',
-    },
     'chatSourceLocal': {
       AppLocale.ru: 'Друг поблизости',
       AppLocale.en: 'Nearby friend',
     },
-    'chatSourceLocalDesc': {
-      AppLocale.ru: 'Болтает просто так — живёт в телефоне, офлайн',
-      AppLocale.en: 'Just chats for fun — lives on your phone, offline',
-    },
     'chatSourceTutor': {AppLocale.ru: 'Репетитор', AppLocale.en: 'Tutor'},
-    'chatSourceTutorDesc': {
-      AppLocale.ru: 'Ведёт занятие по плану — тоже офлайн',
-      AppLocale.en: 'Runs a structured lesson — also offline',
-    },
     // {name} is substituted at runtime with the short persona name
     // ('personaNameFriend'/'personaNameTutor') — kept as templates rather
-    // than four near-duplicate string pairs per persona.
-    'personaKnocking': {
-      AppLocale.ru: '{name} стучится в дверь…',
-      AppLocale.en: '{name} is knocking at the door…',
-    },
-    'personaRetry': {
-      AppLocale.ru:
-          '{name} заблудился по пути — коснитесь, чтобы позвать снова',
-      AppLocale.en: '{name} got lost on the way — tap to call them again',
-    },
-    'personaReady': {
-      AppLocale.ru: '{name} зашёл в гости и готов болтать офлайн 👋',
-      AppLocale.en: '{name} has settled in and is ready to chat offline 👋',
-    },
+    // than near-duplicate string pairs per persona.
     'personaWakingUp': {
       AppLocale.ru: '{name} просыпается…',
       AppLocale.en: '{name} is waking up…',
     },
     'personaUnavailable': {
-      AppLocale.ru: '{name} ещё не готов — откройте Настройки',
-      AppLocale.en: "{name} isn't ready yet — check Settings",
+      AppLocale.ru: '{name} ещё не готов — нажмите на значок вверху',
+      AppLocale.en: "{name} isn't ready yet — tap the icon up top",
     },
     'personaNameFriend': {AppLocale.ru: 'Друг', AppLocale.en: 'Friend'},
     'personaNameTutor': {AppLocale.ru: 'Репетитор', AppLocale.en: 'Tutor'},
@@ -486,20 +457,33 @@ class Strings {
       AppLocale.en: 'Goals & reminders',
     },
     'dataSection': {AppLocale.ru: 'Данные', AppLocale.en: 'Data'},
-    'backendUrl': {
-      AppLocale.ru: 'Адрес сервера чата',
-      AppLocale.en: 'Chat backend URL',
+    'professorInDevTitle': {
+      AppLocale.ru: 'Профессор скоро откроет двери',
+      AppLocale.en: 'The Professor is almost ready',
     },
-    'professorReady': {
-      AppLocale.ru: 'Профессор на месте — просто пишите ему в чате',
-      AppLocale.en: 'The professor is in — just message them in chat',
+    'professorInDevBody': {
+      AppLocale.ru:
+          'Он всё ещё готовит свой первый урок и появится здесь совсем скоро. А пока Друг и Репетитор уже на месте и рады поболтать!',
+      AppLocale.en:
+          "They're still prepping their first lesson and will be here very soon. In the meantime, Friend and Tutor are already in and happy to chat!",
     },
-    'professorAdvanced': {
-      AppLocale.ru: 'Свой адрес сервера',
-      AppLocale.en: 'Custom server address',
+    'professorInDevBadge': {AppLocale.ru: 'Скоро', AppLocale.en: 'Coming soon'},
+    'choosePersona': {
+      AppLocale.ru: 'Выбрать собеседника',
+      AppLocale.en: 'Choose who to talk to',
     },
-    'save': {AppLocale.ru: 'Сохранить', AppLocale.en: 'Save'},
-    'saved': {AppLocale.ru: 'Сохранено', AppLocale.en: 'Saved'},
+    'switchPersona': {
+      AppLocale.ru: 'Выбрать другого собеседника',
+      AppLocale.en: 'Choose someone else',
+    },
+    'personaTapToStart': {
+      AppLocale.ru: 'Нажмите, чтобы начать знакомство',
+      AppLocale.en: 'Tap to say hello',
+    },
+    'personaReadyShort': {
+      AppLocale.ru: 'Готов болтать',
+      AppLocale.en: 'Ready to chat',
+    },
     'language': {
       AppLocale.ru: 'Язык интерфейса',
       AppLocale.en: 'Interface language',
