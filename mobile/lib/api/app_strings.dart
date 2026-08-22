@@ -58,6 +58,12 @@ class Strings {
       AppLocale.en: 'Write the character',
     },
     'hint': {AppLocale.ru: 'Подсказка', AppLocale.en: 'Hint'},
+    'writeStrokeProgress': {AppLocale.ru: 'Черта', AppLocale.en: 'Stroke'},
+    'writeHanziTip': {
+      AppLocale.ru: 'Веди пальцем по клетке — черты идут по порядку',
+      AppLocale.en: 'Drag inside the box — strokes go in order',
+    },
+    'writeRestart': {AppLocale.ru: 'Заново', AppLocale.en: 'Restart'},
     'correctAnswerIs': {
       AppLocale.ru: 'Правильный ответ',
       AppLocale.en: 'Correct answer',
@@ -277,6 +283,28 @@ class Strings {
       AppLocale.ru: 'Не совсем — попробуй ещё раз',
       AppLocale.en: "Not quite — give it another try",
     },
+    'pronunciationCloseEnough': {
+      AppLocale.ru: 'Слово услышано, но с лишним рядом 👌',
+      AppLocale.en: 'Got the word, with extra noise around it 👌',
+    },
+    'pronunciationWrongWord': {
+      AppLocale.ru: 'Услышалось другое слово',
+      AppLocale.en: 'That came out as a different word',
+    },
+    'pronunciationNotHeard': {
+      AppLocale.ru: 'Ничего не разобрать — скажи чуть громче',
+      AppLocale.en: "Couldn't make it out — try a bit louder",
+    },
+    'pronunciationToneHint': {
+      AppLocale.ru:
+          'Похоже, тон ушёл в сторону: с другим тоном тот же слог — уже другой иероглиф.',
+      AppLocale.en:
+          'Looks like the tone slipped: the same syllable with another tone is a different character.',
+    },
+    'pronunciationSayLike': {
+      AppLocale.ru: 'Скажи так',
+      AppLocale.en: 'Say it like this',
+    },
     'pronunciationSkip': {
       AppLocale.ru: 'Другое слово',
       AppLocale.en: 'Different word',
@@ -465,6 +493,41 @@ class Strings {
       AppLocale.ru: 'Следующий диалог',
       AppLocale.en: 'Next dialogue',
     },
+    'listeningPickTitle': {
+      AppLocale.ru: 'Выбери диалог',
+      AppLocale.en: 'Pick a dialogue',
+    },
+    'listeningRandom': {
+      AppLocale.ru: 'Случайный диалог',
+      AppLocale.en: 'Random dialogue',
+    },
+    'listeningRandomDesc': {
+      AppLocale.ru: 'Пусть приложение выберет за тебя',
+      AppLocale.en: 'Let the app pick for you',
+    },
+    'listeningTapPlay': {
+      AppLocale.ru: 'Нажми и слушай внимательно',
+      AppLocale.en: 'Tap and listen carefully',
+    },
+    'listeningPlaying': {AppLocale.ru: 'Слушай…', AppLocale.en: 'Listening…'},
+    'listeningHiddenHint': {
+      AppLocale.ru: 'Текст скрыт — сначала попробуй понять на слух',
+      AppLocale.en: 'Transcript hidden — try to catch it by ear first',
+    },
+    'listeningShowText': {
+      AppLocale.ru: 'Показать текст',
+      AppLocale.en: 'Show the transcript',
+    },
+    'listeningReplaysUsed': {
+      AppLocale.ru: 'Прослушиваний: {count}',
+      AppLocale.en: 'Replays: {count}',
+    },
+    'listeningCorrect': {AppLocale.ru: 'Верно!', AppLocale.en: 'Correct!'},
+    'listeningWrong': {
+      AppLocale.ru: 'Не тот вариант',
+      AppLocale.en: 'Not that one',
+    },
+    'listeningLines': {AppLocale.ru: 'реплик', AppLocale.en: 'lines'},
     'readingTitle': {AppLocale.ru: 'Чтение', AppLocale.en: 'Reading'},
     'readingCardDesc': {
       AppLocale.ru: 'Короткие тексты на твоём уровне',

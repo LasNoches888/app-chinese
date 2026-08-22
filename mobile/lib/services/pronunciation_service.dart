@@ -1,17 +1,68 @@
 import 'package:speech_to_text/speech_to_text.dart';
 
-/// Listens to the learner's own attempt at a word and reports back what
-/// the on-device speech recognizer heard.
+/// How close the learner's attempt was, and what specifically to fix.
+enum PronunciationGrade {
+  /// The recognizer resolved the audio to exactly the target word.
+  correct,
+
+  /// The target word is in there, but surrounded by other words — usually
+  /// a hesitation ("эм 你好") or the recognizer picking up a longer phrase.
+  closeExtraWords,
+
+  /// The recognizer heard a same-length Chinese word that isn't the
+  /// target — the classic "right syllables, wrong tone" outcome, since a
+  /// wrong tone usually resolves to a different real character.
+  wrongWord,
+
+  /// Nothing usable came back: silence, non-Chinese, or too noisy.
+  notHeard,
+}
+
+class PronunciationResult {
+  final PronunciationGrade grade;
+
+  /// What the recognizer actually heard, cleaned of punctuation.
+  final String heard;
+
+  /// Per-character comparison against the target, aligned by position —
+  /// empty when the lengths differ enough that aligning would be
+  /// misleading rather than helpful.
+  final List<CharComparison> comparison;
+
+  const PronunciationResult({
+    required this.grade,
+    required this.heard,
+    this.comparison = const [],
+  });
+
+  bool get isCorrect => grade == PronunciationGrade.correct;
+
+  /// The characters the learner got wrong, for a "watch this syllable"
+  /// hint. Empty unless [comparison] was computed.
+  List<CharComparison> get mistakes =>
+      comparison.where((c) => !c.matches).toList();
+}
+
+class CharComparison {
+  final String expected;
+  final String heard;
+
+  const CharComparison({required this.expected, required this.heard});
+
+  bool get matches => expected == heard;
+}
+
+/// Listens to the learner's own attempt at a word and grades what the
+/// on-device speech recognizer heard against the target.
 ///
 /// This is a proxy for pronunciation quality, not a lab-grade phonetic
-/// analysis: Android's/iOS's speech recognizer resolves ambiguous audio to
-/// the single most likely real word using its language model, the same
-/// way it would for any dictation. For an isolated one- or two-syllable
-/// word that mostly means "did this resolve to the target character" —
-/// close-but-wrong-tone attempts sometimes still get recognized correctly
-/// if the recognizer's language model favors that word anyway, and correct
-/// attempts can misfire on unclear audio. It's a useful "does this sound
-/// roughly right" check, not a tone-accuracy score.
+/// analysis: the recognizer resolves ambiguous audio to the single most
+/// likely real word using its language model, the same way it would for
+/// any dictation. What that buys us is still useful, though — Mandarin
+/// tones are lexical, so a wrong tone usually lands on a *different real
+/// character*, which is exactly what [PronunciationGrade.wrongWord] and
+/// the per-character [CharComparison] surface. It cannot measure "right
+/// character, slightly flat tone".
 class PronunciationService {
   static final SpeechToText _speech = SpeechToText();
   static bool _initialized = false;
@@ -64,12 +115,51 @@ class PronunciationService {
 
   static Future<void> stop() => _speech.stop();
 
-  /// Loose match: strips whitespace/punctuation the recognizer sometimes
-  /// adds and checks whether the target word appears in what was heard —
-  /// a short answer read back as part of a longer recognized phrase
-  /// ("这是你好" for "你好") should still count.
-  static bool matches(String recognizedText, String targetHanzi) {
-    final cleaned = recognizedText.replaceAll(RegExp(r'[\s,.!?，。！？、]'), '');
-    return cleaned.contains(targetHanzi);
+  /// Strips the whitespace and punctuation recognizers sprinkle in, so
+  /// comparisons are against the characters alone.
+  static String clean(String text) =>
+      text.replaceAll(RegExp(r"[\s,.!?，。！？、'‘’]"), '');
+
+  /// Grades one attempt at [targetHanzi].
+  static PronunciationResult grade(String recognizedText, String targetHanzi) {
+    final heard = clean(recognizedText);
+    if (heard.isEmpty) {
+      return const PronunciationResult(
+        grade: PronunciationGrade.notHeard,
+        heard: '',
+      );
+    }
+    if (heard == targetHanzi) {
+      return PronunciationResult(
+        grade: PronunciationGrade.correct,
+        heard: heard,
+      );
+    }
+    if (heard.contains(targetHanzi)) {
+      // The word is in there — count it as correct-with-noise rather than
+      // failing someone who said the right thing with an "эм" attached.
+      return PronunciationResult(
+        grade: PronunciationGrade.closeExtraWords,
+        heard: heard,
+      );
+    }
+    if (heard.length == targetHanzi.length) {
+      return PronunciationResult(
+        grade: PronunciationGrade.wrongWord,
+        heard: heard,
+        comparison: [
+          for (var i = 0; i < targetHanzi.length; i++)
+            CharComparison(expected: targetHanzi[i], heard: heard[i]),
+        ],
+      );
+    }
+    return PronunciationResult(
+      grade: PronunciationGrade.wrongWord,
+      heard: heard,
+    );
   }
+
+  /// Loose match kept for callers that only need a yes/no.
+  static bool matches(String recognizedText, String targetHanzi) =>
+      clean(recognizedText).contains(targetHanzi);
 }

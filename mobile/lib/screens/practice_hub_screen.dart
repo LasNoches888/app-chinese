@@ -7,7 +7,7 @@ import '../components/app_background.dart';
 import '../services/daily_content_service.dart';
 import 'dictionary_screen.dart';
 import 'lesson_session_screen.dart';
-import 'listening_screen.dart';
+import 'listening_list_screen.dart';
 import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
 import 'pronunciation_check_screen.dart';
@@ -155,7 +155,7 @@ class PracticeHubScreen extends StatelessWidget {
               subtitle: settings.t('listeningCardDesc'),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => const ListeningScreen(),
+                  builder: (_) => const ListeningListScreen(),
                 ),
               ),
             ),

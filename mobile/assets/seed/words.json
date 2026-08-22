@@ -3485,5 +3485,170 @@
     "hsk_level": 3,
     "topic": "society3",
     "deck_id": "society3"
+  },
+  {
+    "id": "yao_want",
+    "hanzi": "要",
+    "pinyin": "yào",
+    "translation_ru": "хотеть / нужно",
+    "example_sentence": "我要喝水。",
+    "example_translation": "Я хочу пить воду.",
+    "hsk_level": 1,
+    "topic": "verbs1",
+    "deck_id": "verbs1"
+  },
+  {
+    "id": "zaoshang",
+    "hanzi": "早上",
+    "pinyin": "zǎo shang",
+    "translation_ru": "утро",
+    "example_sentence": "早上好！",
+    "example_translation": "Доброе утро!",
+    "hsk_level": 1,
+    "topic": "time",
+    "deck_id": "time"
+  },
+  {
+    "id": "wanshang",
+    "hanzi": "晚上",
+    "pinyin": "wǎn shang",
+    "translation_ru": "вечер",
+    "example_sentence": "晚上我在家。",
+    "example_translation": "Вечером я дома.",
+    "hsk_level": 1,
+    "topic": "time",
+    "deck_id": "time"
+  },
+  {
+    "id": "xing",
+    "hanzi": "姓",
+    "pinyin": "xìng",
+    "translation_ru": "фамилия / носить фамилию",
+    "example_sentence": "你姓什么？",
+    "example_translation": "Какая у тебя фамилия?",
+    "hsk_level": 1,
+    "topic": "people",
+    "deck_id": "people"
+  },
+  {
+    "id": "cuo",
+    "hanzi": "错",
+    "pinyin": "cuò",
+    "translation_ru": "ошибка / неправильный",
+    "example_sentence": "这个字写错了。",
+    "example_translation": "Этот иероглиф написан неправильно.",
+    "hsk_level": 2,
+    "topic": "study2",
+    "deck_id": "study2"
+  },
+  {
+    "id": "li_from",
+    "hanzi": "离",
+    "pinyin": "lí",
+    "translation_ru": "от (расстояние)",
+    "example_sentence": "我家离学校很近。",
+    "example_translation": "Мой дом близко от школы.",
+    "hsk_level": 2,
+    "topic": "transport2",
+    "deck_id": "transport2"
+  },
+  {
+    "id": "ba_particle",
+    "hanzi": "吧",
+    "pinyin": "ba",
+    "translation_ru": "частица предложения (давай)",
+    "example_sentence": "我们走吧！",
+    "example_translation": "Пойдём!",
+    "hsk_level": 2,
+    "topic": "adverbs2",
+    "deck_id": "adverbs2"
+  },
+  {
+    "id": "bie",
+    "hanzi": "别",
+    "pinyin": "bié",
+    "translation_ru": "не надо (запрет)",
+    "example_sentence": "别着急。",
+    "example_translation": "Не волнуйся.",
+    "hsk_level": 2,
+    "topic": "adverbs2",
+    "deck_id": "adverbs2"
+  },
+  {
+    "id": "ranhou",
+    "hanzi": "然后",
+    "pinyin": "rán hòu",
+    "translation_ru": "потом, затем",
+    "example_sentence": "先吃饭，然后休息。",
+    "example_translation": "Сначала поесть, потом отдохнуть.",
+    "hsk_level": 2,
+    "topic": "adverbs2",
+    "deck_id": "adverbs2"
+  },
+  {
+    "id": "you_again",
+    "hanzi": "又",
+    "pinyin": "yòu",
+    "translation_ru": "снова, опять",
+    "example_sentence": "他又问了一次。",
+    "example_translation": "Он спросил ещё раз.",
+    "hsk_level": 2,
+    "topic": "adverbs2",
+    "deck_id": "adverbs2"
+  },
+  {
+    "id": "zhi_only",
+    "hanzi": "只",
+    "pinyin": "zhǐ",
+    "translation_ru": "только",
+    "example_sentence": "我只有二十块钱。",
+    "example_translation": "У меня только двадцать юаней.",
+    "hsk_level": 2,
+    "topic": "adverbs2",
+    "deck_id": "adverbs2"
+  },
+  {
+    "id": "dai",
+    "hanzi": "带",
+    "pinyin": "dài",
+    "translation_ru": "брать с собой",
+    "example_sentence": "别忘了带护照。",
+    "example_translation": "Не забудь взять паспорт.",
+    "hsk_level": 3,
+    "topic": "travel3",
+    "deck_id": "travel3"
+  },
+  {
+    "id": "xuyao",
+    "hanzi": "需要",
+    "pinyin": "xū yào",
+    "translation_ru": "нуждаться, требоваться",
+    "example_sentence": "这个工作需要努力。",
+    "example_translation": "Эта работа требует стараний.",
+    "hsk_level": 3,
+    "topic": "work3",
+    "deck_id": "work3"
+  },
+  {
+    "id": "di_low",
+    "hanzi": "低",
+    "pinyin": "dī",
+    "translation_ru": "низкий",
+    "example_sentence": "冬天温度很低。",
+    "example_translation": "Зимой температура очень низкая.",
+    "hsk_level": 3,
+    "topic": "nature3",
+    "deck_id": "nature3"
+  },
+  {
+    "id": "cai_only",
+    "hanzi": "才",
+    "pinyin": "cái",
+    "translation_ru": "только тогда, лишь",
+    "example_sentence": "努力了才会成功。",
+    "example_translation": "Только приложив усилия, добьёшься успеха.",
+    "hsk_level": 3,
+    "topic": "society3",
+    "deck_id": "society3"
   }
 ]

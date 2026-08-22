@@ -18,7 +18,7 @@
     "title": "Люди и местоимения",
     "topic": "people",
     "hsk_level": 1,
-    "word_count": 14
+    "word_count": 15
   },
   {
     "id": "family",
@@ -39,7 +39,7 @@
     "title": "Время",
     "topic": "time",
     "hsk_level": 1,
-    "word_count": 14
+    "word_count": 16
   },
   {
     "id": "questions",
@@ -53,7 +53,7 @@
     "title": "Глаголы: основа",
     "topic": "verbs1",
     "hsk_level": 1,
-    "word_count": 22
+    "word_count": 23
   },
   {
     "id": "adjectives1",
@@ -109,7 +109,7 @@
     "title": "Учёба",
     "topic": "study2",
     "hsk_level": 2,
-    "word_count": 12
+    "word_count": 13
   },
   {
     "id": "shopping2",
@@ -130,14 +130,14 @@
     "title": "Транспорт и город",
     "topic": "transport2",
     "hsk_level": 2,
-    "word_count": 11
+    "word_count": 12
   },
   {
     "id": "adverbs2",
     "title": "Наречия и связки",
     "topic": "adverbs2",
     "hsk_level": 2,
-    "word_count": 16
+    "word_count": 21
   },
   {
     "id": "daily2",
@@ -158,27 +158,27 @@
     "title": "Работа",
     "topic": "work3",
     "hsk_level": 3,
-    "word_count": 11
+    "word_count": 12
   },
   {
     "id": "travel3",
     "title": "Путешествия",
     "topic": "travel3",
     "hsk_level": 3,
-    "word_count": 11
+    "word_count": 12
   },
   {
     "id": "nature3",
     "title": "Природа и сезоны",
     "topic": "nature3",
     "hsk_level": 3,
-    "word_count": 11
+    "word_count": 12
   },
   {
     "id": "society3",
     "title": "Общество",
     "topic": "society3",
     "hsk_level": 3,
-    "word_count": 11
+    "word_count": 12
   }
 ]

@@ -242,7 +242,7 @@
     "question": "Как зовут говорящего B?",
     "options": [
       "Ли Мин",
-      "Ван Ли",
+      "Ли Ли",
       "Не сказано"
     ],
     "correct_index": 0
@@ -883,15 +883,15 @@
     "lines": [
       {
         "speaker": "A",
-        "hanzi": "你好，我叫小美。",
-        "pinyin": "Nǐ hǎo, wǒ jiào Xiǎoměi.",
-        "translation_ru": "Привет, меня зовут Сяомэй."
+        "hanzi": "你好，我叫小红。",
+        "pinyin": "Nǐ hǎo, wǒ jiào Xiǎohóng.",
+        "translation_ru": "Привет, меня зовут Сяохун."
       },
       {
         "speaker": "B",
-        "hanzi": "你好，小美！认识你很高兴。",
-        "pinyin": "Nǐ hǎo, Xiǎoměi! Rènshi nǐ hěn gāoxìng.",
-        "translation_ru": "Привет, Сяомэй! Приятно познакомиться."
+        "hanzi": "你好，小红！认识你很高兴。",
+        "pinyin": "Nǐ hǎo, Xiǎohóng! Rènshi nǐ hěn gāoxìng.",
+        "translation_ru": "Привет, Сяохун! Приятно познакомиться."
       },
       {
         "speaker": "A",
@@ -903,7 +903,7 @@
     "question": "Как зовут говорящего A?",
     "options": [
       "Сяомин",
-      "Сяомэй",
+      "Сяохун",
       "Не сказано"
     ],
     "correct_index": 1
@@ -951,15 +951,15 @@
       },
       {
         "speaker": "B",
-        "hanzi": "二十个。老师姓王。",
-        "pinyin": "Èrshí ge. Lǎoshī xìng Wáng.",
-        "translation_ru": "Двадцать. Учителя зовут Ван."
+        "hanzi": "二十个。老师姓李。",
+        "pinyin": "Èrshí ge. Lǎoshī xìng Lǐ.",
+        "translation_ru": "Двадцать. Учителя зовут Ли."
       },
       {
         "speaker": "A",
-        "hanzi": "你认识王老师吗？",
-        "pinyin": "Nǐ rènshi Wáng lǎoshī ma?",
-        "translation_ru": "Ты знаком с учителем Ван?"
+        "hanzi": "你认识李老师吗？",
+        "pinyin": "Nǐ rènshi Lǐ lǎoshī ma?",
+        "translation_ru": "Ты знаком с учителем Ли?"
       },
       {
         "speaker": "B",

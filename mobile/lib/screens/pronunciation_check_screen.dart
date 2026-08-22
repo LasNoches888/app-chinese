@@ -10,13 +10,11 @@ import '../models/word.dart';
 import '../services/pronunciation_service.dart';
 import '../services/speech_service.dart';
 
-enum _Verdict { none, correct, tryAgain }
-
 /// Speak-and-check practice: the learner hears a word, says it back, and
-/// the on-device speech recognizer reports what it heard. See
-/// [PronunciationService] for what this can and can't actually measure —
-/// framed to the learner as "does this sound right" rather than a
-/// precise tone score, since that's what it really is.
+/// the app grades what the on-device recognizer heard — telling them
+/// *which syllable* came out as a different character rather than just
+/// "try again". See [PronunciationService] for what this can and can't
+/// actually measure.
 class PronunciationCheckScreen extends StatefulWidget {
   const PronunciationCheckScreen({super.key});
 
@@ -32,8 +30,9 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
   Word? _current;
   bool? _speechAvailable;
   bool _listening = false;
-  String _heard = '';
-  _Verdict _verdict = _Verdict.none;
+  String _partial = '';
+  PronunciationResult? _result;
+  int _tries = 0;
   int _correctCount = 0;
   int _attempts = 0;
 
@@ -44,58 +43,71 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
   }
 
   Future<void> _load() async {
-    final all = await context.read<AppRepositories>().words.getAllWords();
+    final repos = context.read<AppRepositories>();
+    final all = await repos.words.getAllWords();
+    // Weak words first — the ones the learner keeps getting wrong are the
+    // ones worth hearing themselves say. Falls back to the full bank for
+    // a fresh profile with no review history yet.
+    final weakIds = (await repos.srs.getWeakWordIds()).toSet();
     final available = await PronunciationService.ensureInitialized();
     if (!mounted) return;
+    final weak = all.where((w) => weakIds.contains(w.id)).toList();
     setState(() {
-      _allWords = all;
+      _allWords = weak.length >= 5 ? weak : all;
       _speechAvailable = available;
     });
     _nextWord();
   }
 
   void _nextWord() {
-    if (_allWords == null || _allWords!.isEmpty) return;
+    final pool = _allWords;
+    if (pool == null || pool.isEmpty) return;
     setState(() {
-      _current = _allWords![_rng.nextInt(_allWords!.length)];
-      _heard = '';
-      _verdict = _Verdict.none;
+      _current = pool[_rng.nextInt(pool.length)];
+      _partial = '';
+      _result = null;
+      _tries = 0;
     });
   }
 
   Future<void> _toggleListening() async {
     if (_listening) {
       await PronunciationService.stop();
+      if (mounted) setState(() => _listening = false);
       return;
     }
     setState(() {
       _listening = true;
-      _heard = '';
-      _verdict = _Verdict.none;
+      _partial = '';
+      _result = null;
     });
     await PronunciationService.listen(
       onResult: (text, isFinal) {
         if (!mounted) return;
-        setState(() => _heard = text);
-        if (isFinal) _evaluate();
+        setState(() => _partial = text);
+        if (isFinal) _evaluate(text);
       },
     );
   }
 
-  Future<void> _evaluate() async {
-    if (!mounted || _current == null) return;
-    final correct =
-        _heard.isNotEmpty &&
-        PronunciationService.matches(_heard, _current!.hanzi);
+  Future<void> _evaluate(String text) async {
+    final word = _current;
+    if (!mounted || word == null) return;
+    final result = PronunciationService.grade(text, word.hanzi);
     setState(() {
       _listening = false;
-      _verdict = correct ? _Verdict.correct : _Verdict.tryAgain;
+      _result = result;
+      _tries += 1;
       _attempts += 1;
-      if (correct) _correctCount += 1;
+      if (result.isCorrect) _correctCount += 1;
     });
-    if (correct) {
-      await context.read<AppRepositories>().stats.addXpAndRecordActivity(5);
-      await Future<void>.delayed(const Duration(milliseconds: 900));
+    if (result.isCorrect ||
+        result.grade == PronunciationGrade.closeExtraWords) {
+      // Full credit for a clean read, a bit less when the recognizer also
+      // picked up filler around it.
+      final xp = result.isCorrect ? 5 : 3;
+      await context.read<AppRepositories>().stats.addXpAndRecordActivity(xp);
+      await Future<void>.delayed(const Duration(milliseconds: 1400));
       if (mounted) _nextWord();
     }
   }
@@ -121,16 +133,16 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
             : word == null
             ? const Center(child: CircularProgressIndicator())
             : SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                   child: Column(
                     children: [
                       Text(
                         settings.t('pronunciationPrompt'),
                         textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
-                      const Spacer(),
+                      const SizedBox(height: 24),
                       Text(
                         word.hanzi,
                         style: const TextStyle(
@@ -141,50 +153,37 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
                       const SizedBox(height: 6),
                       Text(
                         word.pinyin,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.titleLarge?.copyWith(color: Colors.grey),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         word.translationRu,
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 8),
                       TextButton.icon(
                         onPressed: () =>
                             SpeechService.speak(word.hanzi, rate: 0.35),
                         icon: const Icon(Icons.volume_up_outlined),
                         label: Text(settings.t('listen')),
                       ),
-                      const Spacer(),
-                      if (_heard.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: Text(
-                            '${settings.t('pronunciationHeard')}: $_heard',
-                            textAlign: TextAlign.center,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        ),
-                      if (_verdict != _Verdict.none)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Text(
-                            _verdict == _Verdict.correct
-                                ? settings.t('pronunciationCorrect')
-                                : settings.t('pronunciationTryAgain'),
-                            style: TextStyle(
-                              color: _verdict == _Verdict.correct
-                                  ? Colors.green
-                                  : Colors.orange,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
+                      const SizedBox(height: 16),
+                      _FeedbackPanel(
+                        settings: settings,
+                        result: _result,
+                        partial: _partial,
+                        listening: _listening,
+                        tries: _tries,
+                        target: word,
+                      ),
+                      const SizedBox(height: 20),
                       GestureDetector(
                         onTap: _toggleListening,
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
                           width: 88,
                           height: 88,
                           decoration: BoxDecoration(
@@ -192,6 +191,19 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
                             color: _listening
                                 ? Colors.red
                                 : Theme.of(context).colorScheme.primary,
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    (_listening
+                                            ? Colors.red
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.primary)
+                                        .withValues(alpha: 0.4),
+                                blurRadius: _listening ? 26 : 12,
+                                spreadRadius: _listening ? 5 : 0,
+                              ),
+                            ],
                           ),
                           child: Icon(
                             _listening ? Icons.stop : Icons.mic,
@@ -215,6 +227,140 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
                   ),
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// Shows what the recognizer heard and, when it's actionable, which
+/// syllable to fix.
+class _FeedbackPanel extends StatelessWidget {
+  final AppSettings settings;
+  final PronunciationResult? result;
+  final String partial;
+  final bool listening;
+  final int tries;
+  final Word target;
+
+  const _FeedbackPanel({
+    required this.settings,
+    required this.result,
+    required this.partial,
+    required this.listening,
+    required this.tries,
+    required this.target,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    if (listening) {
+      return SizedBox(
+        height: 72,
+        child: Center(
+          child: Text(
+            partial.isEmpty ? '…' : partial,
+            style: theme.textTheme.titleMedium,
+          ),
+        ),
+      );
+    }
+
+    final r = result;
+    if (r == null) return const SizedBox(height: 72);
+
+    final (color, title) = switch (r.grade) {
+      PronunciationGrade.correct => (
+        Colors.green,
+        settings.t('pronunciationCorrect'),
+      ),
+      PronunciationGrade.closeExtraWords => (
+        Colors.lightGreen,
+        settings.t('pronunciationCloseEnough'),
+      ),
+      PronunciationGrade.wrongWord => (
+        Colors.orange,
+        settings.t('pronunciationWrongWord'),
+      ),
+      PronunciationGrade.notHeard => (
+        Colors.blueGrey,
+        settings.t('pronunciationNotHeard'),
+      ),
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: color, fontWeight: FontWeight.w700),
+          ),
+          if (r.heard.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              '${settings.t('pronunciationHeard')}: ${r.heard}',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+          // Same syllable count but different characters is the closest
+          // this can get to "your tone landed on another word" — worth
+          // pointing at the exact syllable rather than a generic retry.
+          if (r.mistakes.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                for (final m in r.mistakes)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '${m.heard} → ${m.expected}',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              settings.t('pronunciationToneHint'),
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodySmall,
+            ),
+          ],
+          // After a couple of misses, stop guessing and just show the
+          // target pinyin broken out — repeating "try again" with no new
+          // information is where people give up.
+          if (tries >= 2 && !r.isCorrect) ...[
+            const SizedBox(height: 10),
+            Text(
+              '${settings.t('pronunciationSayLike')}: ${target.pinyin}',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

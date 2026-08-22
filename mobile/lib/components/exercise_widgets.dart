@@ -406,6 +406,12 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
   /// Normalizes both tone-mark and tone-number pinyin to a comparable
   /// plain form, stripping tone digits entirely so either notation (or no
   /// tones at all) is accepted.
+  ///
+  /// Spaces are stripped rather than collapsed: the stored pinyin isn't
+  /// consistently spaced per syllable ("nǐ hǎo" but "kuàilè"), and typing
+  /// a word as one run — "nihao" — is the natural thing to do. Requiring
+  /// the learner to guess the same word boundaries the data happens to
+  /// use just fails correct answers.
   String _normalize(String input) {
     final buffer = StringBuffer();
     for (final rune in input.toLowerCase().runes) {
@@ -416,7 +422,7 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
     return buffer
         .toString()
         .replaceAll(RegExp(r'[0-9]'), '')
-        .replaceAll(RegExp(r'\s+'), ' ')
+        .replaceAll(RegExp(r"[\s'’-]+"), '')
         .trim();
   }
 
@@ -534,31 +540,85 @@ class _WriteHanziExerciseWidgetState extends State<WriteHanziExerciseWidget>
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           widget.settings.t('writeHanziPrompt'),
-          style: Theme.of(context).textTheme.bodySmall,
+          style: theme.textTheme.bodySmall,
         ),
         const SizedBox(height: 4),
         Text(widget.question.translation ?? '', textAlign: TextAlign.center),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
+        // Live stroke progress. Without it the canvas gives no feedback at
+        // all until the character is finished — a stroke that didn't
+        // register looked identical to one the learner hadn't drawn yet,
+        // which is exactly the "it doesn't work" complaint.
+        ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) {
+            final total = _controller.strokeOrder.nStrokes;
+            final done = _controller.currentStroke.clamp(0, total);
+            return Column(
+              children: [
+                Text(
+                  '${widget.settings.t('writeStrokeProgress')} $done / $total',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: total == 0 ? 0 : done / total,
+                    minHeight: 6,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
             border: Border.all(
-              color: Theme.of(context).colorScheme.outlineVariant,
+              color: theme.colorScheme.outlineVariant,
               width: 2,
             ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: StrokeOrderAnimator(_controller, size: const Size(260, 260)),
         ),
-        const SizedBox(height: 12),
-        TextButton.icon(
-          onPressed: _controller.animateHint,
-          icon: const Icon(Icons.lightbulb_outline),
-          label: Text(widget.settings.t('hint')),
+        const SizedBox(height: 8),
+        Text(
+          widget.settings.t('writeHanziTip'),
+          textAlign: TextAlign.center,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              onPressed: _controller.animateHint,
+              icon: const Icon(Icons.lightbulb_outline),
+              label: Text(widget.settings.t('hint')),
+            ),
+            TextButton.icon(
+              // Restarting the quiz is the escape hatch when a stroke goes
+              // badly wrong halfway through a complex character.
+              onPressed: () {
+                _controller.stopQuiz();
+                _controller.startQuiz();
+              },
+              icon: const Icon(Icons.refresh),
+              label: Text(widget.settings.t('writeRestart')),
+            ),
+          ],
         ),
       ],
     );
