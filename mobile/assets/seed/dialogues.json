@@ -3,72 +3,699 @@
     "id": "dlg_greetings",
     "topic": "greetings",
     "lines": [
-      {"speaker": "A", "hanzi": "你好！", "pinyin": "Nǐ hǎo!", "translation_ru": "Привет!"},
-      {"speaker": "B", "hanzi": "你好！你好吗？", "pinyin": "Nǐ hǎo! Nǐ hǎo ma?", "translation_ru": "Привет! Как дела?"},
-      {"speaker": "A", "hanzi": "我很好，谢谢。你呢？", "pinyin": "Wǒ hěn hǎo, xièxie. Nǐ ne?", "translation_ru": "У меня всё хорошо, спасибо. А у тебя?"},
-      {"speaker": "B", "hanzi": "也很好。再见！", "pinyin": "Yě hěn hǎo. Zàijiàn!", "translation_ru": "Тоже хорошо. До свидания!"}
+      {
+        "speaker": "A",
+        "hanzi": "你好！",
+        "pinyin": "Nǐ hǎo!",
+        "translation_ru": "Привет!"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "你好！你好吗？",
+        "pinyin": "Nǐ hǎo! Nǐ hǎo ma?",
+        "translation_ru": "Привет! Как дела?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我很好，谢谢。你呢？",
+        "pinyin": "Wǒ hěn hǎo, xièxie. Nǐ ne?",
+        "translation_ru": "У меня всё хорошо, спасибо. А у тебя?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "也很好。再见！",
+        "pinyin": "Yě hěn hǎo. Zàijiàn!",
+        "translation_ru": "Тоже хорошо. До свидания!"
+      }
     ],
     "question": "Как себя чувствует говорящий A?",
-    "options": ["Хорошо", "Плохо", "Не сказал"],
+    "options": [
+      "Хорошо",
+      "Плохо",
+      "Не сказал"
+    ],
     "correct_index": 0
   },
   {
     "id": "dlg_people",
     "topic": "people",
     "lines": [
-      {"speaker": "A", "hanzi": "你是学生吗？", "pinyin": "Nǐ shì xuésheng ma?", "translation_ru": "Ты студент?"},
-      {"speaker": "B", "hanzi": "是，我是学生。你是老师吗？", "pinyin": "Shì, wǒ shì xuésheng. Nǐ shì lǎoshī ma?", "translation_ru": "Да, я студент. Ты учитель?"},
-      {"speaker": "A", "hanzi": "是，我是老师。", "pinyin": "Shì, wǒ shì lǎoshī.", "translation_ru": "Да, я учитель."}
+      {
+        "speaker": "A",
+        "hanzi": "你是学生吗？",
+        "pinyin": "Nǐ shì xuésheng ma?",
+        "translation_ru": "Ты студент?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "是，我是学生。你是老师吗？",
+        "pinyin": "Shì, wǒ shì xuésheng. Nǐ shì lǎoshī ma?",
+        "translation_ru": "Да, я студент. Ты учитель?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "是，我是老师。",
+        "pinyin": "Shì, wǒ shì lǎoshī.",
+        "translation_ru": "Да, я учитель."
+      }
     ],
     "question": "Кто говорящий B?",
-    "options": ["Учитель", "Студент", "Друг"],
+    "options": [
+      "Учитель",
+      "Студент",
+      "Друг"
+    ],
     "correct_index": 1
   },
   {
     "id": "dlg_family",
     "topic": "family",
     "lines": [
-      {"speaker": "A", "hanzi": "这是我爸爸，这是我妈妈。", "pinyin": "Zhè shì wǒ bàba, zhè shì wǒ māma.", "translation_ru": "Это мой папа, это моя мама."},
-      {"speaker": "B", "hanzi": "你有哥哥吗？", "pinyin": "Nǐ yǒu gēge ma?", "translation_ru": "У тебя есть старший брат?"},
-      {"speaker": "A", "hanzi": "没有哥哥，我有姐姐。", "pinyin": "Méiyǒu gēge, wǒ yǒu jiějie.", "translation_ru": "Старшего брата нет, есть старшая сестра."}
+      {
+        "speaker": "A",
+        "hanzi": "这是我爸爸，这是我妈妈。",
+        "pinyin": "Zhè shì wǒ bàba, zhè shì wǒ māma.",
+        "translation_ru": "Это мой папа, это моя мама."
+      },
+      {
+        "speaker": "B",
+        "hanzi": "你有哥哥吗？",
+        "pinyin": "Nǐ yǒu gēge ma?",
+        "translation_ru": "У тебя есть старший брат?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "没有哥哥，我有姐姐。",
+        "pinyin": "Méiyǒu gēge, wǒ yǒu jiějie.",
+        "translation_ru": "Старшего брата нет, есть старшая сестра."
+      }
     ],
     "question": "Кто есть у говорящего A?",
-    "options": ["Старший брат", "Старшая сестра", "Младшая сестра"],
+    "options": [
+      "Старший брат",
+      "Старшая сестра",
+      "Младшая сестра"
+    ],
     "correct_index": 1
   },
   {
     "id": "dlg_food",
     "topic": "food",
     "lines": [
-      {"speaker": "A", "hanzi": "你想喝什么？咖啡还是茶？", "pinyin": "Nǐ xiǎng hē shénme? Kāfēi háishi chá?", "translation_ru": "Что будешь пить — кофе или чай?"},
-      {"speaker": "B", "hanzi": "我想喝茶，谢谢。你吃苹果吗？", "pinyin": "Wǒ xiǎng hē chá, xièxie. Nǐ chī píngguǒ ma?", "translation_ru": "Я буду чай, спасибо. Ты ешь яблоко?"},
-      {"speaker": "A", "hanzi": "好，苹果很好吃。", "pinyin": "Hǎo, píngguǒ hěn hǎochī.", "translation_ru": "Хорошо, яблоко очень вкусное."}
+      {
+        "speaker": "A",
+        "hanzi": "你想喝什么？咖啡还是茶？",
+        "pinyin": "Nǐ xiǎng hē shénme? Kāfēi háishi chá?",
+        "translation_ru": "Что будешь пить — кофе или чай?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我想喝茶，谢谢。你吃苹果吗？",
+        "pinyin": "Wǒ xiǎng hē chá, xièxie. Nǐ chī píngguǒ ma?",
+        "translation_ru": "Я буду чай, спасибо. Ты ешь яблоко?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "好，苹果很好吃。",
+        "pinyin": "Hǎo, píngguǒ hěn hǎochī.",
+        "translation_ru": "Хорошо, яблоко очень вкусное."
+      }
     ],
     "question": "Что выбрал говорящий B?",
-    "options": ["Кофе", "Чай", "Молоко"],
+    "options": [
+      "Кофе",
+      "Чай",
+      "Молоко"
+    ],
     "correct_index": 1
   },
   {
     "id": "dlg_time",
     "topic": "time",
     "lines": [
-      {"speaker": "A", "hanzi": "你今天忙吗？", "pinyin": "Nǐ jīntiān máng ma?", "translation_ru": "Ты сегодня занят?"},
-      {"speaker": "B", "hanzi": "今天不忙，明天很忙。", "pinyin": "Jīntiān bù máng, míngtiān hěn máng.", "translation_ru": "Сегодня не занят, завтра очень занят."}
+      {
+        "speaker": "A",
+        "hanzi": "你今天忙吗？",
+        "pinyin": "Nǐ jīntiān máng ma?",
+        "translation_ru": "Ты сегодня занят?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "今天不忙，明天很忙。",
+        "pinyin": "Jīntiān bù máng, míngtiān hěn máng.",
+        "translation_ru": "Сегодня не занят, завтра очень занят."
+      }
     ],
     "question": "Когда говорящий B занят?",
-    "options": ["Сегодня", "Завтра", "Вчера"],
+    "options": [
+      "Сегодня",
+      "Завтра",
+      "Вчера"
+    ],
     "correct_index": 1
   },
   {
     "id": "dlg_movement",
     "topic": "movement",
     "lines": [
-      {"speaker": "A", "hanzi": "你去哪儿？", "pinyin": "Nǐ qù nǎr?", "translation_ru": "Куда ты идёшь?"},
-      {"speaker": "B", "hanzi": "我去上班，然后回家。你呢？", "pinyin": "Wǒ qù shàngbān, ránhòu huíjiā. Nǐ ne?", "translation_ru": "Я иду на работу, потом домой. А ты?"},
-      {"speaker": "A", "hanzi": "我走去朋友家。", "pinyin": "Wǒ zǒu qù péngyou jiā.", "translation_ru": "Я иду пешком к другу."}
+      {
+        "speaker": "A",
+        "hanzi": "你去哪儿？",
+        "pinyin": "Nǐ qù nǎr?",
+        "translation_ru": "Куда ты идёшь?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我去上班，然后回家。你呢？",
+        "pinyin": "Wǒ qù shàngbān, ránhòu huíjiā. Nǐ ne?",
+        "translation_ru": "Я иду на работу, потом домой. А ты?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我走去朋友家。",
+        "pinyin": "Wǒ zǒu qù péngyou jiā.",
+        "translation_ru": "Я иду пешком к другу."
+      }
     ],
     "question": "Куда говорящий B идёт сначала?",
-    "options": ["Домой", "На работу", "К другу"],
+    "options": [
+      "Домой",
+      "На работу",
+      "К другу"
+    ],
     "correct_index": 1
+  },
+  {
+    "id": "dlg_numbers",
+    "topic": "numbers",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你家有几个人？",
+        "pinyin": "Nǐ jiā yǒu jǐ ge rén?",
+        "translation_ru": "В твоей семье сколько человек?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我家有四个人。你呢？",
+        "pinyin": "Wǒ jiā yǒu sì ge rén. Nǐ ne?",
+        "translation_ru": "В моей семье четыре человека. А у тебя?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我家有五个人。",
+        "pinyin": "Wǒ jiā yǒu wǔ ge rén.",
+        "translation_ru": "В моей семье пять человек."
+      }
+    ],
+    "question": "Сколько человек в семье говорящего B?",
+    "options": [
+      "Четыре",
+      "Пять",
+      "Три"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_questions",
+    "topic": "questions",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你叫什么名字？",
+        "pinyin": "Nǐ jiào shénme míngzi?",
+        "translation_ru": "Как тебя зовут?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我叫李明。你是谁？",
+        "pinyin": "Wǒ jiào Lǐ Míng. Nǐ shì shéi?",
+        "translation_ru": "Меня зовут Ли Мин. А ты кто?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我是他的同学。",
+        "pinyin": "Wǒ shì tā de tóngxué.",
+        "translation_ru": "Я его одноклассник."
+      }
+    ],
+    "question": "Как зовут говорящего B?",
+    "options": [
+      "Ли Мин",
+      "Ван Ли",
+      "Не сказано"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_verbs1",
+    "topic": "verbs1",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你会说汉语吗？",
+        "pinyin": "Nǐ huì shuō Hànyǔ ma?",
+        "translation_ru": "Ты умеешь говорить по-китайски?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "会一点儿。我在学习。",
+        "pinyin": "Huì yìdiǎnr. Wǒ zài xuéxí.",
+        "translation_ru": "Немного умею. Я учусь."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你喜欢看书吗？",
+        "pinyin": "Nǐ xǐhuan kàn shū ma?",
+        "translation_ru": "Ты любишь читать книги?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "喜欢，我也喜欢写字。",
+        "pinyin": "Xǐhuan, wǒ yě xǐhuan xiě zì.",
+        "translation_ru": "Люблю, я также люблю писать иероглифы."
+      }
+    ],
+    "question": "Что говорящий B умеет делать немного?",
+    "options": [
+      "Говорить по-китайски",
+      "Готовить",
+      "Петь"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_adjectives1",
+    "topic": "adjectives1",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "今天天气怎么样？",
+        "pinyin": "Jīntiān tiānqì zěnmeyàng?",
+        "translation_ru": "Какая сегодня погода?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很冷，可是昨天很热。",
+        "pinyin": "Hěn lěng, kěshì zuótiān hěn rè.",
+        "translation_ru": "Очень холодно, но вчера было очень жарко."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你的猫漂亮吗？",
+        "pinyin": "Nǐ de māo piàoliang ma?",
+        "translation_ru": "Твоя кошка красивая?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很漂亮，也很小。",
+        "pinyin": "Hěn piàoliang, yě hěn xiǎo.",
+        "translation_ru": "Очень красивая, и очень маленькая."
+      }
+    ],
+    "question": "Какая сегодня погода?",
+    "options": [
+      "Холодная",
+      "Жаркая",
+      "Тёплая"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_places1",
+    "topic": "places1",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你去哪儿？",
+        "pinyin": "Nǐ qù nǎr?",
+        "translation_ru": "Куда ты идёшь?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我去商店，商店在学校前面。",
+        "pinyin": "Wǒ qù shāngdiàn, shāngdiàn zài xuéxiào qiánmiàn.",
+        "translation_ru": "Иду в магазин, магазин перед школой."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "医院在哪儿？",
+        "pinyin": "Yīyuàn zài nǎr?",
+        "translation_ru": "А где больница?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "在学校后面。",
+        "pinyin": "Zài xuéxiào hòumiàn.",
+        "translation_ru": "Позади школы."
+      }
+    ],
+    "question": "Где находится магазин?",
+    "options": [
+      "Перед школой",
+      "Позади школы",
+      "В Пекине"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_objects1",
+    "topic": "objects1",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "桌子上有什么？",
+        "pinyin": "Zhuōzi shàng yǒu shénme?",
+        "translation_ru": "Что на столе?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "有一本书和电脑。",
+        "pinyin": "Yǒu yī běn shū hé diànnǎo.",
+        "translation_ru": "Книга и компьютер."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你有狗还是猫？",
+        "pinyin": "Nǐ yǒu gǒu háishi māo?",
+        "translation_ru": "У тебя собака или кошка?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我有猫，没有狗。",
+        "pinyin": "Wǒ yǒu māo, méiyǒu gǒu.",
+        "translation_ru": "У меня кошка, собаки нет."
+      }
+    ],
+    "question": "Что есть у говорящего B?",
+    "options": [
+      "Собака",
+      "Кошка",
+      "И то и другое"
+    ],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_grammar1",
+    "topic": "grammar1",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "今天下雨吗？",
+        "pinyin": "Jīntiān xià yǔ ma?",
+        "translation_ru": "Сегодня идёт дождь?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "下雨了，天气不好。",
+        "pinyin": "Xià yǔ le, tiānqì bù hǎo.",
+        "translation_ru": "Идёт дождь, погода плохая."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你怎么去学校？",
+        "pinyin": "Nǐ zěnme qù xuéxiào?",
+        "translation_ru": "Как ты доберёшься до школы?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我坐出租车去。",
+        "pinyin": "Wǒ zuò chūzūchē qù.",
+        "translation_ru": "Поеду на такси."
+      }
+    ],
+    "question": "Как говорящий B поедет в школу?",
+    "options": [
+      "Пешком",
+      "На такси",
+      "На самолёте"
+    ],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_colors",
+    "topic": "colors",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你喜欢什么颜色？",
+        "pinyin": "Nǐ xǐhuan shénme yánsè?",
+        "translation_ru": "Какой цвет тебе нравится?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我喜欢蓝色和绿色。你呢？",
+        "pinyin": "Wǒ xǐhuan lánsè hé lǜsè. Nǐ ne?",
+        "translation_ru": "Мне нравится синий и зелёный. А тебе?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我喜欢红色。",
+        "pinyin": "Wǒ xǐhuan hóngsè.",
+        "translation_ru": "Мне нравится красный."
+      }
+    ],
+    "question": "Какие цвета любит говорящий B?",
+    "options": [
+      "Красный",
+      "Синий и зелёный",
+      "Чёрный и белый"
+    ],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_food2",
+    "topic": "food2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你饿吗？我们去吃饭吧。",
+        "pinyin": "Nǐ è ma? Wǒmen qù chī fàn ba.",
+        "translation_ru": "Ты голоден? Пойдём поедим."
+      },
+      {
+        "speaker": "B",
+        "hanzi": "好，我想吃面条。",
+        "pinyin": "Hǎo, wǒ xiǎng chī miàntiáo.",
+        "translation_ru": "Хорошо, я хочу лапшу."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "服务员，请给我们面条和牛奶。",
+        "pinyin": "Fúwùyuán, qǐng gěi wǒmen miàntiáo hé niúnǎi.",
+        "translation_ru": "Официант, дайте нам лапшу и молоко, пожалуйста."
+      }
+    ],
+    "question": "Что заказали герои?",
+    "options": [
+      "Лапшу и молоко",
+      "Рыбу и кофе",
+      "Яйца и чай"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_study2",
+    "topic": "study2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你懂这个问题吗？",
+        "pinyin": "Nǐ dǒng zhège wèntí ma?",
+        "translation_ru": "Ты понимаешь этот вопрос?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "不懂，你能回答吗？",
+        "pinyin": "Bù dǒng, nǐ néng huídá ma?",
+        "translation_ru": "Не понимаю, ты можешь ответить?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我也不知道，我们问老师吧。",
+        "pinyin": "Wǒ yě bù zhīdào, wǒmen wèn lǎoshī ba.",
+        "translation_ru": "Я тоже не знаю, давай спросим учителя."
+      }
+    ],
+    "question": "Что решили сделать герои?",
+    "options": [
+      "Спросить учителя",
+      "Пойти домой",
+      "Читать газету"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_shopping2",
+    "topic": "shopping2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "这件衣服多少钱？",
+        "pinyin": "Zhè jiàn yīfu duōshao qián?",
+        "translation_ru": "Сколько стоит эта одежда?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "一百元，很便宜。",
+        "pinyin": "Yī bǎi yuán, hěn piányi.",
+        "translation_ru": "Сто юаней, очень дёшево."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "太贵了！有没有便宜一点儿的？",
+        "pinyin": "Tài guì le! Yǒu méiyǒu piányi yìdiǎnr de?",
+        "translation_ru": "Слишком дорого! Есть подешевле?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "有，我帮你找。",
+        "pinyin": "Yǒu, wǒ bāng nǐ zhǎo.",
+        "translation_ru": "Есть, я помогу тебе найти."
+      }
+    ],
+    "question": "Что герой А считает про цену?",
+    "options": [
+      "Дёшево",
+      "Слишком дорого",
+      "Нормально"
+    ],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_body2",
+    "topic": "body2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你怎么了？",
+        "pinyin": "Nǐ zěnme le?",
+        "translation_ru": "Что с тобой?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我生病了，很累。",
+        "pinyin": "Wǒ shēngbìng le, hěn lèi.",
+        "translation_ru": "Я заболел, очень устал."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你要休息，也要吃药。",
+        "pinyin": "Nǐ yào xiūxi, yě yào chī yào.",
+        "translation_ru": "Тебе нужно отдохнуть и принять лекарство."
+      },
+      {
+        "speaker": "B",
+        "hanzi": "好，谢谢你。",
+        "pinyin": "Hǎo, xièxie nǐ.",
+        "translation_ru": "Хорошо, спасибо."
+      }
+    ],
+    "question": "Что случилось с говорящим B?",
+    "options": [
+      "Он заболел",
+      "Он голоден",
+      "Он спешит"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_transport2",
+    "topic": "transport2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "车站远吗？",
+        "pinyin": "Chēzhàn yuǎn ma?",
+        "translation_ru": "Остановка далеко?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "不远，很近。你坐公共汽车还是火车？",
+        "pinyin": "Bù yuǎn, hěn jìn. Nǐ zuò gōnggòng qìchē háishi huǒchē?",
+        "translation_ru": "Не далеко, близко. Ты едешь на автобусе или на поезде?"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我坐公共汽车。",
+        "pinyin": "Wǒ zuò gōnggòng qìchē.",
+        "translation_ru": "Я еду на автобусе."
+      }
+    ],
+    "question": "Остановка далеко или близко?",
+    "options": [
+      "Далеко",
+      "Близко",
+      "Не сказано"
+    ],
+    "correct_index": 1
+  },
+  {
+    "id": "dlg_adverbs2",
+    "topic": "adverbs2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你今天很忙吗？",
+        "pinyin": "Nǐ jīntiān hěn máng ma?",
+        "translation_ru": "Ты сегодня очень занят?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很忙，所以没有休息。",
+        "pinyin": "Hěn máng, suǒyǐ méiyǒu xiūxi.",
+        "translation_ru": "Очень занят, поэтому не отдыхал."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "你已经很累了吧？",
+        "pinyin": "Nǐ yǐjīng hěn lèi le ba?",
+        "translation_ru": "Ты, наверное, уже очень устал?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "是的，但是我还要工作。",
+        "pinyin": "Shì de, dànshì wǒ hái yào gōngzuò.",
+        "translation_ru": "Да, но мне ещё нужно работать."
+      }
+    ],
+    "question": "Почему говорящий B не отдыхал?",
+    "options": [
+      "Был занят",
+      "Заболел",
+      "Не хотел"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_daily2",
+    "topic": "daily2",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "明天是我的生日。",
+        "pinyin": "Míngtiān shì wǒ de shēngrì.",
+        "translation_ru": "Завтра мой день рождения."
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我们一起唱歌、跳舞吧！",
+        "pinyin": "Wǒmen yìqǐ chànggē, tiàowǔ ba!",
+        "translation_ru": "Давай вместе споём и потанцуем!"
+      },
+      {
+        "speaker": "A",
+        "hanzi": "好，我很高兴！",
+        "pinyin": "Hǎo, wǒ hěn gāoxìng!",
+        "translation_ru": "Хорошо, я очень рад(а)!"
+      }
+    ],
+    "question": "Что герои будут делать вместе?",
+    "options": [
+      "Петь и танцевать",
+      "Готовиться к экзамену",
+      "Смотреть фильм"
+    ],
+    "correct_index": 0
   }
 ]

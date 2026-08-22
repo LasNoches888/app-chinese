@@ -145,5 +145,40 @@
     "topic": "daily2",
     "hsk_level": 2,
     "word_count": 20
+  },
+  {
+    "id": "emotions3",
+    "title": "Эмоции",
+    "topic": "emotions3",
+    "hsk_level": 3,
+    "word_count": 10
+  },
+  {
+    "id": "work3",
+    "title": "Работа",
+    "topic": "work3",
+    "hsk_level": 3,
+    "word_count": 11
+  },
+  {
+    "id": "travel3",
+    "title": "Путешествия",
+    "topic": "travel3",
+    "hsk_level": 3,
+    "word_count": 11
+  },
+  {
+    "id": "nature3",
+    "title": "Природа и сезоны",
+    "topic": "nature3",
+    "hsk_level": 3,
+    "word_count": 11
+  },
+  {
+    "id": "society3",
+    "title": "Общество",
+    "topic": "society3",
+    "hsk_level": 3,
+    "word_count": 11
   }
 ]
