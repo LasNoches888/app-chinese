@@ -8,14 +8,11 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
-import '../services/persona.dart';
 import '../services/speech_service.dart';
 
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
 const _accentGreen = Color(0xFF23C58F);
-const _accentGreenDark = Color(0xFF17A673);
-const _accentBlue = Color(0xFF4E7CFF);
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -26,24 +23,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen>
     with StopSpeechOnDispose, WidgetsBindingObserver {
-  late final TextEditingController _controller;
   UserStats? _stats;
-  final Map<LocalModelVariant, bool> _downloading = {
-    LocalModelVariant.friend: false,
-    LocalModelVariant.tutor: false,
-  };
-  final Map<LocalModelVariant, int> _downloadProgress = {
-    LocalModelVariant.friend: 0,
-    LocalModelVariant.tutor: 0,
-  };
-  bool _showServerUrlField = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: context.read<AppSettings>().baseUrl,
-    );
     WidgetsBinding.instance.addObserver(this);
   }
 
@@ -60,23 +44,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadStats();
-    // Weights survive on disk but not in memory, so on a cold start we have
-    // to read them back before the active persona counts as available.
-    // Only probed for whichever persona is actually selected — loading
-    // ~1GB for a persona nobody's currently using would be pure waste.
-    final variant = localVariantFor(context.read<AppSettings>().chatMode);
-    if (variant != null &&
-        LocalLlmService.status[variant]!.value == LocalModelStatus.unknown) {
-      _ensureLocalModelReady(variant);
-    }
-  }
-
-  /// Checks the on-disk cache and, if nothing's there yet, starts the
-  /// download immediately — picking a local persona is itself the only
-  /// action needed, rather than a separate confirm-to-download step.
-  Future<void> _ensureLocalModelReady(LocalModelVariant variant) async {
-    final cached = await LocalLlmService.loadFromCacheIfPresent(variant);
-    if (!cached && mounted) _downloadLocalModel(variant);
   }
 
   Future<void> _loadStats() async {
@@ -88,7 +55,6 @@ class _SettingsScreenState extends State<SettingsScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _controller.dispose();
     super.dispose();
   }
 
@@ -167,26 +133,6 @@ class _SettingsScreenState extends State<SettingsScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(settings.t('done'))));
-  }
-
-  Future<void> _downloadLocalModel(LocalModelVariant variant) async {
-    setState(() {
-      _downloading[variant] = true;
-      _downloadProgress[variant] = 0;
-    });
-    try {
-      await LocalLlmService.downloadModel(
-        variant,
-        onProgress: (p) {
-          if (mounted) setState(() => _downloadProgress[variant] = p);
-        },
-      );
-      if (!mounted) return;
-      setState(() => _downloading[variant] = false);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _downloading[variant] = false);
-    }
   }
 
   @override
@@ -323,150 +269,6 @@ class _SettingsScreenState extends State<SettingsScreen>
               ],
             ),
             _SectionCard(
-              icon: Icons.forum_outlined,
-              accent: _accentBlue,
-              title: settings.t('chatSource'),
-              children: [
-                AnimatedBuilder(
-                  animation: Listenable.merge(
-                    LocalLlmService.status.values.toList(),
-                  ),
-                  builder: (context, _) {
-                    final friendStatus =
-                        LocalLlmService.status[LocalModelVariant.friend]!.value;
-                    final tutorStatus =
-                        LocalLlmService.status[LocalModelVariant.tutor]!.value;
-                    final activeVariant = localVariantFor(settings.chatMode);
-                    return Column(
-                      children: [
-                        // IntrinsicHeight is what makes `stretch` legal here:
-                        // inside a ListView the Row has unbounded height, and
-                        // stretching a child to that throws "BoxConstraints
-                        // forces an infinite height", which takes the whole
-                        // settings list down with it.
-                        IntrinsicHeight(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Expanded(
-                                child: _ChatModeCard(
-                                  emoji: '🎓',
-                                  gradient: const [_accentBlue, _brandEnd],
-                                  title: settings.t('chatSourceServer'),
-                                  subtitle: settings.t('chatSourceServerDesc'),
-                                  selected:
-                                      settings.chatMode == ChatMode.server,
-                                  onTap: () => context
-                                      .read<AppSettings>()
-                                      .setChatMode(ChatMode.server),
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _ChatModeCard(
-                                  emoji: friendStatus == LocalModelStatus.ready
-                                      ? '👋'
-                                      : '🚪',
-                                  gradient: const [
-                                    _accentGreen,
-                                    _accentGreenDark,
-                                  ],
-                                  title: settings.t('chatSourceLocal'),
-                                  subtitle: settings.t('chatSourceLocalDesc'),
-                                  selected:
-                                      settings.chatMode == ChatMode.localFriend,
-                                  onTap: () {
-                                    context.read<AppSettings>().setChatMode(
-                                      ChatMode.localFriend,
-                                    );
-                                    // Only auto-starts on the very first
-                                    // check this session — once a download
-                                    // has failed, re-tapping the mode card
-                                    // shouldn't silently retry behind the
-                                    // learner's back; they tap the retry
-                                    // panel itself instead.
-                                    if (friendStatus ==
-                                        LocalModelStatus.unknown) {
-                                      _ensureLocalModelReady(
-                                        LocalModelVariant.friend,
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                              Expanded(
-                                child: _ChatModeCard(
-                                  emoji: tutorStatus == LocalModelStatus.ready
-                                      ? '📖'
-                                      : '📕',
-                                  gradient: const [
-                                    _accentGreenDark,
-                                    _accentGreen,
-                                  ],
-                                  title: settings.t('chatSourceTutor'),
-                                  subtitle: settings.t('chatSourceTutorDesc'),
-                                  selected:
-                                      settings.chatMode == ChatMode.localTutor,
-                                  onTap: () {
-                                    context.read<AppSettings>().setChatMode(
-                                      ChatMode.localTutor,
-                                    );
-                                    if (tutorStatus ==
-                                        LocalModelStatus.unknown) {
-                                      _ensureLocalModelReady(
-                                        LocalModelVariant.tutor,
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        // Panels are very different heights, so the card is
-                        // resized as well as cross-faded — otherwise the
-                        // swap jumps the whole list.
-                        AnimatedSize(
-                          duration: const Duration(milliseconds: 260),
-                          curve: Curves.easeOutCubic,
-                          alignment: Alignment.topCenter,
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 220),
-                            switchInCurve: Curves.easeOut,
-                            transitionBuilder: (child, animation) =>
-                                FadeTransition(
-                                  opacity: animation,
-                                  child: child,
-                                ),
-                            child: KeyedSubtree(
-                              key: ValueKey<Object>(
-                                activeVariant == null
-                                    ? ChatMode.server
-                                    : LocalLlmService
-                                          .status[activeVariant]!
-                                          .value,
-                              ),
-                              child: activeVariant == null
-                                  ? _buildServerSection(settings)
-                                  : _buildLocalModelSection(
-                                      settings,
-                                      activeVariant,
-                                      LocalLlmService
-                                          .status[activeVariant]!
-                                          .value,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ],
-            ),
-            _SectionCard(
               icon: Icons.storage_outlined,
               accent: Colors.blueGrey,
               title: settings.t('dataSection'),
@@ -561,238 +363,6 @@ class _SettingsScreenState extends State<SettingsScreen>
           ],
         );
       },
-    );
-  }
-
-  Widget _buildServerSection(AppSettings settings) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                settings.t('professorReady'),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-            TextButton(
-              onPressed: () =>
-                  setState(() => _showServerUrlField = !_showServerUrlField),
-              child: Text(settings.t('professorAdvanced')),
-            ),
-          ],
-        ),
-        // Off by default — changing the backend address is a dev/testing
-        // action, not something every learner needs to see or touch.
-        AnimatedSize(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.topCenter,
-          child: !_showServerUrlField
-              ? const SizedBox(width: double.infinity)
-              : Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        settings.t('backendUrl'),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
-                        controller: _controller,
-                        decoration: InputDecoration(
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: const Icon(Icons.link),
-                          hintText: 'http://10.0.2.2:8000',
-                          isDense: true,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.icon(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _accentBlue,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            context.read<AppSettings>().setBaseUrl(
-                              _controller.text.trim(),
-                            );
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(settings.t('saved'))),
-                            );
-                          },
-                          icon: const Icon(Icons.save_outlined),
-                          label: Text(settings.t('save')),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildLocalModelSection(
-    AppSettings settings,
-    LocalModelVariant variant,
-    LocalModelStatus modelStatus,
-  ) {
-    final theme = Theme.of(context);
-    final name = personaName(settings, variant);
-    final knockEmoji = variant == LocalModelVariant.friend ? '🚪' : '📕';
-    final downloading = _downloading[variant]!;
-    final progress = _downloadProgress[variant]!;
-
-    // Reading ~1GB of cached weights back into memory takes a moment on a
-    // cold start; without this the panel would sit on "not downloaded" and
-    // tempt the learner into re-downloading what they already have.
-    if (modelStatus == LocalModelStatus.loading) {
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: _accentGreen.withValues(alpha: 0.4)),
-          color: _accentGreen.withValues(alpha: 0.06),
-        ),
-        padding: const EdgeInsets.all(18),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 22,
-              height: 22,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: _accentGreen,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                settings.t('personaWakingUp').replaceFirst('{name}', name),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (modelStatus == LocalModelStatus.ready) {
-      return Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: const LinearGradient(
-            colors: [_accentGreen, _accentGreenDark],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        padding: const EdgeInsets.fromLTRB(12, 12, 18, 12),
-        child: Row(
-          children: [
-            Image.asset(
-              variant == LocalModelVariant.friend
-                  ? 'assets/mascot/panda_06.png'
-                  : 'assets/mascot/panda_25.png',
-              height: 64,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                settings.t('personaReady').replaceFirst('{name}', name),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final container = Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _accentGreen.withValues(alpha: 0.4)),
-        color: _accentGreen.withValues(alpha: 0.06),
-      ),
-      padding: const EdgeInsets.all(18),
-      child: downloading
-          ? Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    _EmojiAvatar(
-                      emoji: knockEmoji,
-                      background: _accentGreen.withValues(alpha: 0.18),
-                    ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Text(
-                        settings
-                            .t('personaKnocking')
-                            .replaceFirst('{name}', name),
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: LinearProgressIndicator(
-                    value: progress / 100,
-                    minHeight: 10,
-                    color: _accentGreen,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '${settings.t('trainingInProgress')}… $progress%',
-                  style: theme.textTheme.bodySmall,
-                ),
-              ],
-            )
-          // Only reachable after a failed attempt — a normal download
-          // starts the moment the persona is picked, with no separate
-          // button.
-          : Row(
-              children: [
-                _EmojiAvatar(
-                  emoji: knockEmoji,
-                  background: _accentGreen.withValues(alpha: 0.18),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    settings.t('personaRetry').replaceFirst('{name}', name),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ),
-                const Icon(Icons.refresh, color: _accentGreen),
-              ],
-            ),
-    );
-
-    if (downloading) return container;
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () => _downloadLocalModel(variant),
-      child: container,
     );
   }
 }
@@ -989,104 +559,6 @@ class _EmojiAvatar extends StatelessWidget {
       decoration: BoxDecoration(color: background, shape: BoxShape.circle),
       alignment: Alignment.center,
       child: Text(emoji, style: const TextStyle(fontSize: 24)),
-    );
-  }
-}
-
-class _ChatModeCard extends StatelessWidget {
-  final String emoji;
-  final List<Color> gradient;
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _ChatModeCard({
-    required this.emoji,
-    required this.gradient,
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: selected
-              ? LinearGradient(
-                  colors: gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                )
-              : null,
-          color: selected
-              ? null
-              : theme.colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.45,
-                ),
-          border: Border.all(
-            color: selected
-                ? Colors.transparent
-                : theme.colorScheme.outlineVariant,
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 36,
-                  height: 36,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: selected
-                        ? Colors.white.withValues(alpha: 0.24)
-                        : theme.colorScheme.surface,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(emoji, style: const TextStyle(fontSize: 18)),
-                ),
-                Icon(
-                  selected ? Icons.check_circle : Icons.circle_outlined,
-                  size: 19,
-                  color: selected ? Colors.white : theme.colorScheme.outline,
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
-                color: selected ? Colors.white : null,
-              ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              subtitle,
-              style: TextStyle(
-                fontSize: 11,
-                height: 1.3,
-                color: selected
-                    ? Colors.white.withValues(alpha: 0.92)
-                    : theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

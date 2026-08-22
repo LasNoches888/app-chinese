@@ -55,7 +55,11 @@ class AppSettings extends ChangeNotifier {
   TimeOfDay _reminderTime = const TimeOfDay(hour: 19, minute: 0);
   TimeOfDay get reminderTime => _reminderTime;
 
-  ChatMode _chatMode = ChatMode.server;
+  // Professor (server) is marked "coming soon" in the persona picker and
+  // isn't offered as a choice there, so a fresh install shouldn't default
+  // into it — Tutor is the closest thing to a safe, always-available
+  // starting point.
+  ChatMode _chatMode = ChatMode.localTutor;
   ChatMode get chatMode => _chatMode;
 
   SpeechSpeed _speechSpeed = SpeechSpeed.slow;
@@ -97,7 +101,10 @@ class AppSettings extends ChangeNotifier {
     _chatMode = switch (prefs.getString(_chatModeKey)) {
       'localFriend' => ChatMode.localFriend,
       'localTutor' || 'local' => ChatMode.localTutor,
-      _ => ChatMode.server,
+      'server' => ChatMode.server,
+      // No saved value yet (fresh install) — Professor isn't offered as a
+      // choice in the picker right now, so don't default into it.
+      _ => ChatMode.localTutor,
     };
     _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
         ? SpeechSpeed.normal

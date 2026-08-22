@@ -206,9 +206,19 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
               const SizedBox(height: 24),
               Expanded(
                 child: Center(
-                  child: SingleChildScrollView(
-                    child: _buildExercise(question, settings),
-                  ),
+                  // The writing exercise's canvas only recognizes
+                  // onPanUpdate/onPanEnd, which lose the gesture-arena
+                  // race against a scrollable ancestor's own vertical drag
+                  // recognizer for any top-to-bottom stroke — the most
+                  // common stroke direction in Chinese characters. That
+                  // reads as "drawing doesn't register" even though every
+                  // other exercise type genuinely benefits from scrolling
+                  // on short screens.
+                  child: question.type == ExerciseType.writeHanzi
+                      ? _buildExercise(question, settings)
+                      : SingleChildScrollView(
+                          child: _buildExercise(question, settings),
+                        ),
                 ),
               ),
             ],
