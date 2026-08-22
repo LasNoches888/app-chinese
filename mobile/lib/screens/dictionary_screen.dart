@@ -1,19 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
-import '../services/speech_service.dart';
 import '../components/app_background.dart';
 import '../components/speak_button.dart';
+import '../models/dict_entry.dart';
 import '../models/word.dart';
+import '../services/speech_service.dart';
 import 'word_detail_screen.dart';
 
-/// Searchable list of every word the app knows, matching on hanzi, pinyin
-/// or the Russian translation.
+/// Search across everything the app knows about a word.
 ///
-/// Without this, the only way to reach a word is to wait for a lesson to
-/// serve it — fine at 75 words, unusable at 260+.
+/// Two sources, deliberately kept apart. The course words come first:
+/// they carry hand-checked Russian, examples, stroke order and SRS
+/// progress. Below them sits the full CC-CEDICT reference — 124k entries
+/// whose Russian is machine-translated, which is why every one of them
+/// shows its English original underneath.
 class DictionaryScreen extends StatefulWidget {
   const DictionaryScreen({super.key});
 
@@ -26,6 +31,13 @@ class _DictionaryScreenState extends State<DictionaryScreen>
   final TextEditingController _queryCtl = TextEditingController();
   List<Word>? _all;
   String _query = '';
+
+  List<DictEntry> _entries = const [];
+  bool _searchingDict = false;
+  Timer? _debounce;
+
+  /// Guards against an earlier, slower query overwriting a later one.
+  int _searchGeneration = 0;
 
   @override
   void didChangeDependencies() {
@@ -45,8 +57,38 @@ class _DictionaryScreenState extends State<DictionaryScreen>
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _queryCtl.dispose();
     super.dispose();
+  }
+
+  void _onQueryChanged(String value) {
+    setState(() => _query = value);
+    _debounce?.cancel();
+    if (value.trim().isEmpty) {
+      setState(() {
+        _entries = const [];
+        _searchingDict = false;
+      });
+      return;
+    }
+    // The reference dictionary is a scan over 124k rows; running it on
+    // every keystroke would search six times for a six-letter word.
+    _debounce = Timer(const Duration(milliseconds: 220), _searchDictionary);
+  }
+
+  Future<void> _searchDictionary() async {
+    final query = _query.trim();
+    final generation = ++_searchGeneration;
+    setState(() => _searchingDict = true);
+    final results = await context.read<AppRepositories>().dictionary.search(
+      query,
+    );
+    if (!mounted || generation != _searchGeneration) return;
+    setState(() {
+      _entries = results;
+      _searchingDict = false;
+    });
   }
 
   /// Pinyin is stored with tone marks ("nǐ hǎo"), which nobody types on a
@@ -102,11 +144,29 @@ class _DictionaryScreenState extends State<DictionaryScreen>
         .toList();
   }
 
+  /// Course words already shown above don't need repeating below.
+  List<DictEntry> _referenceOnly(List<Word> courseHits) {
+    final seen = courseHits.map((w) => w.hanzi).toSet();
+    return _entries.where((e) => !seen.contains(e.simplified)).toList();
+  }
+
+  void _openEntry(DictEntry entry) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (_) => _EntrySheet(entry: entry),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
+    final theme = Theme.of(context);
     final all = _all;
-    final results = _filtered;
+    final courseHits = _filtered;
+    final searching = _query.trim().isNotEmpty;
+    final reference = _referenceOnly(courseHits);
 
     return Scaffold(
       appBar: AppBar(title: Text(settings.t('dictionaryTitle'))),
@@ -117,7 +177,7 @@ class _DictionaryScreenState extends State<DictionaryScreen>
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
               child: TextField(
                 controller: _queryCtl,
-                onChanged: (v) => setState(() => _query = v),
+                onChanged: _onQueryChanged,
                 decoration: InputDecoration(
                   hintText: settings.t('dictionarySearchHint'),
                   prefixIcon: const Icon(Icons.search),
@@ -127,7 +187,7 @@ class _DictionaryScreenState extends State<DictionaryScreen>
                           icon: const Icon(Icons.clear),
                           onPressed: () {
                             _queryCtl.clear();
-                            setState(() => _query = '');
+                            _onQueryChanged('');
                           },
                         ),
                   border: OutlineInputBorder(
@@ -139,7 +199,10 @@ class _DictionaryScreenState extends State<DictionaryScreen>
             ),
             if (all == null)
               const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (results.isEmpty)
+            else if (searching &&
+                courseHits.isEmpty &&
+                reference.isEmpty &&
+                !_searchingDict)
               Expanded(
                 child: Center(
                   child: Padding(
@@ -157,46 +220,231 @@ class _DictionaryScreenState extends State<DictionaryScreen>
               )
             else
               Expanded(
-                child: ListView.builder(
+                child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                  itemCount: results.length,
-                  itemBuilder: (ctx, i) {
-                    final w = results[i];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Row(
-                          children: [
-                            Text(
-                              w.hanzi,
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                              ),
+                  children: [
+                    if (courseHits.isNotEmpty) ...[
+                      if (searching)
+                        _SectionLabel(settings.t('dictionaryMyWords')),
+                      for (final w in courseHits)
+                        _WordCard(
+                          word: w,
+                          onTap: () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => WordDetailScreen(word: w),
                             ),
-                            const SizedBox(width: 10),
-                            Flexible(
-                              child: Text(
-                                w.pinyin,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(fontStyle: FontStyle.italic),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                        subtitle: Text(w.translationRu),
-                        trailing: SpeakButton(text: w.hanzi, size: 20),
-                        onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => WordDetailScreen(word: w),
+                    ],
+                    if (!searching)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 12),
+                        child: Text(
+                          settings.t('dictionaryTypeToSearch'),
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ),
+                    if (searching && _searchingDict && reference.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                    if (reference.isNotEmpty) ...[
+                      _SectionLabel(settings.t('dictionaryFullDict')),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          settings.t('dictionaryMachineNote'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ),
-                    );
-                  },
+                      for (final e in reference)
+                        _EntryCard(entry: e, onTap: () => _openEntry(e)),
+                    ],
+                  ],
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionLabel extends StatelessWidget {
+  final String text;
+
+  const _SectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 6, bottom: 6),
+    child: Text(
+      text,
+      style: Theme.of(
+        context,
+      ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+    ),
+  );
+}
+
+class _WordCard extends StatelessWidget {
+  final Word word;
+  final VoidCallback onTap;
+
+  const _WordCard({required this.word, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: const EdgeInsets.only(bottom: 8),
+    child: ListTile(
+      title: Row(
+        children: [
+          Text(
+            word.hanzi,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              word.pinyin,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontStyle: FontStyle.italic),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+      subtitle: Text(word.translationRu),
+      trailing: SpeakButton(text: word.hanzi, size: 20),
+      onTap: onTap,
+    ),
+  );
+}
+
+class _EntryCard extends StatelessWidget {
+  final DictEntry entry;
+  final VoidCallback onTap;
+
+  const _EntryCard({required this.entry, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        title: Row(
+          children: [
+            Text(
+              entry.simplified,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Text(
+                entry.pinyin,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontStyle: FontStyle.italic,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (entry.russian.isNotEmpty)
+              Text(entry.russian, maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              entry.english,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        trailing: SpeakButton(text: entry.simplified, size: 20),
+        onTap: onTap,
+      ),
+    );
+  }
+}
+
+/// The full text of one reference entry.
+///
+/// A sheet rather than a screen: there is nothing here to interact with
+/// beyond reading it and hearing it, and these entries carry no examples,
+/// stroke data or progress to warrant a page of their own.
+class _EntrySheet extends StatelessWidget {
+  final DictEntry entry;
+
+  const _EntrySheet({required this.entry});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    final theme = Theme.of(context);
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    entry.simplified,
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                SpeakButton(text: entry.simplified, size: 30),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              entry.pinyin,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            if (entry.hasDistinctTraditional) ...[
+              const SizedBox(height: 6),
+              Text(
+                '${settings.t('dictionaryTraditional')}: ${entry.traditional}',
+                style: theme.textTheme.bodySmall,
+              ),
+            ],
+            const SizedBox(height: 16),
+            if (entry.russian.isNotEmpty) ...[
+              Text(entry.russian, style: theme.textTheme.bodyLarge),
+              const SizedBox(height: 12),
+            ],
+            Text(
+              entry.english,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              settings.t('dictionaryMachineNote'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
           ],
         ),
       ),

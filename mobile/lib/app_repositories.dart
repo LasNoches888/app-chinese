@@ -4,6 +4,7 @@ import 'db/app_database.dart';
 import 'repositories/achievements_repository.dart';
 import 'repositories/chat_repository.dart';
 import 'repositories/dialogue_repository.dart';
+import 'repositories/dictionary_repository.dart';
 import 'repositories/reading_repository.dart';
 import 'repositories/srs_repository.dart';
 import 'repositories/stats_repository.dart';
@@ -23,6 +24,12 @@ class AppRepositories {
   final DialogueRepository dialogues;
   final ReadingRepository reading;
 
+  /// The 124k-entry reference dictionary. Unlike the others this opens
+  /// its own database, and only on first search — unpacking 29 MB at
+  /// startup would delay every launch for a screen most sessions never
+  /// visit.
+  final DictionaryRepository dictionary;
+
   AppRepositories._(
     this.db,
     this.words,
@@ -33,6 +40,7 @@ class AppRepositories {
     this.strokeData,
     this.dialogues,
     this.reading,
+    this.dictionary,
   );
 
   /// [overridePath] opens an isolated database instead of the shared
@@ -51,6 +59,7 @@ class AppRepositories {
     final strokeData = await StrokeDataRepository.load();
     final dialogues = await DialogueRepository.load();
     final reading = await ReadingRepository.load();
+    final dictionary = DictionaryRepository();
     return AppRepositories._(
       db,
       words,
@@ -61,6 +70,7 @@ class AppRepositories {
       strokeData,
       dialogues,
       reading,
+      dictionary,
     );
   }
 }

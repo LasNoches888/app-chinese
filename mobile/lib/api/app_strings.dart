@@ -389,6 +389,30 @@ class Strings {
       AppLocale.ru: 'Ничего не нашлось',
       AppLocale.en: 'Nothing found',
     },
+    'dictionaryMyWords': {
+      AppLocale.ru: 'Слова из курса',
+      AppLocale.en: 'Words from the course',
+    },
+    'dictionaryFullDict': {
+      AppLocale.ru: 'Большой словарь',
+      AppLocale.en: 'Full dictionary',
+    },
+    'dictionaryMachineNote': {
+      AppLocale.ru: 'Перевод машинный — рядом показан английский оригинал',
+      AppLocale.en: 'Machine-translated — the English original is shown too',
+    },
+    'dictionaryLoadingBig': {
+      AppLocale.ru: 'Готовим большой словарь…',
+      AppLocale.en: 'Preparing the full dictionary…',
+    },
+    'dictionaryTypeToSearch': {
+      AppLocale.ru: 'Больше 120 000 слов — начни вводить',
+      AppLocale.en: 'Over 120,000 words — start typing',
+    },
+    'dictionaryTraditional': {
+      AppLocale.ru: 'Традиционное',
+      AppLocale.en: 'Traditional',
+    },
     'wordExample': {AppLocale.ru: 'Пример', AppLocale.en: 'Example'},
     'wordStrokeOrder': {
       AppLocale.ru: 'Порядок черт',

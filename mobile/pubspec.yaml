@@ -38,6 +38,7 @@ flutter:
     - assets/seed/stroke_data.json
     - assets/seed/dialogues.json
     - assets/seed/reading_passages.json
+    - assets/dict/cedict.db.gz
     - assets/images/
     - assets/mascot/
 
