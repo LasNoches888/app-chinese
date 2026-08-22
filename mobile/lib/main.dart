@@ -3,9 +3,9 @@ import 'package:provider/provider.dart';
 
 import 'api/app_settings.dart';
 import 'app_repositories.dart';
-import 'screens/chat_screen.dart';
 import 'screens/lessons_screen.dart';
 import 'screens/onboarding_screen.dart';
+import 'screens/plans_screen.dart';
 import 'screens/practice_hub_screen.dart';
 import 'screens/progress_screen.dart';
 import 'screens/review_screen.dart';
@@ -136,7 +136,7 @@ class _HomeShellState extends State<HomeShell> {
     ReviewScreen(),
     PracticeHubScreen(),
     ProgressScreen(),
-    ChatScreen(),
+    PlansScreen(),
   ];
 
   @override
@@ -189,9 +189,9 @@ class _HomeShellState extends State<HomeShell> {
             label: settings.t('progress'),
           ),
           NavigationDestination(
-            icon: const Icon(Icons.chat_bubble_outline),
-            selectedIcon: const Icon(Icons.chat_bubble),
-            label: settings.t('chat'),
+            icon: const Icon(Icons.map_outlined),
+            selectedIcon: const Icon(Icons.map),
+            label: settings.t('plansTitle'),
           ),
         ],
       ),

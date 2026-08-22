@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 /// for any of it; the backend is only ever consulted for `/chat`.
 class AppDatabase {
   static const _dbName = 'app_chinese.db';
-  static const _schemaVersion = 3;
+  static const _schemaVersion = 4;
 
   static Database? _instance;
 
@@ -47,6 +47,17 @@ class AppDatabase {
             );
             await db.execute(
               'ALTER TABLE user_stats ADD COLUMN race_wins INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+          if (oldVersion < 4) {
+            // Study plans set milestones across listening and speaking,
+            // not just vocabulary — which needs those to actually be
+            // counted somewhere.
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN listening_completed INTEGER NOT NULL DEFAULT 0',
+            );
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN pronunciation_completed INTEGER NOT NULL DEFAULT 0',
             );
           }
         },
@@ -113,7 +124,9 @@ class AppDatabase {
         perfect_lessons_count INTEGER NOT NULL DEFAULT 0,
         streak_freezes INTEGER NOT NULL DEFAULT 0,
         daily_challenges_completed INTEGER NOT NULL DEFAULT 0,
-        race_wins INTEGER NOT NULL DEFAULT 0
+        race_wins INTEGER NOT NULL DEFAULT 0,
+        listening_completed INTEGER NOT NULL DEFAULT 0,
+        pronunciation_completed INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''

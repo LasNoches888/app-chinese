@@ -10,6 +10,19 @@ class Strings {
     'progress': {AppLocale.ru: 'Прогресс', AppLocale.en: 'Progress'},
     'chat': {AppLocale.ru: 'Чат', AppLocale.en: 'Chat'},
     'settings': {AppLocale.ru: 'Настройки', AppLocale.en: 'Settings'},
+    'plansTitle': {AppLocale.ru: 'Планы', AppLocale.en: 'Plans'},
+    'planContinue': {AppLocale.ru: 'ПРОДОЛЖИТЬ', AppLocale.en: 'CONTINUE'},
+    'planNextStep': {AppLocale.ru: 'Дальше', AppLocale.en: 'Next'},
+    'planDone': {AppLocale.ru: 'План пройден!', AppLocale.en: 'Plan complete!'},
+    'planStage1': {AppLocale.ru: 'Основа', AppLocale.en: 'Foundation'},
+    'planStage2': {
+      AppLocale.ru: 'Расширяем базу',
+      AppLocale.en: 'Expanding the basics',
+    },
+    'planStage3': {
+      AppLocale.ru: 'Ближе к среднему уровню',
+      AppLocale.en: 'Approaching intermediate',
+    },
 
     // Lessons / deck map
     'deckLocked': {AppLocale.ru: 'Заблокировано', AppLocale.en: 'Locked'},

@@ -13,6 +13,8 @@ class UserStats {
   final int streakFreezes;
   final int dailyChallengesCompleted;
   final int raceWins;
+  final int listeningCompleted;
+  final int pronunciationCompleted;
 
   const UserStats({
     required this.totalXp,
@@ -29,6 +31,8 @@ class UserStats {
     required this.streakFreezes,
     required this.dailyChallengesCompleted,
     required this.raceWins,
+    required this.listeningCompleted,
+    required this.pronunciationCompleted,
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
@@ -50,6 +54,8 @@ class UserStats {
     streakFreezes: map['streak_freezes'] as int? ?? 0,
     dailyChallengesCompleted: map['daily_challenges_completed'] as int? ?? 0,
     raceWins: map['race_wins'] as int? ?? 0,
+    listeningCompleted: map['listening_completed'] as int? ?? 0,
+    pronunciationCompleted: map['pronunciation_completed'] as int? ?? 0,
   );
 
   UserStats copyWith({
@@ -67,6 +73,8 @@ class UserStats {
     int? streakFreezes,
     int? dailyChallengesCompleted,
     int? raceWins,
+    int? listeningCompleted,
+    int? pronunciationCompleted,
   }) {
     return UserStats(
       totalXp: totalXp ?? this.totalXp,
@@ -84,6 +92,9 @@ class UserStats {
       dailyChallengesCompleted:
           dailyChallengesCompleted ?? this.dailyChallengesCompleted,
       raceWins: raceWins ?? this.raceWins,
+      listeningCompleted: listeningCompleted ?? this.listeningCompleted,
+      pronunciationCompleted:
+          pronunciationCompleted ?? this.pronunciationCompleted,
     );
   }
 }

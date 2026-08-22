@@ -47,6 +47,8 @@ class StatsRepository {
       'streak_freezes': stats.streakFreezes,
       'daily_challenges_completed': stats.dailyChallengesCompleted,
       'race_wins': stats.raceWins,
+      'listening_completed': stats.listeningCompleted,
+      'pronunciation_completed': stats.pronunciationCompleted,
     }, where: 'id = 1');
   }
 
@@ -128,6 +130,22 @@ class StatsRepository {
     var stats = await getStats();
     stats = stats.copyWith(
       dailyChallengesCompleted: stats.dailyChallengesCompleted + 1,
+    );
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> recordListeningCompleted() async {
+    var stats = await getStats();
+    stats = stats.copyWith(listeningCompleted: stats.listeningCompleted + 1);
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> recordPronunciationCompleted() async {
+    var stats = await getStats();
+    stats = stats.copyWith(
+      pronunciationCompleted: stats.pronunciationCompleted + 1,
     );
     await _save(stats);
     return stats;

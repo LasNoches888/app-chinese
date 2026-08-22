@@ -110,7 +110,11 @@ class _ListeningScreenState extends State<ListeningScreen>
     if (index == _dialogue.correctIndex) {
       // Listening awarded nothing at all before — the one practice mode
       // that didn't count toward XP or the daily streak.
-      await context.read<AppRepositories>().stats.addXpAndRecordActivity(8);
+      final repos = context.read<AppRepositories>();
+      await repos.stats.addXpAndRecordActivity(8);
+      // Counted so study plans can set listening milestones rather than
+      // being one long vocabulary checklist.
+      await repos.stats.recordListeningCompleted();
     }
   }
 

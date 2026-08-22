@@ -55,6 +55,8 @@ void main() {
     expect(find.text('Повторить'), findsWidgets);
     expect(find.text('Практика'), findsWidgets);
     expect(find.text('Прогресс'), findsWidgets);
-    expect(find.text('Чат'), findsWidgets);
+    // The chat moved into the plans screen's app bar; the fifth tab is
+    // now the study plans.
+    expect(find.text('Планы'), findsWidgets);
   });
 }

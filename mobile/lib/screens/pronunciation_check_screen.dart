@@ -128,7 +128,9 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
       // Full credit for a clean read, a bit less when the recognizer also
       // picked up filler around it.
       final xp = result.isPass ? 5 : 3;
-      await context.read<AppRepositories>().stats.addXpAndRecordActivity(xp);
+      final repos = context.read<AppRepositories>();
+      await repos.stats.addXpAndRecordActivity(xp);
+      await repos.stats.recordPronunciationCompleted();
       await Future<void>.delayed(const Duration(milliseconds: 1200));
       if (mounted) _nextWord();
     }
