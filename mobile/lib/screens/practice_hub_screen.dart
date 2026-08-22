@@ -10,6 +10,7 @@ import 'lesson_session_screen.dart';
 import 'listening_screen.dart';
 import 'memory_match_screen.dart';
 import 'placement_test_screen.dart';
+import 'pronunciation_check_screen.dart';
 import 'race_screen.dart';
 import 'reading_list_screen.dart';
 import 'scenario_list_screen.dart';
@@ -125,6 +126,16 @@ class PracticeHubScreen extends StatelessWidget {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const MemoryMatchScreen(),
+                ),
+              ),
+            ),
+            _PracticeCard(
+              emoji: '🎤',
+              title: settings.t('pronunciationTitle'),
+              subtitle: settings.t('pronunciationCardDesc'),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PronunciationCheckScreen(),
                 ),
               ),
             ),

@@ -9,6 +9,7 @@ import 'package:app_chinese/screens/listening_screen.dart';
 import 'package:app_chinese/screens/memory_match_screen.dart';
 import 'package:app_chinese/screens/placement_test_screen.dart';
 import 'package:app_chinese/screens/practice_hub_screen.dart';
+import 'package:app_chinese/screens/pronunciation_check_screen.dart';
 import 'package:app_chinese/screens/race_screen.dart';
 import 'package:app_chinese/screens/reading_list_screen.dart';
 import 'package:app_chinese/screens/scenario_list_screen.dart';
@@ -72,6 +73,22 @@ void main() {
     expect(find.text('Слово дня'), findsOneWidget);
     expect(find.text('Игра на время'), findsOneWidget);
     expect(find.text('Гонка с пандой'), findsOneWidget);
+    expect(find.text('Проверка произношения'), findsOneWidget);
+  });
+
+  testWidgets('PronunciationCheckScreen falls back to an unavailable message '
+      'without a real speech recognizer', (tester) async {
+    await pumpScreen(tester, const PronunciationCheckScreen());
+    // PronunciationService.ensureInitialized() falls back after a
+    // 5-second timeout in environments with no real recognizer.
+    await tester.pump(const Duration(seconds: 6));
+
+    expect(
+      find.text(
+        'На этом устройстве не нашлось распознавания речи для проверки произношения.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('SpeedRoundScreen loads a prompt with four options', (

@@ -246,6 +246,47 @@ class Strings {
 
     // Settings
     'listen': {AppLocale.ru: 'Прослушать', AppLocale.en: 'Listen'},
+    'pronunciationTitle': {
+      AppLocale.ru: 'Проверка произношения',
+      AppLocale.en: 'Pronunciation check',
+    },
+    'pronunciationCardDesc': {
+      AppLocale.ru: 'Скажи слово вслух — телефон послушает',
+      AppLocale.en: 'Say the word out loud — your phone listens',
+    },
+    'pronunciationPrompt': {
+      AppLocale.ru:
+          'Прослушай слово, потом скажи его вслух. Это приблизительная проверка — распознавание речи ориентируется на слово в целом, а не только на тон.',
+      AppLocale.en:
+          "Listen to the word, then say it out loud. This is an approximate check — speech recognition looks at the whole word, not just the tone.",
+    },
+    'pronunciationListening': {
+      AppLocale.ru: 'Слушаю…',
+      AppLocale.en: 'Listening…',
+    },
+    'pronunciationTapToSpeak': {
+      AppLocale.ru: 'Нажми и скажи слово',
+      AppLocale.en: 'Tap and say the word',
+    },
+    'pronunciationHeard': {AppLocale.ru: 'Услышано', AppLocale.en: 'Heard'},
+    'pronunciationCorrect': {
+      AppLocale.ru: 'Похоже на правильное произношение! 👍',
+      AppLocale.en: 'Sounds right! 👍',
+    },
+    'pronunciationTryAgain': {
+      AppLocale.ru: 'Не совсем — попробуй ещё раз',
+      AppLocale.en: "Not quite — give it another try",
+    },
+    'pronunciationSkip': {
+      AppLocale.ru: 'Другое слово',
+      AppLocale.en: 'Different word',
+    },
+    'pronunciationUnavailable': {
+      AppLocale.ru:
+          'На этом устройстве не нашлось распознавания речи для проверки произношения.',
+      AppLocale.en:
+          "This device doesn't have speech recognition available for a pronunciation check.",
+    },
     'speechSection': {
       AppLocale.ru: 'Произношение',
       AppLocale.en: 'Pronunciation',
