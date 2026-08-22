@@ -97,6 +97,42 @@ void main() {
     expect(find.text('Следующий диалог'), findsNothing);
   });
 
+  testWidgets('answer options are locked until the dialogue has played', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const ListeningScreen());
+
+    // Mid-playback: the question is visible (so you know what to listen
+    // for) but tapping through without hearing anything is not on offer.
+    final buttonsWhilePlaying = tester
+        .widgetList<OutlinedButton>(find.byType(OutlinedButton))
+        .toList();
+    expect(buttonsWhilePlaying, isNotEmpty);
+    expect(buttonsWhilePlaying.every((b) => b.onPressed == null), isTrue);
+
+    await letPlaybackFinish(tester);
+
+    final buttonsAfter = tester
+        .widgetList<OutlinedButton>(find.byType(OutlinedButton))
+        .toList();
+    expect(buttonsAfter.every((b) => b.onPressed != null), isTrue);
+  });
+
+  testWidgets('peeking unlocks answering without waiting for playback', (
+    tester,
+  ) async {
+    await pumpScreen(tester, const ListeningScreen());
+
+    await tester.tap(find.text('Показать текст'));
+    await tester.pump();
+
+    final buttons = tester
+        .widgetList<OutlinedButton>(find.byType(OutlinedButton))
+        .toList();
+    expect(buttons.every((b) => b.onPressed != null), isTrue);
+    await letPlaybackFinish(tester);
+  });
+
   testWidgets('the picker offers a random option plus real dialogues', (
     tester,
   ) async {

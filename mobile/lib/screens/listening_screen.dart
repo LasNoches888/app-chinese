@@ -35,6 +35,13 @@ class _ListeningScreenState extends State<ListeningScreen>
   int? _selectedOption;
   bool _revealed = false;
 
+  /// Whether the dialogue has played through at least once. The answer
+  /// options stay locked until it has: showing the question up front is
+  /// useful (you know what to listen for), but leaving it *answerable*
+  /// during playback let you tap straight through without hearing
+  /// anything — and made a stray tap end the exercise.
+  bool _heardOnce = false;
+
   /// Bumped whenever playback should be abandoned — leaving the screen, or
   /// restarting with a new dialogue. A running [_playAll] loop compares
   /// against it and bails, so a stale loop can't keep speaking lines over
@@ -59,6 +66,10 @@ class _ListeningScreenState extends State<ListeningScreen>
   }
 
   Future<void> _playAll() async {
+    // Autoplay is scheduled from a post-frame callback, so the screen can
+    // already be gone by the time it runs (open listening, immediately
+    // press back) — setState on a dead State throws.
+    if (!mounted) return;
     final generation = ++_playbackGeneration;
     setState(() {
       _playing = true;
@@ -66,7 +77,14 @@ class _ListeningScreenState extends State<ListeningScreen>
     });
     for (final line in _dialogue.lines) {
       if (!mounted || generation != _playbackGeneration) return;
-      await SpeechService.speak(line.hanzi, rate: 0.45);
+      // Both speakers used one identical voice, which made a two-person
+      // exchange genuinely hard to follow now that the transcript is
+      // hidden — you couldn't tell where A stopped and B started.
+      await SpeechService.speak(
+        line.hanzi,
+        rate: 0.45,
+        pitch: line.speaker == 'A' ? 0.92 : 1.12,
+      );
       // speak() returns once playback *starts*, not once it finishes — a
       // fixed pause per line is a rough stand-in for "wait for it to end"
       // since flutter_tts's completion callback is already wired to
@@ -76,7 +94,10 @@ class _ListeningScreenState extends State<ListeningScreen>
       );
     }
     if (mounted && generation == _playbackGeneration) {
-      setState(() => _playing = false);
+      setState(() {
+        _playing = false;
+        _heardOnce = true;
+      });
     }
   }
 
@@ -96,10 +117,11 @@ class _ListeningScreenState extends State<ListeningScreen>
   void _restart() {
     final repos = context.read<AppRepositories>();
     setState(() {
-      _dialogue = repos.dialogues.random();
+      _dialogue = repos.dialogues.random(excludingId: _dialogue.id);
       _selectedOption = null;
       _revealed = false;
       _replays = 0;
+      _heardOnce = false;
     });
     _playAll();
   }
@@ -117,6 +139,9 @@ class _ListeningScreenState extends State<ListeningScreen>
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
     final answered = _selectedOption != null;
+    // Peeking at the transcript also unlocks answering — someone who
+    // chose to read it shouldn't be stuck unable to continue.
+    final canAnswer = _heardOnce || _revealed;
 
     return Scaffold(
       appBar: AppBar(
@@ -162,7 +187,9 @@ class _ListeningScreenState extends State<ListeningScreen>
                       backgroundColor: _optionColor(i),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: answered ? null : () => _pickOption(i),
+                    onPressed: (answered || !canAnswer)
+                        ? null
+                        : () => _pickOption(i),
                     child: Text(_dialogue.options[i]),
                   ),
                 ),

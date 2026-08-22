@@ -1,43 +1,63 @@
 import 'package:speech_to_text/speech_to_text.dart';
 
-/// How close the learner's attempt was, and what specifically to fix.
+import 'pinyin.dart';
+
+/// How close the learner's attempt was, best first.
 enum PronunciationGrade {
   /// The recognizer resolved the audio to exactly the target word.
   correct,
 
-  /// The target word is in there, but surrounded by other words — usually
-  /// a hesitation ("эм 你好") or the recognizer picking up a longer phrase.
+  /// A different character with identical pinyin, tones included — 他/她
+  /// are both "tā". The recognizer picked the wrong one from context, but
+  /// the learner's mouth did the right thing, so this is a pass.
+  homophone,
+
+  /// The target word is in there, surrounded by other words — usually a
+  /// hesitation or the recognizer catching a longer phrase.
   closeExtraWords,
 
-  /// The recognizer heard a same-length Chinese word that isn't the
-  /// target — the classic "right syllables, wrong tone" outcome, since a
-  /// wrong tone usually resolves to a different real character.
+  /// Right syllables, wrong tones. The one failure this can diagnose
+  /// precisely, and the one learners most need to hear about.
+  toneMiss,
+
+  /// Something else entirely.
   wrongWord,
 
-  /// Nothing usable came back: silence, non-Chinese, or too noisy.
+  /// Nothing usable: silence, non-Chinese, or too noisy.
   notHeard,
 }
 
 class PronunciationResult {
   final PronunciationGrade grade;
 
-  /// What the recognizer actually heard, cleaned of punctuation.
+  /// What the recognizer heard, cleaned of punctuation.
   final String heard;
 
-  /// Per-character comparison against the target, aligned by position —
-  /// empty when the lengths differ enough that aligning would be
-  /// misleading rather than helpful.
+  /// Pinyin of [heard], when it's a word the app knows. Empty otherwise —
+  /// the recognizer can return anything, and guessing a reading for an
+  /// unknown string would be worse than saying nothing.
+  final String heardPinyin;
+
+  /// Per-character comparison against the target, aligned by position.
+  /// Empty when the lengths differ enough that aligning would mislead.
   final List<CharComparison> comparison;
 
   const PronunciationResult({
     required this.grade,
     required this.heard,
+    this.heardPinyin = '',
     this.comparison = const [],
   });
 
-  bool get isCorrect => grade == PronunciationGrade.correct;
+  /// Whether the learner's pronunciation was good enough to move on. A
+  /// homophone counts: they said the right sounds.
+  bool get isPass =>
+      grade == PronunciationGrade.correct ||
+      grade == PronunciationGrade.homophone;
 
-  /// The characters the learner got wrong, for a "watch this syllable"
+  bool get isExact => grade == PronunciationGrade.correct;
+
+  /// The characters that came out differently, for a "watch this syllable"
   /// hint. Empty unless [comparison] was computed.
   List<CharComparison> get mistakes =>
       comparison.where((c) => !c.matches).toList();
@@ -52,17 +72,16 @@ class CharComparison {
   bool get matches => expected == heard;
 }
 
-/// Listens to the learner's own attempt at a word and grades what the
-/// on-device speech recognizer heard against the target.
+/// Listens to the learner's attempt at a word and grades it against the
+/// target.
 ///
-/// This is a proxy for pronunciation quality, not a lab-grade phonetic
-/// analysis: the recognizer resolves ambiguous audio to the single most
-/// likely real word using its language model, the same way it would for
-/// any dictation. What that buys us is still useful, though — Mandarin
-/// tones are lexical, so a wrong tone usually lands on a *different real
-/// character*, which is exactly what [PronunciationGrade.wrongWord] and
-/// the per-character [CharComparison] surface. It cannot measure "right
-/// character, slightly flat tone".
+/// This reads the on-device recognizer's output rather than analysing the
+/// audio signal, so it can't measure "right character, slightly flat
+/// tone". What it *can* do is exploit the fact that Mandarin tones are
+/// lexical: say 妈 with the wrong tone and the recognizer hears 马, a
+/// different real character. Comparing the pinyin of what was heard
+/// against the target's turns that into an actual tone diagnosis instead
+/// of a bare "wrong".
 class PronunciationService {
   static final SpeechToText _speech = SpeechToText();
   static bool _initialized = false;
@@ -73,7 +92,7 @@ class PronunciationService {
   /// Probes for a working speech recognizer. Safe to call repeatedly and
   /// safe to call where none exists (no mic permission, no recognizer
   /// installed, or a test environment with no platform channels) — it
-  /// just leaves [isAvailable] false.
+  /// just leaves it unavailable.
   static Future<bool> ensureInitialized() async {
     if (_initialized) return _available;
     _initialized = true;
@@ -92,23 +111,30 @@ class PronunciationService {
     return _available;
   }
 
-  /// Starts listening, calling [onResult] with the recognizer's best guess
-  /// each time it updates (both partial and final results — [isFinal]
-  /// tells them apart). No-ops if no recognizer is available.
+  /// Starts listening. [onResult] receives every transcription the
+  /// recognizer offers — `alternates` is ordered best-first and often
+  /// holds the right word in second place, which is why the grader looks
+  /// at all of them rather than only the headline guess.
   static Future<void> listen({
-    required void Function(String recognizedText, bool isFinal) onResult,
+    required void Function(List<String> alternates, bool isFinal) onResult,
     String localeId = 'zh-CN',
   }) async {
     if (!await ensureInitialized()) return;
     await _speech.listen(
-      onResult: (result) =>
-          onResult(result.recognizedWords, result.finalResult),
+      onResult: (result) => onResult(
+        result.alternates.map((a) => a.recognizedWords).toList(),
+        result.finalResult,
+      ),
       listenOptions: SpeechListenOptions(
         localeId: localeId,
         partialResults: true,
         cancelOnError: true,
-        pauseFor: const Duration(seconds: 2),
-        listenFor: const Duration(seconds: 8),
+        // These are single words, not dictation. Waiting two seconds of
+        // silence before finalizing made every attempt feel sluggish;
+        // one second is still comfortably past the gap inside a
+        // two-syllable word.
+        pauseFor: const Duration(seconds: 1),
+        listenFor: const Duration(seconds: 6),
       ),
     );
   }
@@ -120,46 +146,115 @@ class PronunciationService {
   static String clean(String text) =>
       text.replaceAll(RegExp(r"[\s,.!?，。！？、'‘’]"), '');
 
-  /// Grades one attempt at [targetHanzi].
-  static PronunciationResult grade(String recognizedText, String targetHanzi) {
-    final heard = clean(recognizedText);
-    if (heard.isEmpty) {
+  /// Grades one attempt.
+  ///
+  /// [alternates] is the recognizer's candidate list, best first.
+  /// [pinyinByHanzi] maps known words to their pinyin so a homophone or a
+  /// tone slip can be told apart from a genuinely wrong word; pass an
+  /// empty map to fall back to character-only comparison.
+  static PronunciationResult grade({
+    required List<String> alternates,
+    required String targetHanzi,
+    required String targetPinyin,
+    Map<String, String> pinyinByHanzi = const {},
+  }) {
+    final candidates = alternates
+        .map(clean)
+        .where((c) => c.isNotEmpty)
+        .toList();
+    if (candidates.isEmpty) {
       return const PronunciationResult(
         grade: PronunciationGrade.notHeard,
         heard: '',
       );
     }
+
+    PronunciationResult? best;
+    for (final heard in candidates) {
+      final result = _gradeOne(
+        heard: heard,
+        targetHanzi: targetHanzi,
+        targetPinyin: targetPinyin,
+        pinyinByHanzi: pinyinByHanzi,
+      );
+      // Grades are declared best-first, so a lower index is a better
+      // outcome — an alternate that nails it outranks the headline guess.
+      if (best == null || result.grade.index < best.grade.index) {
+        best = result;
+      }
+      if (best.grade == PronunciationGrade.correct) break;
+    }
+    return best!;
+  }
+
+  static PronunciationResult _gradeOne({
+    required String heard,
+    required String targetHanzi,
+    required String targetPinyin,
+    required Map<String, String> pinyinByHanzi,
+  }) {
     if (heard == targetHanzi) {
       return PronunciationResult(
         grade: PronunciationGrade.correct,
         heard: heard,
+        heardPinyin: targetPinyin,
       );
     }
+
+    final heardPinyin = pinyinByHanzi[heard] ?? '';
+
+    if (heardPinyin.isNotEmpty) {
+      if (Pinyin.sameWithTones(heardPinyin, targetPinyin)) {
+        // Identical sounds, different character — the learner said it
+        // right and the recognizer just picked another spelling of it.
+        return PronunciationResult(
+          grade: PronunciationGrade.homophone,
+          heard: heard,
+          heardPinyin: heardPinyin,
+        );
+      }
+      if (Pinyin.isToneOnlyDifference(heardPinyin, targetPinyin)) {
+        return PronunciationResult(
+          grade: PronunciationGrade.toneMiss,
+          heard: heard,
+          heardPinyin: heardPinyin,
+          comparison: _align(heard, targetHanzi),
+        );
+      }
+    }
+
     if (heard.contains(targetHanzi)) {
-      // The word is in there — count it as correct-with-noise rather than
-      // failing someone who said the right thing with an "эм" attached.
       return PronunciationResult(
         grade: PronunciationGrade.closeExtraWords,
         heard: heard,
+        heardPinyin: heardPinyin,
       );
     }
-    if (heard.length == targetHanzi.length) {
-      return PronunciationResult(
-        grade: PronunciationGrade.wrongWord,
-        heard: heard,
-        comparison: [
-          for (var i = 0; i < targetHanzi.length; i++)
-            CharComparison(expected: targetHanzi[i], heard: heard[i]),
-        ],
-      );
-    }
+
     return PronunciationResult(
       grade: PronunciationGrade.wrongWord,
       heard: heard,
+      heardPinyin: heardPinyin,
+      comparison: _align(heard, targetHanzi),
     );
   }
 
-  /// Loose match kept for callers that only need a yes/no.
-  static bool matches(String recognizedText, String targetHanzi) =>
-      clean(recognizedText).contains(targetHanzi);
+  /// Character-by-character alignment, only when the lengths match —
+  /// pairing up strings of different lengths would point at the wrong
+  /// syllable, which is worse than pointing at none.
+  static List<CharComparison> _align(String heard, String target) {
+    if (heard.length != target.length) return const [];
+    return [
+      for (var i = 0; i < target.length; i++)
+        CharComparison(expected: target[i], heard: heard[i]),
+    ];
+  }
+
+  /// Whether an in-progress (partial) transcription is already good
+  /// enough to stop listening and grade — saves waiting out the trailing
+  /// silence once the learner has clearly said the word.
+  static bool isConclusive({
+    required List<String> alternates,
+    required String targetHanzi,
+  }) => alternates.map(clean).any((c) => c == targetHanzi);
 }

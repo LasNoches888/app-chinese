@@ -135,6 +135,11 @@ void main() {
     expect(find.byIcon(Icons.volume_up), findsOneWidget);
     // Every set has at least two tone options as tappable buttons.
     expect(find.byType(OutlinedButton), findsAtLeastNWidgets(2));
+
+    // The screen autoplays the target on load, and SpeechService.speak
+    // bounds that call with a timeout — let it expire so no timer is
+    // still pending when the tree is torn down.
+    await tester.pump(const Duration(seconds: 5));
   });
 
   testWidgets('PlacementTestScreen loads a word and reveals on tap', (

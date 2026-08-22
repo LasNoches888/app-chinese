@@ -27,6 +27,11 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
     with StopSpeechOnDispose {
   final _rng = Random();
   List<Word>? _allWords;
+
+  /// Lets the grader tell a homophone or a tone slip apart from a
+  /// genuinely wrong word — without a reading for what the recognizer
+  /// returned, all it can say is "different characters".
+  Map<String, String> _pinyinByHanzi = const {};
   Word? _current;
   bool? _speechAvailable;
   bool _listening = false;
@@ -54,6 +59,7 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
     final weak = all.where((w) => weakIds.contains(w.id)).toList();
     setState(() {
       _allWords = weak.length >= 5 ? weak : all;
+      _pinyinByHanzi = {for (final w in all) w.hanzi: w.pinyin};
       _speechAvailable = available;
     });
     _nextWord();
@@ -81,33 +87,49 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
       _partial = '';
       _result = null;
     });
+    var graded = false;
     await PronunciationService.listen(
-      onResult: (text, isFinal) {
-        if (!mounted) return;
-        setState(() => _partial = text);
-        if (isFinal) _evaluate(text);
+      onResult: (alternates, isFinal) {
+        if (!mounted || graded) return;
+        setState(() => _partial = alternates.isEmpty ? '' : alternates.first);
+        // Don't sit through the trailing silence once the word has clearly
+        // been said — the recognizer only finalizes after a pause, which
+        // is most of the wait the learner feels.
+        final conclusive = PronunciationService.isConclusive(
+          alternates: alternates,
+          targetHanzi: _current?.hanzi ?? '',
+        );
+        if (isFinal || conclusive) {
+          graded = true;
+          if (conclusive && !isFinal) PronunciationService.stop();
+          _evaluate(alternates);
+        }
       },
     );
   }
 
-  Future<void> _evaluate(String text) async {
+  Future<void> _evaluate(List<String> alternates) async {
     final word = _current;
     if (!mounted || word == null) return;
-    final result = PronunciationService.grade(text, word.hanzi);
+    final result = PronunciationService.grade(
+      alternates: alternates,
+      targetHanzi: word.hanzi,
+      targetPinyin: word.pinyin,
+      pinyinByHanzi: _pinyinByHanzi,
+    );
     setState(() {
       _listening = false;
       _result = result;
       _tries += 1;
       _attempts += 1;
-      if (result.isCorrect) _correctCount += 1;
+      if (result.isPass) _correctCount += 1;
     });
-    if (result.isCorrect ||
-        result.grade == PronunciationGrade.closeExtraWords) {
+    if (result.isPass || result.grade == PronunciationGrade.closeExtraWords) {
       // Full credit for a clean read, a bit less when the recognizer also
       // picked up filler around it.
-      final xp = result.isCorrect ? 5 : 3;
+      final xp = result.isPass ? 5 : 3;
       await context.read<AppRepositories>().stats.addXpAndRecordActivity(xp);
-      await Future<void>.delayed(const Duration(milliseconds: 1400));
+      await Future<void>.delayed(const Duration(milliseconds: 1200));
       if (mounted) _nextWord();
     }
   }
@@ -275,9 +297,17 @@ class _FeedbackPanel extends StatelessWidget {
         Colors.green,
         settings.t('pronunciationCorrect'),
       ),
+      PronunciationGrade.homophone => (
+        Colors.green,
+        settings.t('pronunciationHomophone'),
+      ),
       PronunciationGrade.closeExtraWords => (
         Colors.lightGreen,
         settings.t('pronunciationCloseEnough'),
+      ),
+      PronunciationGrade.toneMiss => (
+        Colors.orange,
+        settings.t('pronunciationToneMiss'),
       ),
       PronunciationGrade.wrongWord => (
         Colors.orange,
@@ -307,9 +337,32 @@ class _FeedbackPanel extends StatelessWidget {
           if (r.heard.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              '${settings.t('pronunciationHeard')}: ${r.heard}',
+              r.heardPinyin.isEmpty
+                  ? '${settings.t('pronunciationHeard')}: ${r.heard}'
+                  : '${settings.t('pronunciationHeard')}: ${r.heard} [${r.heardPinyin}]',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall,
+            ),
+          ],
+          // The actionable case: the syllables were right and only the
+          // tone slipped, so say so in pinyin — "mǎ вместо mā" is a fix
+          // the learner can act on, "wrong word" isn't.
+          if (r.grade == PronunciationGrade.toneMiss &&
+              r.heardPinyin.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.surface,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${r.heardPinyin}  →  ${target.pinyin}',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
             ),
           ],
           // Same syllable count but different characters is the closest
@@ -349,7 +402,7 @@ class _FeedbackPanel extends StatelessWidget {
           // After a couple of misses, stop guessing and just show the
           // target pinyin broken out — repeating "try again" with no new
           // information is where people give up.
-          if (tries >= 2 && !r.isCorrect) ...[
+          if (tries >= 2 && !r.isPass) ...[
             const SizedBox(height: 10),
             Text(
               '${settings.t('pronunciationSayLike')}: ${target.pinyin}',

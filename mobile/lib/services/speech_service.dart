@@ -52,8 +52,30 @@ class SpeechService {
   /// Speaks [text] in Mandarin, replacing anything already playing.
   ///
   /// [rate] is the platform rate where 0.5 is the engine's normal pace;
-  /// learners generally need slower than that to catch tones.
-  static Future<void> speak(String text, {double rate = 0.45}) async {
+  /// learners generally need slower than that to catch tones. [pitch]
+  /// shifts the voice — used to give a two-speaker dialogue two
+  /// distinguishable voices rather than one narrator reading both parts.
+  /// Note this changes voice *register*, not the tone contours inside a
+  /// syllable, so it doesn't distort the Mandarin being taught.
+  static Future<void> speak(
+    String text, {
+    double rate = 0.45,
+    double pitch = 1.0,
+  }) async =>
+      _speak(text, rate: rate, pitch: pitch)
+      // speak() resolves when playback *starts*, so a few seconds is a
+      // generous ceiling even counting first-call engine init. Bounding
+      // it matters because callers now sequence on it — the listening
+      // exercise keeps its answer buttons locked until the dialogue has
+      // played through, and a wedged TTS engine would otherwise leave
+      // that exercise permanently unanswerable.
+      .timeout(const Duration(seconds: 4), onTimeout: () {});
+
+  static Future<void> _speak(
+    String text, {
+    required double rate,
+    required double pitch,
+  }) async {
     if (text.trim().isEmpty) return;
     if (!await ensureInitialized()) {
       // Rather than sending the learner to Settings to find a "download
@@ -71,6 +93,7 @@ class SpeechService {
       // first — stop before speaking rather than relying on queue mode.
       await _tts.stop();
       await _tts.setSpeechRate(rate);
+      await _tts.setPitch(pitch);
       speaking.value = text;
       await _tts.speak(text);
     } catch (_) {

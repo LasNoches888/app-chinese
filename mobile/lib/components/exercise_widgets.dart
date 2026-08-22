@@ -5,6 +5,7 @@ import 'package:stroke_order_animator/stroke_order_animator.dart';
 
 import '../api/app_settings.dart';
 import '../models/exercise_question.dart';
+import '../services/pinyin.dart';
 import 'speak_button.dart';
 
 /// Flashcard flip: tap to reveal, then self-report "know it" / "don't
@@ -376,60 +377,14 @@ class _TypePinyinExerciseWidgetState extends State<TypePinyinExerciseWidget> {
   bool _correct = false;
   Timer? _advanceTimer;
 
-  static const _toneMarks = {
-    'ā': 'a1',
-    'á': 'a2',
-    'ǎ': 'a3',
-    'à': 'a4',
-    'ē': 'e1',
-    'é': 'e2',
-    'ě': 'e3',
-    'è': 'e4',
-    'ī': 'i1',
-    'í': 'i2',
-    'ǐ': 'i3',
-    'ì': 'i4',
-    'ō': 'o1',
-    'ó': 'o2',
-    'ǒ': 'o3',
-    'ò': 'o4',
-    'ū': 'u1',
-    'ú': 'u2',
-    'ǔ': 'u3',
-    'ù': 'u4',
-    'ǖ': 'v1',
-    'ǘ': 'v2',
-    'ǚ': 'v3',
-    'ǜ': 'v4',
-  };
-
-  /// Normalizes both tone-mark and tone-number pinyin to a comparable
-  /// plain form, stripping tone digits entirely so either notation (or no
-  /// tones at all) is accepted.
-  ///
-  /// Spaces are stripped rather than collapsed: the stored pinyin isn't
-  /// consistently spaced per syllable ("nǐ hǎo" but "kuàilè"), and typing
-  /// a word as one run — "nihao" — is the natural thing to do. Requiring
-  /// the learner to guess the same word boundaries the data happens to
-  /// use just fails correct answers.
-  String _normalize(String input) {
-    final buffer = StringBuffer();
-    for (final rune in input.toLowerCase().runes) {
-      final ch = String.fromCharCode(rune);
-      final mapped = _toneMarks[ch];
-      buffer.write(mapped != null ? mapped[0] : ch);
-    }
-    return buffer
-        .toString()
-        .replaceAll(RegExp(r'[0-9]'), '')
-        .replaceAll(RegExp(r"[\s'’-]+"), '')
-        .trim();
-  }
-
   void _check() {
-    final correct =
-        _normalize(_controller.text) ==
-        _normalize(widget.question.correctPinyin ?? '');
+    // Tones aren't required here — this exercise is about recalling the
+    // syllables, and the tone drill/pronunciation check are where tones
+    // are actually graded.
+    final correct = Pinyin.sameIgnoringTones(
+      _controller.text,
+      widget.question.correctPinyin ?? '',
+    );
     setState(() {
       _checked = true;
       _correct = correct;

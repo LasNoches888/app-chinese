@@ -283,6 +283,14 @@ class Strings {
       AppLocale.ru: 'Не совсем — попробуй ещё раз',
       AppLocale.en: "Not quite — give it another try",
     },
+    'pronunciationHomophone': {
+      AppLocale.ru: 'Звучит верно! 👍',
+      AppLocale.en: 'Sounds right! 👍',
+    },
+    'pronunciationToneMiss': {
+      AppLocale.ru: 'Слоги верные — ушёл тон',
+      AppLocale.en: 'Right syllables — the tone slipped',
+    },
     'pronunciationCloseEnough': {
       AppLocale.ru: 'Слово услышано, но с лишним рядом 👌',
       AppLocale.en: 'Got the word, with extra noise around it 👌',
