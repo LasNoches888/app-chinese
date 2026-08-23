@@ -14,6 +14,16 @@ class Strings {
     'planContinue': {AppLocale.ru: 'ПРОДОЛЖИТЬ', AppLocale.en: 'CONTINUE'},
     'planNextStep': {AppLocale.ru: 'Дальше', AppLocale.en: 'Next'},
     'planDone': {AppLocale.ru: 'План пройден!', AppLocale.en: 'Plan complete!'},
+    'planOutcomes': {
+      AppLocale.ru: 'В конце ты сможешь',
+      AppLocale.en: "By the end you'll be able to",
+    },
+    'planSamples': {
+      AppLocale.ru: 'Фразы, которые откроются',
+      AppLocale.en: 'Phrases this unlocks',
+    },
+    'planSteps': {AppLocale.ru: 'Шаги плана', AppLocale.en: 'Plan steps'},
+    'planStepsLeft': {AppLocale.ru: 'осталось', AppLocale.en: 'left'},
     'planStage1': {AppLocale.ru: 'Основа', AppLocale.en: 'Foundation'},
     'planStage2': {
       AppLocale.ru: 'Расширяем базу',

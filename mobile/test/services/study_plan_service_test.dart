@@ -41,13 +41,15 @@ void main() {
     emoji: '🌱',
     titleRu: 'Тест',
     descriptionRu: 'описание',
+    outcomesRu: ['сможешь'],
+    samples: [PlanSample('你好', 'nǐ hǎo', 'привет')],
     paceRu: 'темп',
     stage: 1,
     steps: [
-      PlanStep.deck('greetings', 'Здороваться'),
-      PlanStep.words(10, 'Выучить 10 слов'),
-      PlanStep.streak(3, 'Серия 3 дня'),
-      PlanStep.listening(2, 'Два диалога'),
+      PlanStep.deck('greetings', 'Здороваться', 'подробности'),
+      PlanStep.words(10, 'Выучить 10 слов', 'подробности'),
+      PlanStep.streak(3, 'Серия 3 дня', 'подробности'),
+      PlanStep.listening(2, 'Два диалога', 'подробности'),
     ],
   );
 
@@ -202,6 +204,38 @@ void main() {
       }
     });
 
+    test('every plan explains what it buys and proves it with phrases', () {
+      for (final p in kStudyPlans) {
+        expect(p.outcomesRu, isNotEmpty, reason: p.id);
+        expect(p.samples, isNotEmpty, reason: p.id);
+        for (final s in p.samples) {
+          expect(s.hanzi.trim(), isNotEmpty, reason: p.id);
+          expect(s.pinyin.trim(), isNotEmpty, reason: p.id);
+          expect(s.ru.trim(), isNotEmpty, reason: p.id);
+        }
+        for (final s in p.steps) {
+          expect(s.detailRu.trim(), isNotEmpty, reason: '${p.id}/${s.titleRu}');
+        }
+      }
+    });
+
+    test('sample phrases only use characters the course teaches', () async {
+      // The samples are shown as "фразы, которые откроются". A sample
+      // built from a character no deck covers would be a promise the app
+      // cannot keep.
+      final taught = await _taughtCharacters();
+      for (final p in kStudyPlans) {
+        for (final s in p.samples) {
+          final unknown = s.hanzi
+              .split('')
+              .where((c) => RegExp(r'[一-鿿]').hasMatch(c))
+              .where((c) => !taught.contains(c))
+              .toSet();
+          expect(unknown, isEmpty, reason: '${p.id}: ${s.hanzi}');
+        }
+      }
+    });
+
     test('plans cover listening and speaking, not just vocabulary', () {
       final kinds = {
         for (final p in kStudyPlans)
@@ -211,6 +245,11 @@ void main() {
       expect(kinds, contains(PlanStepKind.pronunciation));
     });
   });
+}
+
+Future<Set<String>> _taughtCharacters() async {
+  final words = await _readSeed('assets/seed/words.json');
+  return {for (final w in words) ...(w['hanzi'] as String).split('')};
 }
 
 Future<Set<String>> _seedDeckIds() async {

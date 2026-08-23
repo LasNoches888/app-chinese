@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/app_bar_actions.dart';
 import '../services/daily_content_service.dart';
 import 'dictionary_screen.dart';
 import 'lesson_session_screen.dart';
@@ -14,7 +15,6 @@ import 'pronunciation_check_screen.dart';
 import 'race_screen.dart';
 import 'reading_list_screen.dart';
 import 'scenario_list_screen.dart';
-import 'settings_screen.dart';
 import 'speed_round_screen.dart';
 import 'tone_trainer_screen.dart';
 import 'word_detail_screen.dart';
@@ -68,14 +68,7 @@ class PracticeHubScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(settings.t('practiceHub')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
-            ),
-          ),
-        ],
+        actions: const [AppBarActions()],
       ),
       body: AppBackground(
         child: ListView(

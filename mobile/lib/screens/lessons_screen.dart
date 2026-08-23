@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/app_bar_actions.dart';
 import '../models/deck.dart';
 import '../models/user_stats.dart';
 import 'lesson_session_screen.dart';
-import 'settings_screen.dart';
 
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
@@ -95,14 +95,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(settings.t('lessons')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
+        actions: const [AppBarActions()],
       ),
       body: AppBackground(
         child: decks == null

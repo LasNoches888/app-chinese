@@ -4,10 +4,9 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/app_bar_actions.dart';
 import '../services/study_plan_service.dart';
-import 'chat_screen.dart';
 import 'plan_detail_screen.dart';
-import 'settings_screen.dart';
 
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
@@ -71,22 +70,7 @@ class _PlansScreenState extends State<PlansScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(settings.t('plansTitle')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline),
-            tooltip: settings.t('chat'),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const ChatScreen())),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: settings.t('settings'),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
+        actions: const [AppBarActions()],
       ),
       body: AppBackground(
         child: plans == null
@@ -247,6 +231,7 @@ class _PlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final step = progress.currentStep;
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: InkWell(
@@ -311,6 +296,20 @@ class _PlanCard extends StatelessWidget {
                         color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
+                    // Naming the next step turns a list of topics into a
+                    // list of things to actually go and do.
+                    if (step != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        '${settings.t('planNextStep')}: ${step.step.titleRu}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ],
                 ),
               ),

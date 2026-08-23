@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/app_bar_actions.dart';
 import '../models/achievement.dart';
 import '../models/user_stats.dart';
 import '../services/xp_service.dart';
-import 'settings_screen.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -63,12 +63,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         title: Text(settings.t('progress')),
         actions: [
           IconButton(icon: const Icon(Icons.refresh), onPressed: _load),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
+          const AppBarActions(),
         ],
       ),
       body: AppBackground(

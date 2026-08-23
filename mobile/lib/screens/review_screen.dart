@@ -4,8 +4,8 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/app_bar_actions.dart';
 import 'lesson_session_screen.dart';
-import 'settings_screen.dart';
 
 /// SRS review tab: shows how many words are due right now and, when
 /// tapped, runs them through the same exercise engine as a lesson.
@@ -51,14 +51,7 @@ class _ReviewScreenState extends State<ReviewScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(settings.t('review')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const SettingsScreen())),
-          ),
-        ],
+        actions: const [AppBarActions()],
       ),
       body: AppBackground(
         child: _dueWordIds == null
