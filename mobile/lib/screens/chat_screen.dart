@@ -9,6 +9,7 @@ import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/chat_message.dart';
 import '../services/pinyin_annotator.dart';
+import '../services/tutor_reference.dart';
 import '../services/tutor_fact_checker.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
@@ -103,23 +104,33 @@ class _ChatScreenState extends State<ChatScreen> {
       final knownWords = (await repos.words.getWordsByIds(
         knownIds,
       )).map((w) => w.hanzi).toList();
-      final weakWords = (await repos.words.getWordsByIds(
-        weakIds,
-      )).map((w) => w.hanzi).toList();
+      final weak = await repos.words.getWordsByIds(weakIds);
+      final weakWords = weak.map((w) => w.hanzi).toList();
 
       final ChatMessage reply;
       final variant = localVariantFor(settings.chatMode);
       if (variant != null) {
+        final annotator = PinyinAnnotator(repos.dictionary, repos.words);
+        // The model can't hold the facts of the language, so it is given
+        // them instead of asked to recall them.
+        final reference = await TutorReference.build(
+          learnerMessage: text,
+          weakWords: weak,
+          dictionary: repos.dictionary,
+          annotator: annotator,
+        );
         final prompt = variant == LocalModelVariant.friend
             ? buildFriendSystemPrompt(
                 hskLevel: 1,
                 knownWords: knownWords,
                 weakWords: weakWords,
+                reference: reference,
               )
             : buildTutorSystemPrompt(
                 hskLevel: 1,
                 knownWords: knownWords,
                 weakWords: weakWords,
+                reference: reference,
               );
         final raw = await LocalLlmService.sendMessage(
           variant,

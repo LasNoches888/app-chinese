@@ -89,6 +89,32 @@ class PinyinAnnotator {
     return _tidy(out.toString());
   }
 
+  /// The Chinese words [text] is made of, longest-match first.
+  ///
+  /// Shared with the reference builder: deciding where one word ends and
+  /// the next begins is the same problem whether the answer is used to
+  /// transcribe the text or to look up what it means.
+  Future<List<String>> segment(String text) async {
+    if (!_han.hasMatch(text)) return const [];
+    final readings = await _readingsFor(text);
+    final words = <String>[];
+    var i = 0;
+    while (i < text.length) {
+      if (!_han.hasMatch(text[i])) {
+        i++;
+        continue;
+      }
+      final match = _longestMatch(text, i, readings);
+      if (match == null) {
+        i++;
+      } else {
+        words.add(match);
+        i += match.length;
+      }
+    }
+    return words;
+  }
+
   /// Replaces the model's pinyin — on the reply and on every word it
   /// claims to have introduced — with the looked-up one.
   Future<ChatMessage> correct(ChatMessage message) async {

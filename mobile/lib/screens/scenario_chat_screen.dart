@@ -8,6 +8,7 @@ import '../data/scenarios.dart';
 import '../models/chat_message.dart';
 import '../services/local_llm_service.dart';
 import '../services/pinyin_annotator.dart';
+import '../services/tutor_reference.dart';
 import '../services/tutor_fact_checker.dart';
 import '../services/system_prompt.dart';
 
@@ -70,6 +71,12 @@ class _ScenarioChatScreenState extends State<ScenarioChatScreen> {
         role: widget.scenario.role,
         topicHintRu: widget.scenario.topicHintRu,
         openingLineZh: widget.scenario.openingLineZh,
+        reference: await TutorReference.build(
+          learnerMessage: text,
+          weakWords: const [],
+          dictionary: repos.dictionary,
+          annotator: annotator,
+        ),
       );
       final raw = await LocalLlmService.sendMessage(
         LocalModelVariant.tutor,

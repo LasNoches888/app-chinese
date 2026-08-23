@@ -94,6 +94,34 @@ class DictionaryRepository {
     return result;
   }
 
+  /// Whole entries for a batch of exact headwords, best reading per word.
+  ///
+  /// Same batching reason as [pinyinFor], but the caller here wants the
+  /// meaning too — it is assembling the reference the tutor is allowed to
+  /// speak from.
+  Future<Map<String, DictEntry>> entriesFor(Iterable<String> words) async {
+    final wanted = words.toSet().toList();
+    if (wanted.isEmpty) return const {};
+    final db = await _open();
+    final placeholders = List.filled(wanted.length, '?').join(',');
+    final rows = await db.rawQuery(
+      '''
+      SELECT * FROM entries
+      WHERE simp IN ($placeholders) OR trad IN ($placeholders)
+      ORDER BY is_ref, freq DESC, weight, id
+    ''',
+      [...wanted, ...wanted],
+    );
+
+    final result = <String, DictEntry>{};
+    for (final row in rows) {
+      final entry = DictEntry.fromMap(row);
+      result.putIfAbsent(entry.simplified, () => entry);
+      result.putIfAbsent(entry.traditional, () => entry);
+    }
+    return result;
+  }
+
   Future<List<DictEntry>> _byHanzi(Database db, String q, int limit) => _run(
     db,
     '''

@@ -5,6 +5,7 @@ String buildTutorSystemPrompt({
   required int hskLevel,
   required List<String> knownWords,
   required List<String> weakWords,
+  String reference = '',
 }) {
   final known = knownWords.isEmpty ? '(пока пусто)' : knownWords.join(', ');
   final weak = weakWords.isEmpty ? '(пока пусто)' : weakWords.join(', ');
@@ -27,6 +28,7 @@ String buildTutorSystemPrompt({
 5. Если ученик пишет не по-китайски, не переключайся на его язык — переспроси
    на упрощённом китайском.
 
+$reference
 ## Формат ответа
 Верни ТОЛЬКО валидный JSON без пояснений вокруг, по схеме:
 {
@@ -46,6 +48,7 @@ String buildFriendSystemPrompt({
   required int hskLevel,
   required List<String> knownWords,
   required List<String> weakWords,
+  String reference = '',
 }) {
   final known = knownWords.isEmpty ? '(пока пусто)' : knownWords.join(', ');
 
@@ -67,6 +70,7 @@ String buildFriendSystemPrompt({
 5. Если ученик пишет не по-китайски, не переключайся на его язык — переспроси
    на упрощённом китайском, по-дружески.
 
+$reference
 ## Формат ответа
 Верни ТОЛЬКО валидный JSON без пояснений вокруг, по схеме:
 {
@@ -88,6 +92,7 @@ String buildScenarioSystemPrompt({
   required String role,
   required String topicHintRu,
   required String openingLineZh,
+  String reference = '',
 }) {
   return '''
 Ты играешь роль: $role. Ты разговариваешь на 普通话 (упрощённом китайском)
@@ -105,6 +110,7 @@ String buildScenarioSystemPrompt({
 6. Если ученик пишет не по-китайски, не переключайся на его язык — переспроси
    на упрощённом китайском.
 
+$reference
 ## Формат ответа
 Верни ТОЛЬКО валидный JSON без пояснений вокруг, по схеме:
 {
