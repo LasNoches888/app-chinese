@@ -14,6 +14,14 @@ class Strings {
     'planContinue': {AppLocale.ru: 'ПРОДОЛЖИТЬ', AppLocale.en: 'CONTINUE'},
     'planNextStep': {AppLocale.ru: 'Дальше', AppLocale.en: 'Next'},
     'planDone': {AppLocale.ru: 'План пройден!', AppLocale.en: 'Plan complete!'},
+    'chatFactRemoved': {
+      AppLocale.ru: 'Часть ответа убрана: репетитор ошибся в фактах о языке',
+      AppLocale.en: 'Part of the reply was removed: the tutor got a fact wrong',
+    },
+    'chatFactUnreliable': {
+      AppLocale.ru: 'Репетитор ответил неверно — спроси ещё раз',
+      AppLocale.en: 'The tutor answered incorrectly — try asking again',
+    },
     'planOutcomes': {
       AppLocale.ru: 'В конце ты сможешь',
       AppLocale.en: "By the end you'll be able to",

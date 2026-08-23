@@ -31,6 +31,12 @@ class ChatMessage {
   final String? pinyin;
   final String? grammarRecast;
   final List<NewWord> newWords;
+
+  /// Set when the app removed something from the reply it could prove
+  /// false — see TutorFactChecker. Holds a string key, not a sentence, so
+  /// the screen can render it in the learner's language.
+  final String? note;
+
   final DateTime? createdAt;
 
   ChatMessage({
@@ -40,19 +46,29 @@ class ChatMessage {
     this.pinyin,
     this.grammarRecast,
     this.newWords = const [],
+    this.note,
     this.createdAt,
   });
 
-  ChatMessage copyWith({String? pinyin, List<NewWord>? newWords}) =>
-      ChatMessage(
-        id: id,
-        fromUser: fromUser,
-        text: text,
-        pinyin: pinyin ?? this.pinyin,
-        grammarRecast: grammarRecast,
-        newWords: newWords ?? this.newWords,
-        createdAt: createdAt,
-      );
+  ChatMessage copyWith({
+    String? text,
+    String? pinyin,
+    String? grammarRecast,
+    bool clearGrammarRecast = false,
+    List<NewWord>? newWords,
+    String? note,
+  }) => ChatMessage(
+    id: id,
+    fromUser: fromUser,
+    text: text ?? this.text,
+    pinyin: pinyin ?? this.pinyin,
+    grammarRecast: clearGrammarRecast
+        ? null
+        : (grammarRecast ?? this.grammarRecast),
+    newWords: newWords ?? this.newWords,
+    note: note ?? this.note,
+    createdAt: createdAt,
+  );
 
   factory ChatMessage.fromReplyJson(Map<String, dynamic> json) {
     return ChatMessage(
@@ -74,6 +90,7 @@ class ChatMessage {
     newWords: (json['new_words'] as List<dynamic>? ?? [])
         .map((e) => NewWord.fromJson(e as Map<String, dynamic>))
         .toList(),
+    note: json['note'] as String?,
   );
 
   Map<String, dynamic> toJson() => {
@@ -82,5 +99,6 @@ class ChatMessage {
     'pinyin': pinyin,
     'grammar_recast': grammarRecast,
     'new_words': newWords.map((w) => w.toJson()).toList(),
+    'note': note,
   };
 }

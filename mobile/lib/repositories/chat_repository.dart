@@ -33,6 +33,7 @@ class ChatRepository {
       'pinyin': message.pinyin,
       'grammar_recast': message.grammarRecast,
       'new_words': message.newWords.map((w) => w.toJson()).toList(),
+      'note': message.note,
     });
     final id = await db.insert('chat_messages', {
       'role': 'assistant',
@@ -46,6 +47,7 @@ class ChatRepository {
       pinyin: message.pinyin,
       grammarRecast: message.grammarRecast,
       newWords: message.newWords,
+      note: message.note,
       createdAt: now,
     );
   }
@@ -78,6 +80,7 @@ class ChatRepository {
       newWords: (decoded['new_words'] as List<dynamic>? ?? [])
           .map((e) => NewWord.fromJson(e as Map<String, dynamic>))
           .toList(),
+      note: decoded['note'] as String?,
       createdAt: createdAt,
     );
   }

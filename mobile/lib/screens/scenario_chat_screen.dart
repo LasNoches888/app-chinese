@@ -8,6 +8,7 @@ import '../data/scenarios.dart';
 import '../models/chat_message.dart';
 import '../services/local_llm_service.dart';
 import '../services/pinyin_annotator.dart';
+import '../services/tutor_fact_checker.dart';
 import '../services/system_prompt.dart';
 
 /// A roleplay conversation, deliberately ephemeral: unlike the main tutor
@@ -82,8 +83,9 @@ class _ScenarioChatScreenState extends State<ScenarioChatScreen> {
       // Same reason as the main chat: the model's characters are worth
       // trusting, its transcription is not.
       final corrected = await annotator.correct(reply);
+      final checked = await TutorFactChecker(repos.dictionary).check(corrected);
       if (!mounted) return;
-      setState(() => _messages.add(corrected));
+      setState(() => _messages.add(checked.message));
     } catch (e) {
       if (!mounted) return;
       setState(

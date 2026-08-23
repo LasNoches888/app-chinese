@@ -9,6 +9,7 @@ import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/chat_message.dart';
 import '../services/pinyin_annotator.dart';
+import '../services/tutor_fact_checker.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
 import '../services/persona.dart';
@@ -142,7 +143,10 @@ class _ChatScreenState extends State<ChatScreen> {
         repos.dictionary,
         repos.words,
       ).correct(reply);
-      final saved = await repos.chat.addAssistantMessage(corrected);
+      // And it states the occasional falsehood about the language, which
+      // the dictionary can also settle.
+      final checked = await TutorFactChecker(repos.dictionary).check(corrected);
+      final saved = await repos.chat.addAssistantMessage(checked.message);
       if (!mounted) return;
       setState(() => _messages.add(saved));
     } catch (e) {
@@ -655,7 +659,7 @@ class _MessageBubble extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(message.text),
+              if (message.text.isNotEmpty) Text(message.text),
               if (message.pinyin != null && message.pinyin!.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
@@ -669,11 +673,13 @@ class _MessageBubble extends StatelessWidget {
                 ),
               // Only the tutor's turns: the learner's own message is
               // whatever they typed, which may not be Chinese at all.
-              if (!message.fromUser)
+              // Nothing to read aloud when the whole reply was removed.
+              if (!message.fromUser && message.text.isNotEmpty)
                 Align(
                   alignment: Alignment.centerLeft,
                   child: SpeakButton(text: message.text, size: 20),
                 ),
+              if (message.note != null) _FactNote(noteKey: message.note!),
             ],
           ),
         ),
@@ -709,6 +715,42 @@ class _MessageBubble extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// Says that the app took something out of the tutor's reply.
+///
+/// Silently deleting a sentence would leave the learner reading a reply
+/// with a hole in it and no idea why — and quietly editing what the tutor
+/// said is its own small dishonesty.
+class _FactNote extends StatelessWidget {
+  final String noteKey;
+
+  const _FactNote({required this.noteKey});
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline, size: 15, color: theme.colorScheme.outline),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              settings.t(noteKey),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.outline,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
