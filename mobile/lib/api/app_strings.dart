@@ -614,9 +614,9 @@ class Strings {
     },
     'scenariosNeedLocalModel': {
       AppLocale.ru:
-          'Ролевые сценарии работают только с локальной моделью («Друг поблизости») — она полностью управляет своим системным промптом. Скачайте её в Настройках.',
+          'Ролевые сценарии работают на Репетиторе, а он сейчас переезжает на сервер — раздел скоро вернётся.',
       AppLocale.en:
-          'Roleplay only works with the local model ("Nearby friend") — it fully controls its own system prompt. Download it in Settings.',
+          "Roleplay runs on the Tutor, which is moving to a server right now — this section will be back soon.",
     },
     'appearance': {AppLocale.ru: 'Внешний вид', AppLocale.en: 'Appearance'},
     'goalsSection': {
@@ -630,11 +630,21 @@ class Strings {
     },
     'professorInDevBody': {
       AppLocale.ru:
-          'Он всё ещё готовит свой первый урок и появится здесь совсем скоро. А пока Друг и Репетитор уже на месте и рады поболтать!',
+          'Он всё ещё готовит свой первый урок и появится здесь совсем скоро. А пока Друг поблизости уже на месте и рад поболтать!',
       AppLocale.en:
-          "They're still prepping their first lesson and will be here very soon. In the meantime, Friend and Tutor are already in and happy to chat!",
+          "They're still prepping their first lesson and will be here very soon. In the meantime, Friend is already in and happy to chat!",
     },
-    'professorInDevBadge': {AppLocale.ru: 'Скоро', AppLocale.en: 'Coming soon'},
+    'tutorInDevTitle': {
+      AppLocale.ru: 'Репетитор скоро будет здесь',
+      AppLocale.en: 'The Tutor is almost ready',
+    },
+    'tutorInDevBody': {
+      AppLocale.ru:
+          'Он переезжает на более мощный сервер, чтобы объяснять китайский ещё лучше, и появится здесь совсем скоро. А пока Друг поблизости уже на месте и рад поболтать!',
+      AppLocale.en:
+          "They're moving to a more capable server to explain Chinese even better, and will be here very soon. In the meantime, Friend is already in and happy to chat!",
+    },
+    'comingSoonBadge': {AppLocale.ru: 'Скоро', AppLocale.en: 'Coming soon'},
     'choosePersona': {
       AppLocale.ru: 'Выбрать собеседника',
       AppLocale.en: 'Choose who to talk to',

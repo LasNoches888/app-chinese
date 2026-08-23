@@ -55,11 +55,11 @@ class AppSettings extends ChangeNotifier {
   TimeOfDay _reminderTime = const TimeOfDay(hour: 19, minute: 0);
   TimeOfDay get reminderTime => _reminderTime;
 
-  // Professor (server) is marked "coming soon" in the persona picker and
-  // isn't offered as a choice there, so a fresh install shouldn't default
-  // into it — Tutor is the closest thing to a safe, always-available
-  // starting point.
-  ChatMode _chatMode = ChatMode.localTutor;
+  // Professor (server) and Tutor are both marked "coming soon" in the
+  // persona picker right now — Tutor is being moved to run server-side —
+  // so a fresh install shouldn't default into either. Friend is the one
+  // persona actually available.
+  ChatMode _chatMode = ChatMode.localFriend;
   ChatMode get chatMode => _chatMode;
 
   SpeechSpeed _speechSpeed = SpeechSpeed.slow;
@@ -97,14 +97,17 @@ class AppSettings extends ChangeNotifier {
     // 'local' is a pre-migration value from when there was only one local
     // persona — that persona was, behaviorally, the tutor (structured HSK
     // practice with grammar recasts), so it maps onto Tutor rather than
-    // resetting everyone back to the server on the next launch.
+    // resetting everyone back to the server on the next launch. Tutor
+    // itself is currently paused (see isChatModeComingSoon) — this only
+    // decides which saved value an existing install resolves to, not
+    // whether that mode is usable right now.
     _chatMode = switch (prefs.getString(_chatModeKey)) {
       'localFriend' => ChatMode.localFriend,
       'localTutor' || 'local' => ChatMode.localTutor,
       'server' => ChatMode.server,
-      // No saved value yet (fresh install) — Professor isn't offered as a
-      // choice in the picker right now, so don't default into it.
-      _ => ChatMode.localTutor,
+      // No saved value yet (fresh install) — neither Professor nor Tutor
+      // is offered as a choice in the picker right now.
+      _ => ChatMode.localFriend,
     };
     _speechSpeed = prefs.getString(_speechSpeedKey) == 'normal'
         ? SpeechSpeed.normal

@@ -49,8 +49,10 @@ class _ChatScreenState extends State<ChatScreen> {
     super.didChangeDependencies();
     // The weights are on disk but not in memory after a cold start — read
     // them back so the active persona is usable without re-downloading.
-    final variant = localVariantFor(context.read<AppSettings>().chatMode);
-    if (variant != null &&
+    final settings = context.read<AppSettings>();
+    final variant = localVariantFor(settings.chatMode);
+    if (!isChatModeComingSoon(settings.chatMode) &&
+        variant != null &&
         LocalLlmService.status[variant]!.value == LocalModelStatus.unknown) {
       LocalLlmService.loadFromCacheIfPresent(variant);
     }
@@ -80,6 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   bool _canSend(AppSettings settings) {
     if (_sending) return false;
+    if (isChatModeComingSoon(settings.chatMode)) return false;
     final variant = localVariantFor(settings.chatMode);
     if (variant != null) return LocalLlmService.isModelReady(variant);
     return _online;
@@ -205,13 +208,16 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildScaffold(AppSettings settings) {
+    final comingSoon = isChatModeComingSoon(settings.chatMode);
     final variant = localVariantFor(settings.chatMode);
     final modelStatus = variant == null
         ? null
         : LocalLlmService.status[variant]!.value;
     final localReady = modelStatus == LocalModelStatus.ready;
     final canSend = _canSend(settings);
-    final showBlockedBanner = variant != null ? !localReady : !_online;
+    final showBlockedBanner = !comingSoon && variant != null
+        ? !localReady
+        : !_online;
 
     return Scaffold(
       appBar: AppBar(
@@ -228,10 +234,13 @@ class _ChatScreenState extends State<ChatScreen> {
               onTap: _openPersonaPicker,
               child: Padding(
                 padding: const EdgeInsets.all(6),
-                child: Text(switch (variant) {
-                  null => '🎓',
-                  LocalModelVariant.friend => localReady ? '👋' : '🚪',
-                  LocalModelVariant.tutor => localReady ? '📖' : '📕',
+                // Coming-soon modes always show their closed-door icon,
+                // regardless of whether weights happen to be cached from
+                // before the persona was paused.
+                child: Text(switch (settings.chatMode) {
+                  ChatMode.server => '🎓',
+                  ChatMode.localTutor => '📕',
+                  ChatMode.localFriend => localReady ? '👋' : '🚪',
                 }, style: const TextStyle(fontSize: 18)),
               ),
             ),
@@ -251,9 +260,15 @@ class _ChatScreenState extends State<ChatScreen> {
         ],
       ),
       body: AppBackground(
-        child: variant == null
-            ? _ProfessorInDevelopment(
+        child: comingSoon
+            ? _PersonaComingSoon(
                 settings: settings,
+                titleKey: settings.chatMode == ChatMode.server
+                    ? 'professorInDevTitle'
+                    : 'tutorInDevTitle',
+                bodyKey: settings.chatMode == ChatMode.server
+                    ? 'professorInDevBody'
+                    : 'tutorInDevBody',
                 onPickAnother: _openPersonaPicker,
               )
             : Column(
@@ -267,7 +282,10 @@ class _ChatScreenState extends State<ChatScreen> {
                         final isWakingUp =
                             modelStatus == LocalModelStatus.loading;
                         final color = isWakingUp ? _accentGreen : Colors.red;
-                        final personaLabel = personaName(settings, variant);
+                        // This banner only renders for `!comingSoon`,
+                        // where the mode is always backed by a variant
+                        // (Friend, right now).
+                        final personaLabel = personaName(settings, variant!);
                         return InkWell(
                           onTap: isWakingUp ? null : _openPersonaPicker,
                           child: Container(
@@ -333,16 +351,21 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 }
 
-/// Friendly placeholder shown instead of a real chat when Professor —
-/// the only server-backed persona — is selected. Professor isn't offered
-/// as a choice in the picker anymore (see _PersonaPickerSheet), so this
-/// only appears for someone whose saved chatMode predates that change.
-class _ProfessorInDevelopment extends StatelessWidget {
+/// Friendly placeholder shown instead of a real chat for a persona that
+/// isn't offered as a live choice right now — Professor and, while it
+/// moves to run server-side, Tutor. Neither is selectable in the picker
+/// (see _PersonaPickerSheet), so this only appears for someone whose
+/// saved chatMode predates that persona being paused.
+class _PersonaComingSoon extends StatelessWidget {
   final AppSettings settings;
+  final String titleKey;
+  final String bodyKey;
   final VoidCallback onPickAnother;
 
-  const _ProfessorInDevelopment({
+  const _PersonaComingSoon({
     required this.settings,
+    required this.titleKey,
+    required this.bodyKey,
     required this.onPickAnother,
   });
 
@@ -357,13 +380,13 @@ class _ProfessorInDevelopment extends StatelessWidget {
             Image.asset('assets/mascot/panda_25.png', height: 140),
             const SizedBox(height: 20),
             Text(
-              settings.t('professorInDevTitle'),
+              settings.t(titleKey),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
             const SizedBox(height: 10),
             Text(
-              settings.t('professorInDevBody'),
+              settings.t(bodyKey),
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium,
             ),
@@ -380,11 +403,11 @@ class _ProfessorInDevelopment extends StatelessWidget {
   }
 }
 
-/// Bottom sheet for picking who to chat with. Professor is shown but
-/// disabled — a coming-soon card rather than a working option — since the
-/// server-hosted model isn't ready to be someone's daily study partner
-/// yet; Friend and Tutor are the two real choices, each downloadable
-/// (and re-downloadable) straight from here.
+/// Bottom sheet for picking who to chat with. Professor and Tutor are
+/// both shown but disabled — coming-soon cards rather than working
+/// options — since the server-hosted model isn't ready yet and Tutor is
+/// mid-move to running there too. Friend is the one real, tappable
+/// choice, downloadable (and re-downloadable) straight from here.
 class _PersonaPickerSheet extends StatelessWidget {
   final VoidCallback onPicked;
 
@@ -411,7 +434,7 @@ class _PersonaPickerSheet extends StatelessWidget {
               emoji: '🎓',
               gradient: const [_accentBlue, _brandEnd],
               title: settings.t('chatSourceServer'),
-              subtitle: settings.t('professorInDevBadge'),
+              subtitle: settings.t('comingSoonBadge'),
               enabled: false,
               selected: false,
               onTap: () {},
@@ -427,14 +450,14 @@ class _PersonaPickerSheet extends StatelessWidget {
               onPicked: onPicked,
             ),
             const SizedBox(height: 10),
-            _LocalPersonaRow(
-              variant: LocalModelVariant.tutor,
+            _PersonaRow(
               emoji: '📕',
-              readyEmoji: '📖',
               gradient: const [_accentGreenDark, _accentGreen],
               title: settings.t('chatSourceTutor'),
-              settings: settings,
-              onPicked: onPicked,
+              subtitle: settings.t('comingSoonBadge'),
+              enabled: false,
+              selected: false,
+              onTap: () {},
             ),
           ],
         ),

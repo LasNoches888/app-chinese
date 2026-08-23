@@ -182,14 +182,15 @@ void main() {
   });
 
   testWidgets(
-    'ScenarioListScreen gates on the local model when it is not ready',
+    'ScenarioListScreen shows the coming-soon card, not the scenario list',
     (tester) async {
+      // Roleplay runs on Tutor, which is paused while it moves to run
+      // server-side — the screen must always show that, not the scenario
+      // list or a stale "download the model" prompt.
       await pumpScreen(tester, const ScenarioListScreen());
 
-      // No platform channel in `flutter test`, so the local model can never
-      // report ready — the screen must show the setup prompt, not crash or
-      // show an empty scenario list.
-      expect(find.textContaining('Друг поблизости'), findsOneWidget);
+      expect(find.text('Репетитор скоро будет здесь'), findsOneWidget);
+      expect(find.byType(ListTile), findsNothing);
     },
   );
 }

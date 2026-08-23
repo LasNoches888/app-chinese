@@ -9,10 +9,12 @@ import 'package:app_chinese/app_repositories.dart';
 import 'package:app_chinese/screens/chat_screen.dart';
 import 'package:app_chinese/services/local_llm_service.dart';
 
-/// Covers the persona picker that replaced Settings' old chat-source
-/// cards: Professor shows as a disabled "coming soon" row (and its own
-/// friendly placeholder screen when selected), while Friend/Tutor are
-/// real, tappable choices.
+/// Covers the persona picker: Friend is the one real, tappable choice
+/// right now, while Professor and Tutor both show as disabled "coming
+/// soon" rows — Tutor is mid-move to running server-side, alongside
+/// Professor — and picking either (or opening chat with a saved setting
+/// that still points at one) lands on the same friendly placeholder
+/// instead of a chat.
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -20,19 +22,17 @@ void main() {
   });
 
   setUp(() {
-    // Both ready by default so a tap on either row in the picker just
-    // switches the mode instead of also kicking off a real network
-    // download (LocalLlmService.ensureReady is only called for
-    // unknown/absent status).
+    // Ready by default so a tap on Friend's row just switches the mode
+    // instead of also kicking off a real network download
+    // (LocalLlmService.ensureReady is only called for unknown/absent
+    // status).
     LocalLlmService.status[LocalModelVariant.friend]!.value =
-        LocalModelStatus.ready;
-    LocalLlmService.status[LocalModelVariant.tutor]!.value =
         LocalModelStatus.ready;
   });
 
   Future<AppSettings> pumpChat(
     WidgetTester tester, {
-    ChatMode chatMode = ChatMode.localTutor,
+    ChatMode chatMode = ChatMode.localFriend,
   }) async {
     SharedPreferences.setMockInitialValues({});
     tester.view.physicalSize = const Size(1080, 2400);
@@ -68,7 +68,7 @@ void main() {
   testWidgets(
     'a ready local persona shows the chat input with no blocked banner',
     (tester) async {
-      await pumpChat(tester, chatMode: ChatMode.localTutor);
+      await pumpChat(tester, chatMode: ChatMode.localFriend);
 
       expect(find.byType(TextField), findsOneWidget);
       // The "not ready" banner is driven by LocalLlmService.status, which
@@ -87,10 +87,23 @@ void main() {
     expect(find.byType(TextField), findsNothing);
   });
 
-  testWidgets('tapping the badge opens the persona picker', (tester) async {
+  testWidgets('Tutor shows a friendly coming-soon screen instead of chat', (
+    tester,
+  ) async {
+    // Tutor is paused while it moves to run server-side — a saved
+    // setting from before that (or the pre-migration 'local' value) must
+    // land here rather than trying to load or download its weights.
     await pumpChat(tester, chatMode: ChatMode.localTutor);
 
-    await tester.tap(find.text('📖'));
+    expect(find.text('Репетитор скоро будет здесь'), findsOneWidget);
+    expect(find.text('Выбрать другого собеседника'), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+  });
+
+  testWidgets('tapping the badge opens the persona picker', (tester) async {
+    await pumpChat(tester, chatMode: ChatMode.localFriend);
+
+    await tester.tap(find.text('👋'));
     await tester.pumpAndSettle();
 
     expect(find.text('Выбрать собеседника'), findsOneWidget);
@@ -99,26 +112,42 @@ void main() {
     expect(find.text('Репетитор'), findsOneWidget);
   });
 
+  testWidgets('Tutor and Professor both show as coming soon in the picker', (
+    tester,
+  ) async {
+    await pumpChat(tester, chatMode: ChatMode.localFriend);
+
+    await tester.tap(find.text('👋'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Скоро'), findsNWidgets(2));
+  });
+
   testWidgets(
     'an undownloaded persona shows a tap-to-start hint in the picker',
     (tester) async {
       LocalLlmService.status[LocalModelVariant.friend]!.value =
           LocalModelStatus.unknown;
-      await pumpChat(tester, chatMode: ChatMode.localTutor);
+      // Opened from a coming-soon mode (Professor) rather than Friend
+      // itself: entering chat on Friend would trigger
+      // loadFromCacheIfPresent and flip its status before the picker
+      // even opens, which is exactly the noise this test avoids by
+      // reading the status untouched.
+      await pumpChat(tester, chatMode: ChatMode.server);
 
-      await tester.tap(find.text('📖'));
+      await tester.tap(find.text('Выбрать другого собеседника'));
       await tester.pumpAndSettle();
 
       expect(find.text('Нажмите, чтобы начать знакомство'), findsOneWidget);
     },
   );
 
-  testWidgets('picking Friend switches the chat mode and closes the sheet', (
+  testWidgets('picking Friend from the coming-soon screen switches modes', (
     tester,
   ) async {
-    final settings = await pumpChat(tester, chatMode: ChatMode.localTutor);
+    final settings = await pumpChat(tester, chatMode: ChatMode.server);
 
-    await tester.tap(find.text('📖'));
+    await tester.tap(find.text('Выбрать другого собеседника'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Друг поблизости'));
@@ -126,5 +155,6 @@ void main() {
 
     expect(settings.chatMode, ChatMode.localFriend);
     expect(find.text('Выбрать собеседника'), findsNothing);
+    expect(find.byType(TextField), findsOneWidget);
   });
 }
