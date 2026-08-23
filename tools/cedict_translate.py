@@ -70,13 +70,25 @@ def main() -> None:
     ap.add_argument("--output", required=True)
     ap.add_argument("--batch", type=int, default=64)
     ap.add_argument("--limit", type=int, default=0, help="0 = everything")
+    ap.add_argument(
+        "--existing",
+        help="a previous output to carry forward; only glosses missing "
+        "from it are translated, so a change to the parser costs minutes "
+        "rather than another full pass",
+    )
     args = ap.parse_args()
 
     with open(args.input, encoding="utf-8") as f:
         entries = json.load(f)
 
+    done: dict[str, str] = {}
+    if args.existing:
+        with open(args.existing, encoding="utf-8") as f:
+            done = json.load(f)
+        print(f"carried forward: {len(done)}", flush=True)
+
     unique: list[str] = sorted(
-        {g for e in entries for g in e["en"] if translatable(g)}
+        {g for e in entries for g in e["en"] if translatable(g) and g not in done}
     )
     if args.limit:
         unique = unique[: args.limit]
@@ -90,7 +102,7 @@ def main() -> None:
         model = model.half()
     print(f"model loaded on {device}", flush=True)
 
-    ru_by_en: dict[str, str] = {}
+    ru_by_en: dict[str, str] = dict(done)
     started = time.time()
     for i in range(0, len(unique), args.batch):
         chunk = unique[i : i + args.batch]

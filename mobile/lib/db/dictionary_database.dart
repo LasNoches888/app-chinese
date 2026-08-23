@@ -19,7 +19,7 @@ class DictionaryDatabase {
   /// Bump when the shipped data changes. The extracted copy is named
   /// after it, so a new release unpacks a fresh file instead of quietly
   /// serving the previous one.
-  static const _version = 1;
+  static const _version = 2;
   static const _assetPath = 'assets/dict/cedict.db.gz';
 
   static Database? _instance;

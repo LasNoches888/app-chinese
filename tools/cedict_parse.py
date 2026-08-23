@@ -44,9 +44,16 @@ CLASSIFIER_RE = re.compile(r"^CL:")
 XREF_RE = re.compile(r"^(see|see also|variant of|old variant of|abbr\. for)\b")
 
 
-def is_blocked(glosses: list[str]) -> bool:
-    joined = " ; ".join(glosses)
-    return bool(TAG_BLOCKLIST.search(joined) or TERM_BLOCKLIST.search(joined))
+def is_blocked(gloss: str) -> bool:
+    """Whether this one sense is coarse.
+
+    Checked per sense, not per entry. Plenty of ordinary words carry one
+    vulgar sense among several — 小姐 is "Miss" and, in mainland slang,
+    "prostitute"; 黄色 is "yellow" and "pornographic" — and blocking the
+    whole entry loses the word a learner actually needs. Dropping the one
+    sense keeps the word and leaves the coarse reading out.
+    """
+    return bool(TAG_BLOCKLIST.search(gloss) or TERM_BLOCKLIST.search(gloss))
 
 
 def translatable(gloss: str) -> bool:
@@ -75,8 +82,13 @@ def parse(path: str) -> list[dict]:
             glosses = [g.strip() for g in gloss_blob.split("/") if g.strip()]
             if not glosses:
                 continue
-            if is_blocked(glosses):
+            kept = [g for g in glosses if not is_blocked(g)]
+            # An entry whose every sense is coarse has nothing left to
+            # teach, so it goes; one that merely mentions it keeps the
+            # rest.
+            if not kept:
                 continue
+            glosses = kept
             entries.append(
                 {
                     "simp": simp,

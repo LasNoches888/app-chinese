@@ -71,6 +71,22 @@ void main() {
     expect(offenders, isEmpty, reason: 'untaught characters in dialogues');
   });
 
+  test('every example sentence only uses characters the app teaches', () {
+    // The example sits on the word detail screen with a translation but
+    // no gloss for anything else in it, so a character no deck covers is
+    // one the learner meets with nothing to go on. Passages and dialogues
+    // were already held to this; examples were the gap.
+    final taught = taughtCharacters();
+    final offenders = <String, String>{};
+    for (final w in words) {
+      final example = w['example_sentence'] as String?;
+      if (example == null) continue;
+      final bad = untaught(example, taught);
+      if (bad.isNotEmpty) offenders[w['id'] as String] = bad.join();
+    }
+    expect(offenders, isEmpty, reason: 'untaught characters in examples');
+  });
+
   test('every taught character has stroke-order data to write it', () {
     final missing = taughtCharacters().difference(strokeData.keys.toSet());
     expect(missing, isEmpty);

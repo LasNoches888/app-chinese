@@ -36,10 +36,16 @@ DOUBLE_SPACE = re.compile(r"\s{2,}")
 
 
 def plain_pinyin(pinyin: str) -> str:
-    """Toneless, separator-free pinyin: what people actually type."""
-    text = unicodedata.normalize("NFD", pinyin.lower())
+    """Toneless, separator-free pinyin: what people actually type.
+
+    CC-CEDICT spells ü as "u:", and that has to become "v" before the
+    accents are stripped — decomposing first would turn ü into a plain u
+    and quietly make every ü word unfindable by pinyin (绿色 lǜsè would
+    only answer to "luse", which nobody types).
+    """
+    text = pinyin.lower().replace("u:", "v").replace("ü", "v")
+    text = unicodedata.normalize("NFD", text)
     text = "".join(c for c in text if unicodedata.category(c) != "Mn")
-    text = text.replace("ü", "v")
     return SEPARATORS.sub("", TONE_DIGITS.sub("", text))
 
 
