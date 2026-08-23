@@ -43,6 +43,17 @@ class ChatMessage {
     this.createdAt,
   });
 
+  ChatMessage copyWith({String? pinyin, List<NewWord>? newWords}) =>
+      ChatMessage(
+        id: id,
+        fromUser: fromUser,
+        text: text,
+        pinyin: pinyin ?? this.pinyin,
+        grammarRecast: grammarRecast,
+        newWords: newWords ?? this.newWords,
+        createdAt: createdAt,
+      );
+
   factory ChatMessage.fromReplyJson(Map<String, dynamic> json) {
     return ChatMessage(
       fromUser: false,

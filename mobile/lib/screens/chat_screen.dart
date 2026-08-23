@@ -8,6 +8,7 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/speak_button.dart';
 import '../models/chat_message.dart';
+import '../services/pinyin_annotator.dart';
 import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
 import '../services/persona.dart';
@@ -135,7 +136,13 @@ class _ChatScreenState extends State<ChatScreen> {
           weakWords: weakWords,
         );
       }
-      final saved = await repos.chat.addAssistantMessage(reply);
+      // The tutor writes characters well but transcribes them by guess;
+      // the dictionary knows the readings for certain.
+      final corrected = await PinyinAnnotator(
+        repos.dictionary,
+        repos.words,
+      ).correct(reply);
+      final saved = await repos.chat.addAssistantMessage(corrected);
       if (!mounted) return;
       setState(() => _messages.add(saved));
     } catch (e) {

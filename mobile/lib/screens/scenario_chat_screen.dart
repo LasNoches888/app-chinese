@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
+import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../data/scenarios.dart';
 import '../models/chat_message.dart';
 import '../services/local_llm_service.dart';
+import '../services/pinyin_annotator.dart';
 import '../services/system_prompt.dart';
 
 /// A roleplay conversation, deliberately ephemeral: unlike the main tutor
@@ -60,6 +62,8 @@ class _ScenarioChatScreenState extends State<ScenarioChatScreen> {
     });
 
     final settings = context.read<AppSettings>();
+    final repos = context.read<AppRepositories>();
+    final annotator = PinyinAnnotator(repos.dictionary, repos.words);
     try {
       final prompt = buildScenarioSystemPrompt(
         role: widget.scenario.role,
@@ -75,8 +79,11 @@ class _ScenarioChatScreenState extends State<ScenarioChatScreen> {
       final reply = json != null
           ? ChatMessage.fromReplyJson(json)
           : ChatMessage(fromUser: false, text: raw);
+      // Same reason as the main chat: the model's characters are worth
+      // trusting, its transcription is not.
+      final corrected = await annotator.correct(reply);
       if (!mounted) return;
-      setState(() => _messages.add(reply));
+      setState(() => _messages.add(corrected));
     } catch (e) {
       if (!mounted) return;
       setState(

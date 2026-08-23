@@ -62,6 +62,38 @@ class DictionaryRepository {
     return rows.isEmpty ? null : DictEntry.fromMap(rows.first);
   }
 
+  /// Authoritative pinyin for a batch of exact headwords.
+  ///
+  /// One query for the whole batch: the caller is transcribing a sentence
+  /// and needs every candidate substring at once, and a round trip per
+  /// candidate would be dozens of queries for one chat reply.
+  ///
+  /// Where a headword has several readings, the most common non-reference
+  /// one wins — the same rule [lookupExact] uses.
+  Future<Map<String, String>> pinyinFor(Iterable<String> words) async {
+    final wanted = words.toSet().toList();
+    if (wanted.isEmpty) return const {};
+    final db = await _open();
+    final placeholders = List.filled(wanted.length, '?').join(',');
+    final rows = await db.rawQuery(
+      '''
+      SELECT simp, trad, pinyin FROM entries
+      WHERE simp IN ($placeholders) OR trad IN ($placeholders)
+      ORDER BY is_ref, freq DESC, weight, id
+    ''',
+      [...wanted, ...wanted],
+    );
+
+    final result = <String, String>{};
+    for (final row in rows) {
+      // Rows arrive best-first, so the first reading seen for a headword
+      // is the one to keep.
+      result.putIfAbsent(row['simp'] as String, () => row['pinyin'] as String);
+      result.putIfAbsent(row['trad'] as String, () => row['pinyin'] as String);
+    }
+    return result;
+  }
+
   Future<List<DictEntry>> _byHanzi(Database db, String q, int limit) => _run(
     db,
     '''
