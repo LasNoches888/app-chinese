@@ -44,6 +44,7 @@ flutter:
     - assets/dict/cedict.db.gz
     - assets/images/
     - assets/mascot/
+    - assets/mascot/hearts/
 
 flutter_launcher_icons:
   android: true

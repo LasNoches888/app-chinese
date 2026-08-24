@@ -342,8 +342,6 @@ class _OutOfHeartsViewState extends State<_OutOfHeartsView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Image.asset('assets/mascot/panda_13.png', height: 120),
-                const SizedBox(height: 12),
                 const HeartsRow(hearts: 0, large: true),
                 const SizedBox(height: 16),
                 Text(
