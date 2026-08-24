@@ -257,7 +257,6 @@ class Strings {
     },
     'online': {AppLocale.ru: 'В сети', AppLocale.en: 'Online'},
     'offline': {AppLocale.ru: 'Не в сети', AppLocale.en: 'Offline'},
-    'chatSourceServer': {AppLocale.ru: 'Профессор', AppLocale.en: 'Professor'},
     'chatSourceLocal': {
       AppLocale.ru: 'Друг поблизости',
       AppLocale.en: 'Nearby friend',

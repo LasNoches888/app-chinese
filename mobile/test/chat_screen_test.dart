@@ -10,11 +10,11 @@ import 'package:app_chinese/screens/chat_screen.dart';
 import 'package:app_chinese/services/local_llm_service.dart';
 
 /// Covers the persona picker: Friend is the one real, tappable choice
-/// right now, while Professor and Tutor both show as disabled "coming
-/// soon" rows — Tutor is mid-move to running server-side, alongside
-/// Professor — and picking either (or opening chat with a saved setting
-/// that still points at one) lands on the same friendly placeholder
-/// instead of a chat.
+/// right now. Professor is pulled from the picker entirely — not shown
+/// even as disabled — while Tutor still shows as a disabled "coming
+/// soon" row, mid-move to running server-side. Opening chat with a saved
+/// setting that points at either lands on the same friendly placeholder
+/// instead of a chat, for anyone whose setting predates that change.
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -77,15 +77,19 @@ void main() {
     },
   );
 
-  testWidgets('Professor shows a friendly coming-soon screen instead of chat', (
-    tester,
-  ) async {
-    await pumpChat(tester, chatMode: ChatMode.server);
+  testWidgets(
+    'a saved Professor setting still lands on the coming-soon screen',
+    (tester) async {
+      // Professor isn't reachable from the picker anymore, but a value
+      // persisted before it was pulled must not crash or show an empty
+      // chat.
+      await pumpChat(tester, chatMode: ChatMode.server);
 
-    expect(find.text('Профессор скоро откроет двери'), findsOneWidget);
-    expect(find.text('Выбрать другого собеседника'), findsOneWidget);
-    expect(find.byType(TextField), findsNothing);
-  });
+      expect(find.text('Профессор скоро откроет двери'), findsOneWidget);
+      expect(find.text('Выбрать другого собеседника'), findsOneWidget);
+      expect(find.byType(TextField), findsNothing);
+    },
+  );
 
   testWidgets('Tutor shows a friendly coming-soon screen instead of chat', (
     tester,
@@ -107,12 +111,12 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Выбрать собеседника'), findsOneWidget);
-    expect(find.text('Профессор'), findsOneWidget);
+    expect(find.text('Профессор'), findsNothing);
     expect(find.text('Друг поблизости'), findsOneWidget);
     expect(find.text('Репетитор'), findsOneWidget);
   });
 
-  testWidgets('Tutor and Professor both show as coming soon in the picker', (
+  testWidgets('Tutor shows as coming soon in the picker; Professor is absent', (
     tester,
   ) async {
     await pumpChat(tester, chatMode: ChatMode.localFriend);
@@ -120,7 +124,7 @@ void main() {
     await tester.tap(find.text('👋'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Скоро'), findsNWidgets(2));
+    expect(find.text('Скоро'), findsOneWidget);
   });
 
   testWidgets(
@@ -128,8 +132,8 @@ void main() {
     (tester) async {
       LocalLlmService.status[LocalModelVariant.friend]!.value =
           LocalModelStatus.unknown;
-      // Opened from a coming-soon mode (Professor) rather than Friend
-      // itself: entering chat on Friend would trigger
+      // Opened from a coming-soon mode (a stale Professor setting) rather
+      // than Friend itself: entering chat on Friend would trigger
       // loadFromCacheIfPresent and flip its status before the picker
       // even opens, which is exactly the noise this test avoids by
       // reading the status untouched.

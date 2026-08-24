@@ -19,8 +19,6 @@ import 'settings_screen.dart';
 
 const _accentGreen = Color(0xFF23C58F);
 const _accentGreenDark = Color(0xFF17A673);
-const _accentBlue = Color(0xFF4E7CFF);
-const _brandEnd = Color(0xFF6C5CE7);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -403,11 +401,13 @@ class _PersonaComingSoon extends StatelessWidget {
   }
 }
 
-/// Bottom sheet for picking who to chat with. Professor and Tutor are
-/// both shown but disabled — coming-soon cards rather than working
-/// options — since the server-hosted model isn't ready yet and Tutor is
-/// mid-move to running there too. Friend is the one real, tappable
-/// choice, downloadable (and re-downloadable) straight from here.
+/// Bottom sheet for picking who to chat with. Professor is pulled from
+/// this list entirely for now, not just disabled — see
+/// isChatModeComingSoon for the one place that still knows about it, for
+/// the sake of anyone whose saved setting predates its removal. Tutor
+/// stays visible as a disabled "coming soon" card, mid-move to running
+/// server-side. Friend is the one real, tappable choice, downloadable
+/// (and re-downloadable) straight from here.
 class _PersonaPickerSheet extends StatelessWidget {
   final VoidCallback onPicked;
 
@@ -430,16 +430,6 @@ class _PersonaPickerSheet extends StatelessWidget {
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 16),
-            _PersonaRow(
-              emoji: '🎓',
-              gradient: const [_accentBlue, _brandEnd],
-              title: settings.t('chatSourceServer'),
-              subtitle: settings.t('comingSoonBadge'),
-              enabled: false,
-              selected: false,
-              onTap: () {},
-            ),
-            const SizedBox(height: 10),
             _LocalPersonaRow(
               variant: LocalModelVariant.friend,
               emoji: '🚪',
