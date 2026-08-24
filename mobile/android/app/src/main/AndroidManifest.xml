@@ -10,6 +10,13 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
+    <!-- Installing a downloaded update APK ourselves (see
+         AppUpdateService) rather than through the Play Store — Android 8+
+         requires this permission for that. The OS still makes the user
+         confirm "allow installs from this app" the first time, and
+         confirm the install itself every time; this only lets the app
+         start that flow. -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
     <application
         android:label="Uchi"
         android:name="${applicationName}"

@@ -6,6 +6,7 @@ import '../api/app_strings.dart';
 import '../api/reminder_service.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/update_section.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
 import '../services/speech_service.dart';
@@ -13,6 +14,7 @@ import '../services/speech_service.dart';
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
 const _accentGreen = Color(0xFF23C58F);
+const _accentBlue = Color(0xFF4E7CFF);
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -267,6 +269,12 @@ class _SettingsScreenState extends State<SettingsScreen>
                       : const SizedBox(width: double.infinity),
                 ),
               ],
+            ),
+            _SectionCard(
+              icon: Icons.system_update_outlined,
+              accent: _accentBlue,
+              title: settings.t('updatesSection'),
+              children: const [UpdateSection()],
             ),
             _SectionCard(
               icon: Icons.storage_outlined,

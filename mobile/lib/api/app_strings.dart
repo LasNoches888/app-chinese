@@ -623,6 +623,47 @@ class Strings {
       AppLocale.en: 'Goals & reminders',
     },
     'dataSection': {AppLocale.ru: 'Данные', AppLocale.en: 'Data'},
+    'updatesSection': {AppLocale.ru: 'Обновления', AppLocale.en: 'Updates'},
+    'currentVersion': {
+      AppLocale.ru: 'Текущая версия',
+      AppLocale.en: 'Current version',
+    },
+    'checkForUpdate': {
+      AppLocale.ru: 'Проверить обновления',
+      AppLocale.en: 'Check for updates',
+    },
+    'checkingForUpdate': {
+      AppLocale.ru: 'Проверяем…',
+      AppLocale.en: 'Checking…',
+    },
+    'updateCheckFailed': {
+      AppLocale.ru: 'Не удалось проверить — нет соединения с GitHub',
+      AppLocale.en: "Couldn't check — no connection to GitHub",
+    },
+    'upToDate': {
+      AppLocale.ru: 'Установлена последняя версия',
+      AppLocale.en: "You're on the latest version",
+    },
+    'updateAvailable': {
+      AppLocale.ru: 'Доступно обновление: сборка {build}',
+      AppLocale.en: 'Update available: build {build}',
+    },
+    'downloadAndInstall': {
+      AppLocale.ru: 'Скачать и установить',
+      AppLocale.en: 'Download and install',
+    },
+    'downloadingUpdate': {
+      AppLocale.ru: 'Скачивается…',
+      AppLocale.en: 'Downloading…',
+    },
+    'updateDownloadFailed': {
+      AppLocale.ru: 'Скачивание не удалось — попробуйте ещё раз',
+      AppLocale.en: "Download failed — try again",
+    },
+    'openingInstaller': {
+      AppLocale.ru: 'Открываем установщик…',
+      AppLocale.en: 'Opening the installer…',
+    },
     'professorInDevTitle': {
       AppLocale.ru: 'Профессор скоро откроет двери',
       AppLocale.en: 'The Professor is almost ready',

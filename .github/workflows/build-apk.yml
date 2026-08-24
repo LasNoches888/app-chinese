@@ -2,12 +2,19 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    # The repo's actual branch is master — this used to say "main", which
+    # meant a push here never auto-triggered a build; every APK before
+    # this comment was a manually dispatched run.
+    branches: [master]
   workflow_dispatch: {}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Needed for the release step below to create/update a GitHub Release
+    # with the default GITHUB_TOKEN — that token is read-only by default.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -49,3 +56,19 @@ jobs:
         with:
           name: app-chinese-release-apk
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Publish a GitHub Release
+        # This is what the in-app update check reads: AppUpdateService
+        # asks the GitHub API for the latest release, compares its tag's
+        # number against the running app's versionCode, and offers the
+        # attached APK as the download. The tag is exactly the run number
+        # so that comparison is a plain integer diff, not a semver parse.
+        # workflow_dispatch runs don't get a real push event/SHA to
+        # release from, so this only runs for actual pushes.
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Build ${{ github.run_number }}
+          body: ${{ github.event.head_commit.message }}
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk

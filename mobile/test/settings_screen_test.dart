@@ -57,7 +57,21 @@ void main() {
     expect(find.text('Uchi'), findsOneWidget);
     expect(find.text('Внешний вид'), findsOneWidget);
     expect(find.text('Цели и напоминания'), findsOneWidget);
+    expect(find.text('Обновления'), findsOneWidget);
     expect(find.text('Данные'), findsOneWidget);
+  });
+
+  testWidgets('the updates section is present and offers a check button', (
+    tester,
+  ) async {
+    // The version line itself needs a real platform channel
+    // (PackageInfo.fromPlatform() has no fallback under `flutter
+    // test`) — that's covered with an injected loader in
+    // update_section_test.dart instead. This only confirms the
+    // section actually made it into the settings list.
+    await pumpSettings(tester);
+
+    expect(find.text('Проверить обновления'), findsOneWidget);
   });
 
   testWidgets('renders the interactive controls', (tester) async {
