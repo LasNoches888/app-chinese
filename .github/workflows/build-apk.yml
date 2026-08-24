@@ -36,7 +36,14 @@ jobs:
 
       - name: Build release APK
         working-directory: mobile
-        run: flutter build apk --release
+        # --build-number ties versionCode to the CI run, which always
+        # increases — the debug key is pinned (see debug.keystore) so a
+        # signature match is never the problem, but without a rising
+        # versionCode too, Android has been known to treat re-installing
+        # an APK it considers "the same version" as a no-op on some OEM
+        # installers instead of actually replacing it. This also makes
+        # the running build visible under Settings > Apps > Uchi.
+        run: flutter build apk --release --build-number=${{ github.run_number }}
 
       - uses: actions/upload-artifact@v4
         with:
