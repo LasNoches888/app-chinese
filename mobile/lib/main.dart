@@ -1,5 +1,9 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'api/app_settings.dart';
 import 'app_repositories.dart';
@@ -30,6 +34,16 @@ Future<void> main() async {
       ),
     ),
   );
+
+  // sqflite talks to Android/iOS's platform channel by default and has
+  // no desktop implementation — Windows (and Linux, same story) needs
+  // the FFI-backed factory pointed at the bundled sqlite3.dll instead,
+  // or every database call throws "databaseFactory not initialized"
+  // before a single screen renders.
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   final settings = AppSettings();
   await settings.load();
@@ -87,6 +101,21 @@ class AppChinese extends StatelessWidget {
       themeMode: settings.themeMode,
       theme: _theme(Brightness.light),
       darkTheme: _theme(Brightness.dark),
+      // Every screen was built assuming a phone-width viewport — on a
+      // desktop window that's suddenly 1280px+ wide, the same layouts
+      // stretch edge to edge and run their trailing content (chips,
+      // badges, buttons) straight off the visible window instead of
+      // wrapping or centering. A generous-but-bounded ceiling here keeps
+      // every screen readable (long text lines, wide cards) without
+      // needing a max-width constraint added to two dozen screens
+      // individually; HomeShell below adds its own desktop navigation
+      // rail on top of this for the five main tabs specifically.
+      builder: (context, child) => Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          child: child,
+        ),
+      ),
       home: const _RootScreen(),
     );
   }
@@ -139,62 +168,109 @@ class _HomeShellState extends State<HomeShell> {
     PlansScreen(),
   ];
 
+  /// Below this, a NavigationRail would leave less room for content than
+  /// a phone screen already gets — the bottom bar stays the right call
+  /// all the way up to a small desktop window.
+  static const _railBreakpoint = 700.0;
+
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    return Scaffold(
+    final destinations = [
+      (
+        icon: Icons.menu_book_outlined,
+        selected: Icons.menu_book,
+        label: settings.t('lessons'),
+      ),
+      (
+        icon: Icons.refresh_outlined,
+        selected: Icons.refresh,
+        label: settings.t('review'),
+      ),
+      (
+        icon: Icons.auto_awesome_outlined,
+        selected: Icons.auto_awesome,
+        label: settings.t('practiceHub'),
+      ),
+      (
+        icon: Icons.bar_chart_outlined,
+        selected: Icons.bar_chart,
+        label: settings.t('progress'),
+      ),
+      (
+        icon: Icons.map_outlined,
+        selected: Icons.map,
+        label: settings.t('plansTitle'),
+      ),
+    ];
+
+    final body = AnimatedSwitcher(
       // Cross-fades tabs with a slight upward drift instead of swapping
       // them instantly.
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 260),
-        switchInCurve: Curves.easeOutCubic,
-        switchOutCurve: Curves.easeInCubic,
-        transitionBuilder: (child, animation) => FadeTransition(
-          opacity: animation,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0, 0.015),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          ),
-        ),
-        child: KeyedSubtree(
-          key: ValueKey<int>(_index),
-          child: _screens[_index],
+      duration: const Duration(milliseconds: 260),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.015),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        destinations: [
-          NavigationDestination(
-            icon: const Icon(Icons.menu_book_outlined),
-            selectedIcon: const Icon(Icons.menu_book),
-            label: settings.t('lessons'),
+      child: KeyedSubtree(key: ValueKey<int>(_index), child: _screens[_index]),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < _railBreakpoint) {
+          return Scaffold(
+            body: body,
+            bottomNavigationBar: NavigationBar(
+              selectedIndex: _index,
+              onDestinationSelected: (i) => setState(() => _index = i),
+              destinations: [
+                for (final d in destinations)
+                  NavigationDestination(
+                    icon: Icon(d.icon),
+                    selectedIcon: Icon(d.selected),
+                    label: d.label,
+                  ),
+              ],
+            ),
+          );
+        }
+
+        // Wide enough for a desktop window to feel like one — a
+        // permanent rail reads as native there, where a bottom bar
+        // would just be a mobile habit with room to spare either side.
+        return Scaffold(
+          body: Row(
+            children: [
+              NavigationRail(
+                selectedIndex: _index,
+                onDestinationSelected: (i) => setState(() => _index = i),
+                extended: constraints.maxWidth >= 860,
+                labelType: constraints.maxWidth >= 860
+                    ? NavigationRailLabelType.none
+                    : NavigationRailLabelType.all,
+                destinations: [
+                  for (final d in destinations)
+                    NavigationRailDestination(
+                      icon: Icon(d.icon),
+                      selectedIcon: Icon(d.selected),
+                      label: Text(d.label),
+                    ),
+                ],
+              ),
+              const VerticalDivider(width: 1),
+              Expanded(child: body),
+            ],
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.refresh_outlined),
-            selectedIcon: const Icon(Icons.refresh),
-            label: settings.t('review'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.auto_awesome_outlined),
-            selectedIcon: const Icon(Icons.auto_awesome),
-            label: settings.t('practiceHub'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.bar_chart_outlined),
-            selectedIcon: const Icon(Icons.bar_chart),
-            label: settings.t('progress'),
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.map_outlined),
-            selectedIcon: const Icon(Icons.map),
-            label: settings.t('plansTitle'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

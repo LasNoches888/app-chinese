@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Android APK and Windows Installer
 
 on:
   push:
@@ -9,7 +9,34 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  build:
+  test:
+    # Shared gate for both platform builds — Dart tests are OS-agnostic,
+    # so running them once here instead of again inside each build job
+    # halves the CI time that would otherwise go to duplicate test runs.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze
+
+      - name: Test
+        working-directory: mobile
+        timeout-minutes: 5
+        run: flutter test
+
+  build-android:
+    needs: test
     runs-on: ubuntu-latest
     # Needed for the release step below to create/update a GitHub Release
     # with the default GITHUB_TOKEN — that token is read-only by default.
@@ -32,15 +59,6 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
-      - name: Analyze
-        working-directory: mobile
-        run: flutter analyze
-
-      - name: Test
-        working-directory: mobile
-        timeout-minutes: 5
-        run: flutter test
-
       - name: Build release APK
         working-directory: mobile
         # --build-number ties versionCode to the CI run, which always
@@ -60,11 +78,12 @@ jobs:
       - name: Publish a GitHub Release
         # This is what the in-app update check reads: AppUpdateService
         # asks the GitHub API for the latest release, compares its tag's
-        # number against the running app's versionCode, and offers the
-        # attached APK as the download. The tag is exactly the run number
-        # so that comparison is a plain integer diff, not a semver parse.
-        # workflow_dispatch runs don't get a real push event/SHA to
-        # release from, so this only runs for actual pushes.
+        # number against the running app's build number, and offers the
+        # matching attached asset (.apk here, the Windows installer from
+        # the job below) as the download. The tag is exactly the run
+        # number so that comparison is a plain integer diff, not a semver
+        # parse. workflow_dispatch runs don't get a real push event/SHA
+        # to release from, so this only runs for actual pushes.
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
@@ -72,3 +91,53 @@ jobs:
           name: Build ${{ github.run_number }}
           body: ${{ github.event.head_commit.message }}
           files: mobile/build/app/outputs/flutter-apk/app-release.apk
+
+  build-windows:
+    needs: [test, build-android]
+    # Depends on build-android (not just test) so the release for this
+    # tag already exists by the time this job attaches to it — two jobs
+    # racing to create the same release from scratch is exactly the kind
+    # of thing that only fails intermittently.
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.0'
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Build release Windows app
+        working-directory: mobile
+        run: flutter build windows --release --build-number=${{ github.run_number }}
+
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup -y --no-progress
+          echo "C:\Program Files (x86)\Inno Setup 6" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build the installer
+        # Packages the release build (exe + plugin DLLs + data/) into one
+        # self-contained UchiSetup.exe — see windows/installer/uchi.iss
+        # for why: sharing a folder of files means someone has to keep
+        # them all together, sharing one installer doesn't.
+        working-directory: mobile
+        run: ISCC.exe windows\installer\uchi.iss
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uchi-windows-installer
+          path: mobile/build/installer/UchiSetup.exe
+
+      - name: Attach the installer to the same release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          files: mobile/build/installer/UchiSetup.exe

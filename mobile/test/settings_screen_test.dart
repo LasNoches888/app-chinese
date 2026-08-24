@@ -7,6 +7,11 @@ import 'package:app_chinese/api/app_settings.dart';
 import 'package:app_chinese/app_repositories.dart';
 import 'package:app_chinese/screens/settings_screen.dart';
 
+/// The real value, captured before any test overrides it, so it can be
+/// restored — this file runs alongside others in the same process and a
+/// leaked override would leak into them too.
+final _realSupportsSelfUpdate = debugSupportsSelfUpdate;
+
 /// Regression coverage for the Settings screen rendering at all. It shipped
 /// broken twice — opening it showed only the background with none of the
 /// controls — because nothing exercised it outside a real device, so the
@@ -19,6 +24,8 @@ void main() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfiNoIsolate;
   });
+
+  tearDown(() => debugSupportsSelfUpdate = _realSupportsSelfUpdate);
 
   Future<void> pumpSettings(WidgetTester tester) async {
     late AppSettings settings;
@@ -52,6 +59,7 @@ void main() {
   testWidgets('renders every settings section, not just the background', (
     tester,
   ) async {
+    debugSupportsSelfUpdate = true;
     await pumpSettings(tester);
 
     expect(find.text('Uchi'), findsOneWidget);
@@ -69,9 +77,23 @@ void main() {
     // test`) — that's covered with an injected loader in
     // update_section_test.dart instead. This only confirms the
     // section actually made it into the settings list.
+    debugSupportsSelfUpdate = true;
     await pumpSettings(tester);
 
     expect(find.text('Проверить обновления'), findsOneWidget);
+  });
+
+  testWidgets('the updates section is absent where CI ships no installer', (
+    tester,
+  ) async {
+    // Self-update walks a downloaded asset through the OS's own
+    // installer — offering it on a platform CI doesn't publish one for
+    // would be a button that can never actually do anything.
+    debugSupportsSelfUpdate = false;
+    await pumpSettings(tester);
+
+    expect(find.text('Обновления'), findsNothing);
+    expect(find.text('Проверить обновления'), findsNothing);
   });
 
   testWidgets('renders the interactive controls', (tester) async {

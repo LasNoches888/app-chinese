@@ -8,51 +8,115 @@ import 'package:http/testing.dart';
 import 'package:app_chinese/services/app_update_service.dart';
 
 /// There's no app store here — updates are this repo's own GitHub
-/// Releases, and comparing versions is a plain integer diff on the CI run
-/// number rather than a semver parse (see AppUpdateService). These pin
-/// down that comparison and the failure/no-update split it depends on,
-/// using a mock HTTP client rather than the real GitHub API — a unit
-/// test hitting the network would be slow, flaky, and prove nothing
-/// about this logic that a fixed response can't.
+/// Releases, one asset per platform attached to the same tagged release
+/// (an .apk for Android, an installer exe for Windows — see
+/// build-apk.yml), and comparing versions is a plain integer diff on the
+/// CI run number rather than a semver parse (see AppUpdateService).
+/// These pin down that comparison, the per-platform asset match, and the
+/// failure/no-update split it depends on, using a mock HTTP client
+/// rather than the real GitHub API — a unit test hitting the network
+/// would be slow, flaky, and prove nothing about this logic that a fixed
+/// response can't.
 void main() {
   http.Response releaseResponse({
     required String tag,
     List<Map<String, Object?>> assets = const [],
   }) => http.Response(jsonEncode({'tag_name': tag, 'assets': assets}), 200);
 
-  Map<String, Object?> apkAsset({
-    String name = 'app-release.apk',
-    String url = 'https://example.com/app-release.apk',
+  Map<String, Object?> asset({
+    required String name,
+    String url = 'https://example.com/download',
     int size = 12345,
   }) => {'name': name, 'browser_download_url': url, 'size': size};
 
   group('checkForUpdate', () {
     test('a higher remote build is reported as available', () async {
       final client = MockClient(
-        (_) async => releaseResponse(tag: 'build-42', assets: [apkAsset()]),
+        (_) async => releaseResponse(
+          tag: 'build-42',
+          assets: [asset(name: 'app-release.apk')],
+        ),
       );
 
       final update = await AppUpdateService.checkForUpdate(
         client: client,
         localBuildNumber: 10,
+        assetSuffix: '.apk',
       );
 
       expect(update, isNotNull);
       expect(update!.buildNumber, 42);
-      expect(update.apkUrl, 'https://example.com/app-release.apk');
+      expect(update.assetUrl, 'https://example.com/download');
     });
 
     test('an equal or lower remote build reports no update', () async {
       final client = MockClient(
-        (_) async => releaseResponse(tag: 'build-10', assets: [apkAsset()]),
+        (_) async => releaseResponse(
+          tag: 'build-10',
+          assets: [asset(name: 'app-release.apk')],
+        ),
       );
 
       expect(
         await AppUpdateService.checkForUpdate(
           client: client,
           localBuildNumber: 10,
+          assetSuffix: '.apk',
         ),
         isNull,
+      );
+    });
+
+    test(
+      'picks the Windows installer when asked for the Windows suffix',
+      () async {
+        // Both assets present in the same release — a Windows client must
+        // not grab the .apk (which it couldn't do anything with anyway).
+        final client = MockClient(
+          (_) async => releaseResponse(
+            tag: 'build-7',
+            assets: [
+              asset(
+                name: 'app-release.apk',
+                url: 'https://example.com/app-release.apk',
+              ),
+              asset(
+                name: 'UchiSetup.exe',
+                url: 'https://example.com/UchiSetup.exe',
+              ),
+            ],
+          ),
+        );
+
+        final update = await AppUpdateService.checkForUpdate(
+          client: client,
+          localBuildNumber: 1,
+          assetSuffix: 'Setup.exe',
+        );
+
+        expect(update!.assetName, 'UchiSetup.exe');
+        expect(update.assetUrl, 'https://example.com/UchiSetup.exe');
+      },
+    );
+
+    test('a release missing this platform\'s asset is a failure', () async {
+      // Not "no update" — a release that only shipped an .apk this run
+      // (say the Windows job failed) has to read as "couldn't check" on
+      // Windows, not silently as "you're current".
+      final client = MockClient(
+        (_) async => releaseResponse(
+          tag: 'build-9',
+          assets: [asset(name: 'app-release.apk')],
+        ),
+      );
+
+      expect(
+        () => AppUpdateService.checkForUpdate(
+          client: client,
+          localBuildNumber: 1,
+          assetSuffix: 'Setup.exe',
+        ),
+        throwsA(isA<FormatException>()),
       );
     });
 
@@ -63,6 +127,7 @@ void main() {
         () => AppUpdateService.checkForUpdate(
           client: client,
           localBuildNumber: 1,
+          assetSuffix: '.apk',
         ),
         throwsA(isA<HttpException>()),
       );
@@ -70,26 +135,9 @@ void main() {
 
     test('a tag with no number in it is a failure', () async {
       final client = MockClient(
-        (_) async => releaseResponse(tag: 'latest', assets: [apkAsset()]),
-      );
-
-      expect(
-        () => AppUpdateService.checkForUpdate(
-          client: client,
-          localBuildNumber: 1,
-        ),
-        throwsA(isA<FormatException>()),
-      );
-    });
-
-    test('a release with no .apk asset is a failure', () async {
-      // Otherwise "update available" would point at nothing installable.
-      final client = MockClient(
         (_) async => releaseResponse(
-          tag: 'build-99',
-          assets: [
-            {'name': 'source.zip', 'browser_download_url': '...', 'size': 1},
-          ],
+          tag: 'latest',
+          assets: [asset(name: 'app-release.apk')],
         ),
       );
 
@@ -97,6 +145,7 @@ void main() {
         () => AppUpdateService.checkForUpdate(
           client: client,
           localBuildNumber: 1,
+          assetSuffix: '.apk',
         ),
         throwsA(isA<FormatException>()),
       );
@@ -106,12 +155,16 @@ void main() {
       String? seenUserAgent;
       final client = MockClient((request) async {
         seenUserAgent = request.headers['User-Agent'];
-        return releaseResponse(tag: 'build-5', assets: [apkAsset()]);
+        return releaseResponse(
+          tag: 'build-5',
+          assets: [asset(name: 'app-release.apk')],
+        );
       });
 
       await AppUpdateService.checkForUpdate(
         client: client,
         localBuildNumber: 1,
+        assetSuffix: '.apk',
       );
 
       expect(seenUserAgent, isNotNull);
@@ -135,7 +188,11 @@ void main() {
         addTearDown(() => dir.delete(recursive: true));
 
         final path = await AppUpdateService.download(
-          const AppUpdate(buildNumber: 7, apkUrl: 'https://example.com/x.apk'),
+          const AppUpdate(
+            buildNumber: 7,
+            assetName: 'app-release.apk',
+            assetUrl: 'https://example.com/x.apk',
+          ),
           client: client,
           saveDir: dir,
         );
@@ -144,8 +201,36 @@ void main() {
         expect(await file.exists(), isTrue);
         expect(await file.readAsBytes(), bytes);
         expect(path, contains('7'));
+        expect(path, endsWith('.apk'));
       },
     );
+
+    test('keeps the Windows installer\'s .exe extension', () async {
+      // Windows decides how to open a file by its extension — saved
+      // without one, a downloaded Setup.exe just wouldn't run.
+      final bytes = [1, 2, 3];
+      final client = MockClient(
+        (_) async => http.Response.bytes(
+          bytes,
+          200,
+          headers: {'content-length': '${bytes.length}'},
+        ),
+      );
+      final dir = await Directory.systemTemp.createTemp('update_test');
+      addTearDown(() => dir.delete(recursive: true));
+
+      final path = await AppUpdateService.download(
+        const AppUpdate(
+          buildNumber: 3,
+          assetName: 'UchiSetup.exe',
+          assetUrl: 'https://example.com/UchiSetup.exe',
+        ),
+        client: client,
+        saveDir: dir,
+      );
+
+      expect(path, endsWith('.exe'));
+    });
 
     test('reports progress as the download completes', () async {
       final bytes = List<int>.filled(1000, 1);
@@ -161,7 +246,11 @@ void main() {
 
       final seen = <double>[];
       await AppUpdateService.download(
-        const AppUpdate(buildNumber: 1, apkUrl: 'https://example.com/x.apk'),
+        const AppUpdate(
+          buildNumber: 1,
+          assetName: 'app-release.apk',
+          assetUrl: 'https://example.com/x.apk',
+        ),
         client: client,
         saveDir: dir,
         onProgress: seen.add,
@@ -182,7 +271,11 @@ void main() {
 
       expect(
         () => AppUpdateService.download(
-          const AppUpdate(buildNumber: 1, apkUrl: 'https://example.com/x.apk'),
+          const AppUpdate(
+            buildNumber: 1,
+            assetName: 'app-release.apk',
+            assetUrl: 'https://example.com/x.apk',
+          ),
           client: client,
           saveDir: dir,
         ),

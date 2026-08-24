@@ -22,6 +22,13 @@ void main() {
   });
 
   Future<AppSettings> pumpApp(WidgetTester tester) async {
+    // Phone-width: HomeShell swaps the bottom NavigationBar these tests
+    // look for with a desktop NavigationRail past 700 logical px.
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     SharedPreferences.setMockInitialValues({});
     late AppSettings settings;
     late AppRepositories repos;

@@ -20,6 +20,14 @@ void main() {
   });
 
   testWidgets('every main tab offers chat and settings', (tester) async {
+    // Phone-width: HomeShell switches to a desktop NavigationRail past
+    // 700 logical px, and this test is specifically about the bottom
+    // NavigationBar's tabs.
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     SharedPreferences.setMockInitialValues({});
     late AppSettings settings;
     late AppRepositories repos;

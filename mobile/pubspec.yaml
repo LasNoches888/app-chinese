@@ -25,12 +25,15 @@ dependencies:
   package_info_plus: ^10.2.1
   path_provider: ^2.1.6
   open_filex: ^4.7.0
+  # sqflite has no native implementation on desktop — Windows needs this
+  # FFI-backed factory instead (see main.dart). Previously dev-only,
+  # since tests were the only thing using it before desktop existed.
+  sqflite_common_ffi: ^2.3.3
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
-  sqflite_common_ffi: ^2.3.3
   flutter_launcher_icons: ^0.14.4
 
 flutter:

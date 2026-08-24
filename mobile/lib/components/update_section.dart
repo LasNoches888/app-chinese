@@ -96,9 +96,10 @@ class _UpdateSectionState extends State<UpdateSection> {
         },
       );
       if (!mounted) return;
-      // Fires the system installer and returns immediately — the actual
-      // install happens in Android's own UI from here on, so there is no
-      // further state to track: this card stays as it is underneath.
+      // Fires the OS's own installer and returns immediately — the
+      // actual install happens in that UI from here on (and, on
+      // Windows, closes this app to do it — see CloseApplications in
+      // uchi.iss), so there is no further state to track here.
       await AppUpdateService.install(path);
     } catch (_) {
       if (!mounted) return;

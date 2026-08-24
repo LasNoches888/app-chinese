@@ -1,3 +1,6 @@
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb, visibleForTesting;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +18,15 @@ const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
 const _accentGreen = Color(0xFF23C58F);
 const _accentBlue = Color(0xFF4E7CFF);
+
+/// Whether self-update is offered — Android and Windows, the two
+/// platforms CI actually publishes an installer asset for (see
+/// AppUpdateService and build-apk.yml). A mutable top-level var rather
+/// than reading Platform.* inline so a test can flip it without needing
+/// to actually run on either platform.
+@visibleForTesting
+bool debugSupportsSelfUpdate =
+    !kIsWeb && (Platform.isAndroid || Platform.isWindows);
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -270,12 +282,13 @@ class _SettingsScreenState extends State<SettingsScreen>
                 ),
               ],
             ),
-            _SectionCard(
-              icon: Icons.system_update_outlined,
-              accent: _accentBlue,
-              title: settings.t('updatesSection'),
-              children: const [UpdateSection()],
-            ),
+            if (debugSupportsSelfUpdate)
+              _SectionCard(
+                icon: Icons.system_update_outlined,
+                accent: _accentBlue,
+                title: settings.t('updatesSection'),
+                children: const [UpdateSection()],
+              ),
             _SectionCard(
               icon: Icons.storage_outlined,
               accent: Colors.blueGrey,
