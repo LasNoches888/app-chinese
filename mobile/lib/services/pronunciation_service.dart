@@ -1,5 +1,10 @@
+import 'dart:async';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import 'offline_speech_model_service.dart';
 import 'pinyin.dart';
 
 /// How close the learner's attempt was, best first.
@@ -87,6 +92,27 @@ class PronunciationService {
   static bool _initialized = false;
   static bool _available = false;
 
+  static const _onDeviceConfirmedKey = 'pronunciation_on_device_confirmed';
+
+  /// Persisted once a `listen()` with `onDevice: true` completes without a
+  /// language-support error — after that we know this device can actually
+  /// serve on-device recognition for the target locale, so every later
+  /// attempt skips straight to it instead of re-probing.
+  static bool _onDeviceConfirmed = false;
+
+  /// In-memory only, so it resets each app launch: set when the on-device
+  /// probe attempt this session came back with a language-support error,
+  /// so the rest of the session stops retrying on-device — the offline
+  /// model may still be mid-download (see [OfflineSpeechModelService]) and
+  /// could be ready by the next launch.
+  static bool _onDeviceFailedThisSession = false;
+
+  /// Whether the in-flight `listen()` call is the one deciding
+  /// [_onDeviceConfirmed] / [_onDeviceFailedThisSession] for this device.
+  static bool _onDeviceProbeInFlight = false;
+
+  static String? _lastErrorMsg;
+
   static bool get isListening => _speech.isListening;
 
   /// Probes for a working speech recognizer. Safe to call repeatedly and
@@ -98,7 +124,7 @@ class PronunciationService {
     _initialized = true;
     try {
       _available = await _speech
-          .initialize(onError: (_) {}, onStatus: (_) {})
+          .initialize(onError: _onGlobalError, onStatus: _onGlobalStatus)
           // Some environments (no recognizer installed, no platform
           // channel at all in tests) never resolve initialize()'s
           // completer rather than rejecting it — without a timeout the
@@ -108,7 +134,54 @@ class PronunciationService {
     } catch (_) {
       _available = false;
     }
+    if (_available) {
+      // Fire-and-forget: asks Android to fetch the on-device model for
+      // next time, doesn't block this screen on it.
+      unawaited(OfflineSpeechModelService.ensureDownloaded());
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        _onDeviceConfirmed = prefs.getBool(_onDeviceConfirmedKey) ?? false;
+      } catch (_) {
+        // No local storage available (e.g. a test harness) — just means
+        // every session re-probes on-device, which is harmless.
+      }
+    }
     return _available;
+  }
+
+  static void _onGlobalError(SpeechRecognitionError error) {
+    _lastErrorMsg = error.errorMsg;
+  }
+
+  static void _onGlobalStatus(String status) {
+    if (!_onDeviceProbeInFlight) return;
+    if (status != SpeechToText.doneStatus &&
+        status != SpeechToText.notListeningStatus) {
+      return;
+    }
+    _onDeviceProbeInFlight = false;
+    if (_lastErrorMsg == 'error_language_not_supported' ||
+        _lastErrorMsg == 'error_language_unavailable') {
+      // This device doesn't have (or doesn't support) the offline model
+      // for the target locale yet — fall back for the rest of this
+      // session rather than fail every subsequent attempt too.
+      _onDeviceFailedThisSession = true;
+      return;
+    }
+    if (!_onDeviceConfirmed) {
+      _onDeviceConfirmed = true;
+      unawaited(_persistOnDeviceConfirmed());
+    }
+  }
+
+  static Future<void> _persistOnDeviceConfirmed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_onDeviceConfirmedKey, true);
+    } catch (_) {
+      // Nothing to persist to — the in-memory flag still speeds up the
+      // rest of this session.
+    }
   }
 
   /// Starts listening. [onResult] receives every transcription the
@@ -120,6 +193,15 @@ class PronunciationService {
     String localeId = 'zh-CN',
   }) async {
     if (!await ensureInitialized()) return;
+    // Once a device has proven it can serve on-device recognition, always
+    // ask for it — it's faster and needs no network. Until then, try it
+    // at most once per app launch (see [_onGlobalStatus]): if the offline
+    // model isn't there yet, that one attempt falls back to the regular
+    // recognizer as if [onDevice] was never requested, and we don't
+    // retry again this session.
+    final tryOnDevice = _onDeviceConfirmed || !_onDeviceFailedThisSession;
+    _onDeviceProbeInFlight = !_onDeviceConfirmed && tryOnDevice;
+    _lastErrorMsg = null;
     await _speech.listen(
       onResult: (result) => onResult(
         result.alternates.map((a) => a.recognizedWords).toList(),
@@ -135,6 +217,7 @@ class PronunciationService {
         // two-syllable word.
         pauseFor: const Duration(seconds: 1),
         listenFor: const Duration(seconds: 6),
+        onDevice: tryOnDevice,
       ),
     );
   }

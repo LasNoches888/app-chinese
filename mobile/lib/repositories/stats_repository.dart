@@ -6,13 +6,13 @@ import '../services/streak_service.dart';
 /// Owns the single-row user_stats table: XP/level inputs, streak, and the
 /// daily goal.
 ///
-/// `hearts_current`/`hearts_max`/`hearts_updated_at` still exist as
-/// columns — dropping them would be a destructive migration for no
-/// benefit — but nothing here reads or writes them any more. Mistakes no
-/// longer cost anything beyond landing the word back in spaced
+/// Mistakes cost nothing beyond landing the word back in spaced
 /// repetition; there used to be a five-heart budget that could lock a
 /// lesson mid-way through, which was pure friction with nothing to show
-/// for it.
+/// for it. The `hearts_*` columns survive that removal (see [UserStats]
+/// for why they aren't migrated away) and are only ever written at the
+/// two places a fresh row is created, because `hearts_updated_at` is NOT
+/// NULL without a default.
 class StatsRepository {
   final Database db;
 
@@ -29,9 +29,6 @@ class StatsRepository {
       'current_streak': stats.currentStreak,
       'longest_streak': stats.longestStreak,
       'last_activity_date': stats.lastActivityDate?.toIso8601String(),
-      'hearts_current': stats.heartsCurrent,
-      'hearts_max': stats.heartsMax,
-      'hearts_updated_at': stats.heartsUpdatedAt.millisecondsSinceEpoch,
       'daily_goal_xp': stats.dailyGoalXp,
       'xp_today': stats.xpToday,
       'xp_today_date': stats.xpTodayDate,
@@ -49,7 +46,15 @@ class StatsRepository {
 
   /// Adds XP, rolls `xp_today` over on a date change, and records today's
   /// streak activity. Call once per answered question.
-  Future<UserStats> addXpAndRecordActivity(int xp, {DateTime? now}) async {
+  ///
+  /// [pronunciationCompleted] folds in the pronunciation-check counter so
+  /// callers that need both don't pay for two separate read-modify-write
+  /// round trips to the same row.
+  Future<UserStats> addXpAndRecordActivity(
+    int xp, {
+    DateTime? now,
+    bool pronunciationCompleted = false,
+  }) async {
     final effectiveNow = now ?? DateTime.now();
     var stats = await getStats();
     final todayKey = _dateKey(effectiveNow);
@@ -77,6 +82,9 @@ class StatsRepository {
       longestStreak: streakUpdate.longestStreak,
       lastActivityDate: streakUpdate.lastActivityDate,
       streakFreezes: newFreezeCount,
+      pronunciationCompleted: pronunciationCompleted
+          ? stats.pronunciationCompleted + 1
+          : stats.pronunciationCompleted,
     );
     await _save(stats);
     return stats;
@@ -138,6 +146,8 @@ class StatsRepository {
     await db.delete('user_stats');
     await db.insert('user_stats', {
       'id': 1,
+      // Dead column from the removed lives system, but NOT NULL with no
+      // default, so a fresh row still has to name it.
       'hearts_updated_at': DateTime.now().millisecondsSinceEpoch,
     });
   }
