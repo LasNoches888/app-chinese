@@ -122,6 +122,10 @@ class Strings {
       AppLocale.ru: 'Новое достижение!',
       AppLocale.en: 'New achievement!',
     },
+    'rewardBonusXp': {
+      AppLocale.ru: 'Бонус: +{xp} XP!',
+      AppLocale.en: 'Bonus: +{xp} XP!',
+    },
 
     // Progress screen
     'level': {AppLocale.ru: 'Уровень', AppLocale.en: 'Level'},

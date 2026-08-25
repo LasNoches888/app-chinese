@@ -5,8 +5,10 @@ import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/app_bar_actions.dart';
+import '../components/mascot_widget.dart';
 import '../models/deck.dart';
 import '../models/user_stats.dart';
+import '../services/mascot_service.dart';
 import 'lesson_session_screen.dart';
 
 const _brandStart = Color(0xFFFF7A59);
@@ -220,7 +222,16 @@ class _TodayCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Image.asset('assets/mascot/panda_03.png', height: 64),
+              // Asleep if the streak has gone cold for a couple of days,
+              // otherwise wearing whatever outfit the current level has
+              // earned — the closest a fixed set of stills can get to a
+              // companion that grows alongside the learner.
+              MascotWidget(
+                asset: s == null
+                    ? 'assets/mascot/panda_02.png'
+                    : MascotService.homeAsset(s),
+                size: 64,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../api/app_settings.dart';
+import '../api/app_strings.dart' show AppLocale;
 import '../models/achievement.dart';
 import '../models/word.dart';
+import '../services/reward_service.dart';
 
 class LessonResult {
   final int xpEarned;
@@ -11,12 +13,17 @@ class LessonResult {
   final bool isReview;
   final List<String> newAchievements;
 
+  /// An occasional unprompted extra — bonus XP, a cheer, or a fact about
+  /// China. Null most of the time by design; see [RewardService].
+  final LessonReward? reward;
+
   const LessonResult({
     required this.xpEarned,
     required this.mistakes,
     required this.perfect,
     required this.isReview,
     required this.newAchievements,
+    this.reward,
   });
 }
 
@@ -79,6 +86,10 @@ class ResultsScreen extends StatelessWidget {
                     ),
                   ),
                 ),
+                if (result.reward != null) ...[
+                  const SizedBox(height: 16),
+                  _RewardCard(reward: result.reward!, settings: settings),
+                ],
                 if (result.newAchievements.isNotEmpty) ...[
                   const SizedBox(height: 20),
                   Text(
@@ -166,4 +177,47 @@ class ResultsScreen extends StatelessWidget {
   String _titleKeyFor(String code) => kAchievementDefs
       .firstWhere((a) => a.code == code, orElse: () => kAchievementDefs.first)
       .titleKey;
+}
+
+/// The occasional surprise from [RewardService] — a little card that only
+/// shows up when there's actually something to say, so it stays a treat
+/// rather than more boilerplate on every results screen.
+class _RewardCard extends StatelessWidget {
+  final LessonReward reward;
+  final AppSettings settings;
+
+  const _RewardCard({required this.reward, required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    final ru = settings.locale == AppLocale.ru;
+    final (icon, text) = switch (reward.kind) {
+      RewardKind.bonusXp => (
+        '🎁',
+        settings.t('rewardBonusXp').replaceFirst('{xp}', '${reward.xp}'),
+      ),
+      RewardKind.cheer => ('🐼', ru ? reward.cheer!.ru : reward.cheer!.en),
+      RewardKind.fact => ('🧧', ru ? reward.fact!.ru : reward.fact!.en),
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.deepPurple.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.25)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 22)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(text, style: Theme.of(context).textTheme.bodyMedium),
+          ),
+        ],
+      ),
+    );
+  }
 }

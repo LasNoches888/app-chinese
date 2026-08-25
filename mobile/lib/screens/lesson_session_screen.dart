@@ -1,11 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/exercise_widgets.dart';
+import '../components/mascot_widget.dart';
 import '../models/exercise_question.dart';
 import '../services/exercise_generator.dart';
+import '../services/mascot_service.dart';
+import '../services/reward_service.dart';
 import '../services/xp_service.dart';
 import 'results_screen.dart';
 
@@ -49,11 +54,19 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   final Set<String> _mistakeIds = {};
   bool _loading = true;
   bool _answering = false;
+  MascotReaction _reaction = MascotReaction.idle;
+  Timer? _reactionTimer;
 
   @override
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void dispose() {
+    _reactionTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -79,6 +92,20 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     if (_answering) return;
     _answering = true;
     try {
+      // The exercise widgets already show their own inline feedback before
+      // calling this, so the mascot's reaction carries over into the next
+      // question rather than needing an extra pause of its own — it just
+      // fades back to neutral a moment after the new question appears.
+      _reactionTimer?.cancel();
+      setState(
+        () => _reaction = correct
+            ? MascotReaction.correct
+            : MascotReaction.incorrect,
+      );
+      _reactionTimer = Timer(const Duration(milliseconds: 1100), () {
+        if (mounted) setState(() => _reaction = MascotReaction.idle);
+      });
+
       final repos = context.read<AppRepositories>();
       final question = _questions![_index];
       final earned = XpService.xpForAnswer(correct);
@@ -116,6 +143,13 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
       await repos.stats.recordPerfectLesson();
     }
 
+    // Not every lesson — see RewardService for why that's the point.
+    final reward = RewardService.roll();
+    if (reward != null && reward.kind == RewardKind.bonusXp) {
+      await repos.stats.addXpAndRecordActivity(reward.xp);
+      _xpEarned += reward.xp;
+    }
+
     await widget.onFinished?.call();
     final latestStats = await repos.stats.getStats();
     final newAchievements = await repos.achievements.evaluateAndUnlock(
@@ -134,6 +168,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
             perfect: perfect,
             isReview: widget.isReview,
             newAchievements: newAchievements,
+            reward: reward,
           ),
           settings: settings,
           onContinue: () => Navigator.of(context).popUntil((r) => r.isFirst),
@@ -167,9 +202,23 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(value: progress, minHeight: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 8,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  MascotWidget(
+                    asset: MascotService.reactionAsset(_reaction),
+                    size: 36,
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
               Expanded(
