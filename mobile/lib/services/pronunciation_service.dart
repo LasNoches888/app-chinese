@@ -250,11 +250,45 @@ class PronunciationService {
     ];
   }
 
+  /// Grades that settle the verdict as soon as they show up in a partial
+  /// transcript — no more audio is going to change "right sounds, wrong
+  /// tone" back into "wrong word".
+  static const _conclusiveGrades = {
+    PronunciationGrade.correct,
+    PronunciationGrade.homophone,
+    PronunciationGrade.toneMiss,
+  };
+
   /// Whether an in-progress (partial) transcription is already good
   /// enough to stop listening and grade — saves waiting out the trailing
-  /// silence once the learner has clearly said the word.
+  /// silence once the outcome is already clear.
+  ///
+  /// Only checking for an exact hanzi match here used to mean the app
+  /// answered instantly when the learner got it right, but sat through
+  /// the full pause for the one case that matters most: right syllables,
+  /// wrong tone. Running the real grader against the partial fixes that —
+  /// [PronunciationGrade.toneMiss] is just as conclusive as an exact
+  /// match, so it gets the same early stop.
+  ///
+  /// [wrongWord] and [closeExtraWords] are deliberately excluded: an
+  /// early partial reading as "something else" can still resolve into the
+  /// target word as the recognizer keeps refining it, so those wait out
+  /// the natural pause rather than risk cutting the learner off mid-word.
   static bool isConclusive({
     required List<String> alternates,
     required String targetHanzi,
-  }) => alternates.map(clean).any((c) => c == targetHanzi);
+    required String targetPinyin,
+    Map<String, String> pinyinByHanzi = const {},
+  }) {
+    for (final heard in alternates.map(clean).where((c) => c.isNotEmpty)) {
+      final result = _gradeOne(
+        heard: heard,
+        targetHanzi: targetHanzi,
+        targetPinyin: targetPinyin,
+        pinyinByHanzi: pinyinByHanzi,
+      );
+      if (_conclusiveGrades.contains(result.grade)) return true;
+    }
+    return false;
+  }
 }

@@ -98,6 +98,8 @@ class _PronunciationCheckScreenState extends State<PronunciationCheckScreen>
         final conclusive = PronunciationService.isConclusive(
           alternates: alternates,
           targetHanzi: _current?.hanzi ?? '',
+          targetPinyin: _current?.pinyin ?? '',
+          pinyinByHanzi: _pinyinByHanzi,
         );
         if (isFinal || conclusive) {
           graded = true;

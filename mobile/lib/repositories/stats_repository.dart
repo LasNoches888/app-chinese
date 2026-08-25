@@ -1,11 +1,18 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../models/user_stats.dart';
-import '../services/hearts_service.dart';
 import '../services/streak_service.dart';
 
-/// Owns the single-row user_stats table: XP/level inputs, hearts (with
-/// time-based regen applied lazily on read), streak, and the daily goal.
+/// Owns the single-row user_stats table: XP/level inputs, streak, and the
+/// daily goal.
+///
+/// `hearts_current`/`hearts_max`/`hearts_updated_at` still exist as
+/// columns — dropping them would be a destructive migration for no
+/// benefit — but nothing here reads or writes them any more. Mistakes no
+/// longer cost anything beyond landing the word back in spaced
+/// repetition; there used to be a five-heart budget that could lock a
+/// lesson mid-way through, which was pure friction with nothing to show
+/// for it.
 class StatsRepository {
   final Database db;
 
@@ -13,22 +20,7 @@ class StatsRepository {
 
   Future<UserStats> getStats() async {
     final rows = await db.query('user_stats', where: 'id = 1');
-    final stats = UserStats.fromMap(rows.first);
-    return _applyHeartRegenIfNeeded(stats);
-  }
-
-  Future<UserStats> _applyHeartRegenIfNeeded(UserStats stats) async {
-    final (newHearts, newUpdatedAt) = HeartsService.applyRegen(
-      hearts: stats.heartsCurrent,
-      updatedAt: stats.heartsUpdatedAt,
-    );
-    if (newHearts == stats.heartsCurrent) return stats;
-    final updated = stats.copyWith(
-      heartsCurrent: newHearts,
-      heartsUpdatedAt: newUpdatedAt,
-    );
-    await _save(updated);
-    return updated;
+    return UserStats.fromMap(rows.first);
   }
 
   Future<void> _save(UserStats stats) async {
@@ -90,28 +82,6 @@ class StatsRepository {
     return stats;
   }
 
-  Future<UserStats> loseHeart() async {
-    var stats = await getStats();
-    if (stats.heartsCurrent <= 0) return stats;
-    final wasFull = stats.heartsCurrent >= stats.heartsMax;
-    stats = stats.copyWith(
-      heartsCurrent: stats.heartsCurrent - 1,
-      heartsUpdatedAt: wasFull ? DateTime.now() : stats.heartsUpdatedAt,
-    );
-    await _save(stats);
-    return stats;
-  }
-
-  Future<UserStats> restoreHeartsFully() async {
-    var stats = await getStats();
-    stats = stats.copyWith(
-      heartsCurrent: stats.heartsMax,
-      heartsUpdatedAt: DateTime.now(),
-    );
-    await _save(stats);
-    return stats;
-  }
-
   Future<UserStats> setDailyGoalXp(int xp) async {
     var stats = await getStats();
     stats = stats.copyWith(dailyGoalXp: xp);
@@ -158,10 +128,9 @@ class StatsRepository {
     return stats;
   }
 
-  /// Wipes all learning progress (XP, streak, hearts, SRS history,
-  /// completed lessons, achievements) back to a fresh install. The word
-  /// bank itself (words/decks) is untouched — it's seed content, not
-  /// user data.
+  /// Wipes all learning progress (XP, streak, SRS history, completed
+  /// lessons, achievements) back to a fresh install. The word bank itself
+  /// (words/decks) is untouched — it's seed content, not user data.
   Future<void> resetAllProgress() async {
     await db.delete('review_history');
     await db.delete('completed_lessons');

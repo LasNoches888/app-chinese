@@ -1,22 +1,23 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/exercise_widgets.dart';
-import '../components/hearts_row.dart';
 import '../models/exercise_question.dart';
-import '../models/user_stats.dart';
 import '../services/exercise_generator.dart';
-import '../services/hearts_service.dart';
 import '../services/xp_service.dart';
 import 'results_screen.dart';
 
 /// Runs a queue of exercises (a lesson, or a review session over due SRS
 /// words) end to end: question generation, grading against the local DB,
-/// hearts/XP bookkeeping, and handing off to ResultsScreen when done.
+/// and handing off to ResultsScreen when done.
+///
+/// A mistake costs nothing here beyond landing the word back in spaced
+/// repetition — there used to be a five-heart budget that could lock the
+/// whole lesson mid-way through. Learning a language is already the hard
+/// part; running out of attempts and being timed out of the app on top of
+/// it was pure friction with nothing to show for it.
 class LessonSessionScreen extends StatefulWidget {
   final List<String> wordIds;
   final String title;
@@ -44,14 +45,8 @@ class LessonSessionScreen extends StatefulWidget {
 class _LessonSessionScreenState extends State<LessonSessionScreen> {
   List<ExerciseQuestion>? _questions;
   int _index = 0;
-  int _hearts = 5;
-
-  /// Kept alongside [_hearts] purely so the out-of-hearts screen can show
-  /// a live countdown — that needs heartsUpdatedAt, not just the count.
-  UserStats? _stats;
   int _xpEarned = 0;
   final Set<String> _mistakeIds = {};
-  bool _outOfHearts = false;
   bool _loading = true;
   bool _answering = false;
 
@@ -65,7 +60,6 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     final repos = context.read<AppRepositories>();
     final lessonWords = await repos.words.getWordsByIds(widget.wordIds);
     final allWords = await repos.words.getAllWords();
-    final stats = await repos.stats.getStats();
     final questions = ExerciseGenerator.build(
       lessonWords: lessonWords,
       allWords: allWords,
@@ -74,9 +68,6 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     if (!mounted) return;
     setState(() {
       _questions = questions;
-      _hearts = stats.heartsCurrent;
-      _stats = stats;
-      _outOfHearts = stats.heartsCurrent <= 0 && questions.isNotEmpty;
       _loading = false;
     });
   }
@@ -84,7 +75,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   Future<void> _handleAnswer(bool correct) async {
     // Exercise widgets already guard against double-submission themselves,
     // but this is the shared choke point for every type — guard here too
-    // so a rapid double-tap can never double-write SRS/XP/hearts.
+    // so a rapid double-tap can never double-write SRS/XP.
     if (_answering) return;
     _answering = true;
     try {
@@ -98,31 +89,14 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         exerciseType: question.type.name,
       );
       await repos.stats.addXpAndRecordActivity(earned);
-
-      var hearts = _hearts;
-      UserStats? statsAfterHeart;
-      if (!correct) {
-        statsAfterHeart = await repos.stats.loseHeart();
-        hearts = statsAfterHeart.heartsCurrent;
-        _mistakeIds.add(question.wordId);
-      }
+      if (!correct) _mistakeIds.add(question.wordId);
 
       if (!mounted) return;
-      setState(() {
-        _xpEarned += earned;
-        _hearts = hearts;
-        if (statsAfterHeart != null) _stats = statsAfterHeart;
-      });
+      setState(() => _xpEarned += earned);
 
       final isLastQuestion = _index + 1 >= _questions!.length;
       if (isLastQuestion) {
-        // Every question got answered — always show results, even if the
-        // last answer also happened to drain the last heart. Running out
-        // of hearts only needs to block *further* questions, and there
-        // are none left.
         await _finish();
-      } else if (hearts <= 0) {
-        setState(() => _outOfHearts = true);
       } else {
         setState(() => _index += 1);
       }
@@ -140,11 +114,6 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     }
     if (perfect) {
       await repos.stats.recordPerfectLesson();
-    }
-    if (widget.isReview) {
-      // Documented reward for clearing your review queue: an instant full
-      // heart refill, in addition to the passive time-based regen.
-      await repos.stats.restoreHeartsFully();
     }
 
     await widget.onFinished?.call();
@@ -188,23 +157,11 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
       );
     }
 
-    if (_outOfHearts) {
-      return _OutOfHeartsView(settings: settings, stats: _stats);
-    }
-
     final progress = _index / _questions!.length;
     final question = _questions![_index];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(child: HeartsRow(hearts: _hearts)),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -283,114 +240,5 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
           onAnswer: _handleAnswer,
         );
     }
-  }
-}
-
-class _OutOfHeartsView extends StatefulWidget {
-  final AppSettings settings;
-  final UserStats? stats;
-
-  const _OutOfHeartsView({required this.settings, required this.stats});
-
-  @override
-  State<_OutOfHeartsView> createState() => _OutOfHeartsViewState();
-}
-
-class _OutOfHeartsViewState extends State<_OutOfHeartsView> {
-  Timer? _ticker;
-
-  @override
-  void initState() {
-    super.initState();
-    // "Wait for hearts to refill" with no number attached is the kind of
-    // dead end that just makes people close the app. HeartsService already
-    // knew how long the wait was — nothing was showing it.
-    _ticker = Timer.periodic(
-      const Duration(seconds: 1),
-      (_) => setState(() {}),
-    );
-  }
-
-  @override
-  void dispose() {
-    _ticker?.cancel();
-    super.dispose();
-  }
-
-  String _format(Duration d) {
-    final m = d.inMinutes.remainder(60).toString().padLeft(2, '0');
-    final s = d.inSeconds.remainder(60).toString().padLeft(2, '0');
-    return d.inHours > 0 ? '${d.inHours}:$m:$s' : '$m:$s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final settings = widget.settings;
-    final stats = widget.stats;
-    final remaining = stats == null
-        ? null
-        : HeartsService.timeToNextHeart(
-            hearts: stats.heartsCurrent,
-            updatedAt: stats.heartsUpdatedAt,
-          );
-
-    return Scaffold(
-      body: SafeArea(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(32),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const HeartsRow(hearts: 0, large: true),
-                const SizedBox(height: 16),
-                Text(
-                  settings.t('outOfHearts'),
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  settings.t('outOfHeartsBody'),
-                  textAlign: TextAlign.center,
-                ),
-                if (remaining != null) ...[
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.red.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.favorite,
-                          size: 18,
-                          color: Color(0xFFFF4D6D),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '${settings.t('nextHeartIn')} ${_format(remaining)}',
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(settings.t('backToLessons')),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

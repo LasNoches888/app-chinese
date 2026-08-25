@@ -101,25 +101,6 @@ class Strings {
     },
     'due': {AppLocale.ru: 'осталось', AppLocale.en: 'due'},
 
-    // Hearts / results
-    'outOfHearts': {
-      AppLocale.ru: 'Жизни закончились!',
-      AppLocale.en: 'Out of hearts!',
-    },
-    'outOfHeartsBody': {
-      AppLocale.ru:
-          'Подождите восстановления или повторите урок без ошибок в следующий раз.',
-      AppLocale.en:
-          'Wait for hearts to refill, or come back and try a flawless run.',
-    },
-    'nextHeartIn': {
-      AppLocale.ru: 'Следующее сердце через',
-      AppLocale.en: 'Next heart in',
-    },
-    'backToLessons': {
-      AppLocale.ru: 'К урокам',
-      AppLocale.en: 'Back to lessons',
-    },
     'lessonComplete': {
       AppLocale.ru: 'Урок завершён!',
       AppLocale.en: 'Lesson complete!',

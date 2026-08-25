@@ -106,21 +106,43 @@ void main() {
   });
 
   group('PronunciationService.isConclusive', () {
-    test('an exact partial match lets listening stop early', () {
-      expect(
+    bool conclusive(String heard, String target) =>
         PronunciationService.isConclusive(
-          alternates: ['你好'],
-          targetHanzi: '你好',
-        ),
-        isTrue,
-      );
+          alternates: [heard],
+          targetHanzi: target,
+          targetPinyin: bank[target] ?? '',
+          pinyinByHanzi: bank,
+        );
+
+    test('an exact partial match lets listening stop early', () {
+      expect(conclusive('你好', '你好'), isTrue);
     });
 
-    test('a partial that is not the target keeps listening', () {
-      expect(
-        PronunciationService.isConclusive(alternates: ['你'], targetHanzi: '你好'),
-        isFalse,
-      );
+    test('a homophone lets listening stop early', () {
+      // The learner already said it right; more audio won't change that.
+      expect(conclusive('她', '他'), isTrue);
+    });
+
+    test('a tone miss lets listening stop early', () {
+      // This is the verdict the app most needs to deliver fast — waiting
+      // out the full pause here was the whole complaint.
+      expect(conclusive('马', '妈'), isTrue);
+    });
+
+    test('a genuinely different word keeps listening', () {
+      // An early, noisy partial could still resolve into the target as
+      // the recognizer keeps refining it.
+      expect(conclusive('再见', '你好'), isFalse);
+    });
+
+    test('the target buried in a longer phrase keeps listening', () {
+      // The recognizer may still be mid-phrase; cutting it off here could
+      // change what "extra words" even means.
+      expect(conclusive('那个你好吗', '你好'), isFalse);
+    });
+
+    test('an unrelated partial keeps listening', () {
+      expect(conclusive('你', '你好'), isFalse);
     });
   });
 }
