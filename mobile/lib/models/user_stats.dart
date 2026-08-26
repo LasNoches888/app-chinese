@@ -15,6 +15,8 @@ class UserStats {
   final int raceWins;
   final int listeningCompleted;
   final int pronunciationCompleted;
+  final String mascotCharacter;
+  final int equippedOutfit;
 
   const UserStats({
     required this.totalXp,
@@ -33,6 +35,8 @@ class UserStats {
     required this.raceWins,
     required this.listeningCompleted,
     required this.pronunciationCompleted,
+    this.mascotCharacter = 'panda',
+    this.equippedOutfit = 0,
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
@@ -56,6 +60,8 @@ class UserStats {
     raceWins: map['race_wins'] as int? ?? 0,
     listeningCompleted: map['listening_completed'] as int? ?? 0,
     pronunciationCompleted: map['pronunciation_completed'] as int? ?? 0,
+    mascotCharacter: map['mascot_character'] as String? ?? 'panda',
+    equippedOutfit: map['equipped_outfit'] as int? ?? 0,
   );
 
   UserStats copyWith({
@@ -75,6 +81,8 @@ class UserStats {
     int? raceWins,
     int? listeningCompleted,
     int? pronunciationCompleted,
+    String? mascotCharacter,
+    int? equippedOutfit,
   }) {
     return UserStats(
       totalXp: totalXp ?? this.totalXp,
@@ -95,6 +103,8 @@ class UserStats {
       listeningCompleted: listeningCompleted ?? this.listeningCompleted,
       pronunciationCompleted:
           pronunciationCompleted ?? this.pronunciationCompleted,
+      mascotCharacter: mascotCharacter ?? this.mascotCharacter,
+      equippedOutfit: equippedOutfit ?? this.equippedOutfit,
     );
   }
 }

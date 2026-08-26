@@ -38,6 +38,8 @@ class StatsRepository {
       'race_wins': stats.raceWins,
       'listening_completed': stats.listeningCompleted,
       'pronunciation_completed': stats.pronunciationCompleted,
+      'mascot_character': stats.mascotCharacter,
+      'equipped_outfit': stats.equippedOutfit,
     }, where: 'id = 1');
   }
 
@@ -132,6 +134,24 @@ class StatsRepository {
   Future<UserStats> recordRaceWin() async {
     var stats = await getStats();
     stats = stats.copyWith(raceWins: stats.raceWins + 1);
+    await _save(stats);
+    return stats;
+  }
+
+  /// Switches the home-screen companion. Resets the equipped outfit to the
+  /// starter look — the two animals don't share an outfit set, so an index
+  /// that pointed to a valid panda outfit could point at nothing (or the
+  /// wrong thing) for the pug.
+  Future<UserStats> setMascotCharacter(String character) async {
+    var stats = await getStats();
+    stats = stats.copyWith(mascotCharacter: character, equippedOutfit: 0);
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> setEquippedOutfit(int outfitIndex) async {
+    var stats = await getStats();
+    stats = stats.copyWith(equippedOutfit: outfitIndex);
     await _save(stats);
     return stats;
   }

@@ -10,6 +10,7 @@ import '../models/deck.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
 import 'lesson_session_screen.dart';
+import 'mascot_wardrobe_screen.dart';
 
 const _brandStart = Color(0xFFFF7A59);
 const _brandEnd = Color(0xFF6C5CE7);
@@ -77,6 +78,13 @@ class _LessonsScreenState extends State<LessonsScreen> {
     _load();
   }
 
+  Future<void> _openWardrobe() async {
+    await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const MascotWardrobeScreen()));
+    _load();
+  }
+
   /// The deck the learner should open next: the first unlocked one that
   /// isn't finished, so the header's call to action is a single tap rather
   /// than "scan 21 rows and figure out where you left off".
@@ -113,6 +121,7 @@ class _LessonsScreenState extends State<LessonsScreen> {
                       settings: settings,
                       nextDeck: _nextDeck,
                       onContinue: _openDeck,
+                      onMascotTap: _openWardrobe,
                     ),
                     const SizedBox(height: 20),
                     ..._buildGroupedDecks(decks, settings),
@@ -184,6 +193,7 @@ class _TodayCard extends StatelessWidget {
   final AppSettings settings;
   final DeckProgress? nextDeck;
   final void Function(Deck) onContinue;
+  final VoidCallback onMascotTap;
 
   const _TodayCard({
     required this.stats,
@@ -191,6 +201,7 @@ class _TodayCard extends StatelessWidget {
     required this.settings,
     required this.nextDeck,
     required this.onContinue,
+    required this.onMascotTap,
   });
 
   @override
@@ -223,14 +234,37 @@ class _TodayCard extends StatelessWidget {
           Row(
             children: [
               // Asleep if the streak has gone cold for a couple of days,
-              // otherwise wearing whatever outfit the current level has
-              // earned — the closest a fixed set of stills can get to a
-              // companion that grows alongside the learner.
-              MascotWidget(
-                asset: s == null
-                    ? 'assets/mascot/panda_02.png'
-                    : MascotService.homeAsset(s),
-                size: 64,
+              // otherwise wearing whatever outfit is equipped — tapping it
+              // opens the wardrobe to pick a companion and dress it up.
+              GestureDetector(
+                onTap: onMascotTap,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    MascotWidget(
+                      asset: s == null
+                          ? 'assets/mascot/panda_02.png'
+                          : MascotService.homeAsset(s),
+                      size: 64,
+                    ),
+                    Positioned(
+                      right: -2,
+                      bottom: -2,
+                      child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.checkroom,
+                          size: 14,
+                          color: _brandEnd,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(

@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 /// for any of it; the backend is only ever consulted for `/chat`.
 class AppDatabase {
   static const _dbName = 'app_chinese.db';
-  static const _schemaVersion = 4;
+  static const _schemaVersion = 5;
 
   static Database? _instance;
 
@@ -58,6 +58,16 @@ class AppDatabase {
             );
             await db.execute(
               'ALTER TABLE user_stats ADD COLUMN pronunciation_completed INTEGER NOT NULL DEFAULT 0',
+            );
+          }
+          if (oldVersion < 5) {
+            // The home-screen companion: which animal, and which of its
+            // level-gated outfits is currently equipped.
+            await db.execute(
+              "ALTER TABLE user_stats ADD COLUMN mascot_character TEXT NOT NULL DEFAULT 'panda'",
+            );
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN equipped_outfit INTEGER NOT NULL DEFAULT 0',
             );
           }
         },
@@ -126,7 +136,9 @@ class AppDatabase {
         daily_challenges_completed INTEGER NOT NULL DEFAULT 0,
         race_wins INTEGER NOT NULL DEFAULT 0,
         listening_completed INTEGER NOT NULL DEFAULT 0,
-        pronunciation_completed INTEGER NOT NULL DEFAULT 0
+        pronunciation_completed INTEGER NOT NULL DEFAULT 0,
+        mascot_character TEXT NOT NULL DEFAULT 'panda',
+        equipped_outfit INTEGER NOT NULL DEFAULT 0
       )
     ''');
     await db.execute('''

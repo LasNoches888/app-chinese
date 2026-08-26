@@ -1,0 +1,265 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../api/app_settings.dart';
+import '../app_repositories.dart';
+import '../components/app_background.dart';
+import '../models/user_stats.dart';
+import '../services/mascot_service.dart';
+import '../services/xp_service.dart';
+
+/// Pick a companion (panda or pug) and dress it in whatever outfit the
+/// current level has unlocked. Reachable by tapping the mascot on the home
+/// screen.
+class MascotWardrobeScreen extends StatefulWidget {
+  const MascotWardrobeScreen({super.key});
+
+  @override
+  State<MascotWardrobeScreen> createState() => _MascotWardrobeScreenState();
+}
+
+class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
+  UserStats? _stats;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final stats = await context.read<AppRepositories>().stats.getStats();
+    if (!mounted) return;
+    setState(() => _stats = stats);
+  }
+
+  Future<void> _pickCharacter(MascotCharacter character) async {
+    final repo = context.read<AppRepositories>().stats;
+    final stats = await repo.setMascotCharacter(character.dbValue);
+    if (!mounted) return;
+    setState(() => _stats = stats);
+  }
+
+  Future<void> _equip(MascotOutfit outfit) async {
+    final repo = context.read<AppRepositories>().stats;
+    final stats = await repo.setEquippedOutfit(outfit.index);
+    if (!mounted) return;
+    setState(() => _stats = stats);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    final stats = _stats;
+
+    return Scaffold(
+      appBar: AppBar(title: Text(settings.t('mascotWardrobeTitle'))),
+      body: AppBackground(
+        child: stats == null
+            ? const Center(child: CircularProgressIndicator())
+            : _buildBody(context, settings, stats),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    BuildContext context,
+    AppSettings settings,
+    UserStats stats,
+  ) {
+    final character = MascotCharacter.fromDb(stats.mascotCharacter);
+    final level = XpService.levelForXp(stats.totalXp);
+    final outfits = MascotService.outfitsFor(character);
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        Text(
+          settings.t('mascotPickCompanion'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: _CharacterCard(
+                character: MascotCharacter.panda,
+                label: settings.t('mascotPanda'),
+                selected: character == MascotCharacter.panda,
+                onTap: () => _pickCharacter(MascotCharacter.panda),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _CharacterCard(
+                character: MascotCharacter.pug,
+                label: settings.t('mascotPug'),
+                selected: character == MascotCharacter.pug,
+                onTap: () => _pickCharacter(MascotCharacter.pug),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 24),
+        Text(
+          settings.t('mascotOutfitsTitle'),
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+        const SizedBox(height: 10),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 2,
+          mainAxisSpacing: 10,
+          crossAxisSpacing: 10,
+          childAspectRatio: 1.1,
+          children: [
+            for (final outfit in outfits)
+              _OutfitCard(
+                outfit: outfit,
+                settings: settings,
+                unlocked: outfit.requiredLevel <= level,
+                equipped: outfit.index == stats.equippedOutfit,
+                onTap: () => _equip(outfit),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _CharacterCard extends StatelessWidget {
+  final MascotCharacter character;
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _CharacterCard({
+    required this.character,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final asset = MascotService.outfitsFor(character).first.asset;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          color: selected
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          border: Border.all(
+            color: selected
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.outlineVariant,
+            width: selected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Image.asset(asset, height: 64),
+            const SizedBox(height: 8),
+            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _OutfitCard extends StatelessWidget {
+  final MascotOutfit outfit;
+  final AppSettings settings;
+  final bool unlocked;
+  final bool equipped;
+  final VoidCallback onTap;
+
+  const _OutfitCard({
+    required this.outfit,
+    required this.settings,
+    required this.unlocked,
+    required this.equipped,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: unlocked ? onTap : null,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: equipped
+              ? const LinearGradient(
+                  colors: [Color(0xFFFFB03A), Color(0xFFFF7A59)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
+          color: equipped
+              ? null
+              : Theme.of(
+                  context,
+                ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          border: equipped
+              ? null
+              : Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Opacity(
+              opacity: unlocked ? 1 : 0.4,
+              child: Image.asset(outfit.asset, height: 72),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    settings.t(outfit.labelKey),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                      color: equipped ? Colors.white : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (equipped)
+                  const Icon(Icons.check_circle, size: 16, color: Colors.white)
+                else if (!unlocked)
+                  Icon(
+                    Icons.lock_outline,
+                    size: 16,
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+              ],
+            ),
+            if (!unlocked)
+              Text(
+                '${settings.t('mascotLockedUntil')} ${outfit.requiredLevel}',
+                style: Theme.of(context).textTheme.bodySmall,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

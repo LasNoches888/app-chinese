@@ -727,6 +727,35 @@ class Strings {
     'cancel': {AppLocale.ru: 'Отмена', AppLocale.en: 'Cancel'},
     'done': {AppLocale.ru: 'Готово', AppLocale.en: 'Done'},
     'error': {AppLocale.ru: 'Ошибка', AppLocale.en: 'Error'},
+
+    // Mascot wardrobe
+    'mascotWardrobeTitle': {AppLocale.ru: 'Гардероб', AppLocale.en: 'Wardrobe'},
+    'mascotPickCompanion': {
+      AppLocale.ru: 'Выбери спутника',
+      AppLocale.en: 'Pick your companion',
+    },
+    'mascotPanda': {AppLocale.ru: 'Панда', AppLocale.en: 'Panda'},
+    'mascotPug': {AppLocale.ru: 'Мопс', AppLocale.en: 'Pug'},
+    'mascotOutfitsTitle': {AppLocale.ru: 'Наряды', AppLocale.en: 'Outfits'},
+    'mascotLockedUntil': {
+      AppLocale.ru: 'Открыть на уровне',
+      AppLocale.en: 'Unlocks at level',
+    },
+    'outfitStarter': {AppLocale.ru: 'Обычный', AppLocale.en: 'Everyday'},
+    'outfitStarBadge': {
+      AppLocale.ru: 'Значок отличника',
+      AppLocale.en: 'Star badge',
+    },
+    'outfitReadingGlasses': {
+      AppLocale.ru: 'Очки для чтения',
+      AppLocale.en: 'Reading glasses',
+    },
+    'outfitBubbleTea': {AppLocale.ru: 'Баблти', AppLocale.en: 'Bubble tea'},
+    'outfitKungFu': {AppLocale.ru: 'Кунг-фу', AppLocale.en: 'Kung fu'},
+    'outfitChef': {AppLocale.ru: 'Шеф-повар', AppLocale.en: 'Chef'},
+    'outfitSamurai': {AppLocale.ru: 'Самурай', AppLocale.en: 'Samurai'},
+    'outfitPilot': {AppLocale.ru: 'Пилот', AppLocale.en: 'Pilot'},
+    'outfitPugDefault': {AppLocale.ru: 'Обычный', AppLocale.en: 'Everyday'},
   };
 
   static String of(AppLocale locale, String key) =>
