@@ -1,9 +1,8 @@
 import '../models/user_stats.dart';
 import 'xp_service.dart';
 
-/// How the mascot should look mid-lesson, right after an answer. Only the
-/// panda has stills for this — see [MascotService.reactionAsset].
-enum MascotReaction { idle, correct, incorrect }
+/// A moment worth reacting to with the 3D companion mid-lesson.
+enum Mascot3DCue { hello, correct, incorrect }
 
 /// The animal a learner has picked as their home-screen companion.
 enum MascotCharacter {
@@ -48,10 +47,6 @@ class MascotOutfit {
 /// yet, so it ships with a single look until new art exists.
 class MascotService {
   MascotService._();
-
-  static const _idle = 'assets/mascot/panda_02.png';
-  static const _correct = 'assets/mascot/panda_04.png';
-  static const _incorrect = 'assets/mascot/panda_17.png';
 
   /// Highest-level tier first, so [effectiveOutfit] can return on the first
   /// match when falling back.
@@ -148,11 +143,36 @@ class MascotService {
     int level,
   ) => outfitsFor(character).where((o) => o.requiredLevel <= level).toList();
 
-  static String reactionAsset(MascotReaction reaction) => switch (reaction) {
-    MascotReaction.correct => _correct,
-    MascotReaction.incorrect => _incorrect,
-    MascotReaction.idle => _idle,
+  static const _idleAnimationIndex = {
+    MascotCharacter.panda: 0,
+    MascotCharacter.pug: 0,
   };
+
+  /// One-shot glTF animation clips played mid-lesson before falling back to
+  /// idle. The panda's clips came from Quaternius's "Universal Animation
+  /// Library" with their names stripped by the FBX→GLB conversion, so these
+  /// were picked by eye from mid-clip stills, not from a names list — see
+  /// assets/mascot_3d/SOURCES.md. The pug's rig only has Idle and Jump, so
+  /// every cue reuses Jump (or Idle for "incorrect", since a jump reads as
+  /// upbeat regardless of context and a wrong answer shouldn't).
+  static const _cueAnimationIndex = {
+    MascotCharacter.panda: {
+      Mascot3DCue.hello: 5, // arm raised — reads as a wave
+      Mascot3DCue.correct: 22, // the longest clip (80 frames) — a dance
+      Mascot3DCue.incorrect: 6, // head tilted, hand near face — "thinking"
+    },
+    MascotCharacter.pug: {
+      Mascot3DCue.hello: 1,
+      Mascot3DCue.correct: 1,
+      Mascot3DCue.incorrect: 0,
+    },
+  };
+
+  static int idleAnimationIndex(MascotCharacter character) =>
+      _idleAnimationIndex[character]!;
+
+  static int cueAnimationIndex(MascotCharacter character, Mascot3DCue cue) =>
+      _cueAnimationIndex[character]![cue]!;
 
   /// An [equippedIndex] of -1 means "nothing explicitly picked yet" — the
   /// companion should auto-follow the highest outfit the current level has

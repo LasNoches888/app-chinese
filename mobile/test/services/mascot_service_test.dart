@@ -30,10 +30,16 @@ UserStats _stats({
 );
 
 void main() {
-  group('MascotService.reactionAsset', () {
-    test('each reaction has a distinct still', () {
-      final assets = MascotReaction.values.map(MascotService.reactionAsset);
-      expect(assets.toSet().length, MascotReaction.values.length);
+  group('MascotService.cueAnimationIndex', () {
+    test('every character has an animation for every cue', () {
+      for (final character in MascotCharacter.values) {
+        for (final cue in Mascot3DCue.values) {
+          expect(
+            () => MascotService.cueAnimationIndex(character, cue),
+            returnsNormally,
+          );
+        }
+      }
     });
   });
 

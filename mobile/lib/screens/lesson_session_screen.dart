@@ -1,12 +1,14 @@
-import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
+import '../api/app_strings.dart';
 import '../app_repositories.dart';
 import '../components/exercise_widgets.dart';
-import '../components/mascot_widget.dart';
+import '../components/mascot_3d_companion.dart';
+import '../data/mascot_jokes.dart';
 import '../models/exercise_question.dart';
 import '../services/exercise_generator.dart';
 import '../services/mascot_service.dart';
@@ -54,19 +56,15 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   final Set<String> _mistakeIds = {};
   bool _loading = true;
   bool _answering = false;
-  MascotReaction _reaction = MascotReaction.idle;
-  Timer? _reactionTimer;
+  MascotCharacter _character = MascotCharacter.panda;
+  int _correctStreak = 0;
+  final _mascotController = Mascot3DCompanionController();
+  final _random = Random();
 
   @override
   void initState() {
     super.initState();
     _load();
-  }
-
-  @override
-  void dispose() {
-    _reactionTimer?.cancel();
-    super.dispose();
   }
 
   Future<void> _load() async {
@@ -78,11 +76,44 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
       allWords: allWords,
       availableStrokeChars: repos.strokeData.availableCharacters,
     );
+    final stats = await repos.stats.getStats();
     if (!mounted) return;
     setState(() {
       _questions = questions;
+      _character = MascotCharacter.fromDb(stats.mascotCharacter);
       _loading = false;
     });
+    if (questions.isNotEmpty) {
+      final settings = context.read<AppSettings>();
+      _mascotController.react(
+        Mascot3DCue.hello,
+        settings.locale == AppLocale.ru ? 'Погнали! 🐼' : "Let's go! 🐼",
+      );
+    }
+  }
+
+  /// What the correct answer actually was, for the mascot's mid-lesson hint
+  /// after a miss — built from whichever fields this question type
+  /// populates, since each exercise type carries the answer differently.
+  String _correctAnswerText(ExerciseQuestion q) {
+    switch (q.type) {
+      case ExerciseType.flip:
+        final parts = [
+          if (q.hanzi != null) q.hanzi!,
+          if (q.pinyin != null) '(${q.pinyin})',
+          if (q.translation != null) q.translation!,
+        ];
+        return parts.join(' ');
+      case ExerciseType.chooseTranslation:
+      case ExerciseType.chooseHanzi:
+        return q.correctOption ?? '';
+      case ExerciseType.buildSentence:
+        return (q.correctOrder ?? const []).join(' ');
+      case ExerciseType.typePinyin:
+        return q.correctPinyin ?? '';
+      case ExerciseType.writeHanzi:
+        return q.hanzi ?? '';
+    }
   }
 
   Future<void> _handleAnswer(bool correct) async {
@@ -92,23 +123,35 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     if (_answering) return;
     _answering = true;
     try {
-      // The exercise widgets already show their own inline feedback before
-      // calling this, so the mascot's reaction carries over into the next
-      // question rather than needing an extra pause of its own — it just
-      // fades back to neutral a moment after the new question appears.
-      _reactionTimer?.cancel();
-      setState(
-        () => _reaction = correct
-            ? MascotReaction.correct
-            : MascotReaction.incorrect,
-      );
-      _reactionTimer = Timer(const Duration(milliseconds: 1100), () {
-        if (mounted) setState(() => _reaction = MascotReaction.idle);
-      });
-
       final repos = context.read<AppRepositories>();
       final question = _questions![_index];
       final earned = XpService.xpForAnswer(correct);
+
+      // The exercise widgets already show their own inline feedback before
+      // calling this, so the mascot's pop-up is a second beat rather than
+      // the only one: a nudge toward the right answer on a miss, or an
+      // occasional joke once a streak's actually built up (every answer
+      // would just turn into noise).
+      final settings = context.read<AppSettings>();
+      if (correct) {
+        _correctStreak += 1;
+        if (_correctStreak % 3 == 0) {
+          final joke = MascotJokes.all[_random.nextInt(MascotJokes.all.length)];
+          _mascotController.react(
+            Mascot3DCue.correct,
+            settings.locale == AppLocale.ru ? joke.ru : joke.en,
+          );
+        }
+      } else {
+        _correctStreak = 0;
+        final answer = _correctAnswerText(question);
+        _mascotController.react(
+          Mascot3DCue.incorrect,
+          settings.locale == AppLocale.ru
+              ? 'Ничего, бывает! Правильный ответ: $answer'
+              : "No worries! The answer was: $answer",
+        );
+      }
 
       await repos.srs.recordReview(
         wordId: question.wordId,
@@ -198,48 +241,53 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.title)),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            children: [
-              Row(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                 children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 8,
-                      ),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 8,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  MascotWidget(
-                    asset: MascotService.reactionAsset(_reaction),
-                    size: 36,
+                  const SizedBox(height: 24),
+                  Expanded(
+                    child: Center(
+                      // The writing exercise's canvas only recognizes
+                      // onPanUpdate/onPanEnd, which lose the gesture-arena
+                      // race against a scrollable ancestor's own vertical
+                      // drag recognizer for any top-to-bottom stroke — the
+                      // most common stroke direction in Chinese characters.
+                      // That reads as "drawing doesn't register" even
+                      // though every other exercise type genuinely
+                      // benefits from scrolling on short screens.
+                      child: question.type == ExerciseType.writeHanzi
+                          ? _buildExercise(question, settings)
+                          : SingleChildScrollView(
+                              child: _buildExercise(question, settings),
+                            ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: Center(
-                  // The writing exercise's canvas only recognizes
-                  // onPanUpdate/onPanEnd, which lose the gesture-arena
-                  // race against a scrollable ancestor's own vertical drag
-                  // recognizer for any top-to-bottom stroke — the most
-                  // common stroke direction in Chinese characters. That
-                  // reads as "drawing doesn't register" even though every
-                  // other exercise type genuinely benefits from scrolling
-                  // on short screens.
-                  child: question.type == ExerciseType.writeHanzi
-                      ? _buildExercise(question, settings)
-                      : SingleChildScrollView(
-                          child: _buildExercise(question, settings),
-                        ),
-                ),
+            ),
+            // A floating companion rather than inline in the header — it
+            // needs room for its speech bubble, and a persistent (not
+            // recreated per-reaction) 3D view here is what keeps triggering
+            // a reaction cheap instead of re-spinning up a render engine.
+            Positioned(
+              right: 8,
+              bottom: 8,
+              child: Mascot3DCompanion(
+                character: _character,
+                controller: _mascotController,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
