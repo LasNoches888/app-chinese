@@ -48,6 +48,17 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   Timer? _messageTimer;
   Timer? _cueTimer;
 
+  // ViewerWidget only allows manipulatorType to change after it's built —
+  // every other property throws ("create a new widget to change this
+  // property") if it differs across rebuilds, which Vector3/DirectLight
+  // instances built fresh in every build() would, since neither overrides
+  // value equality. Built once and reused as the same instances for the
+  // widget's whole lifetime, which the frequent rebuilds a lesson screen
+  // triggers (one per answer) would otherwise hit constantly.
+  late final _cameraPosition = Vector3(0, 1, 3);
+  late final _directLight = DirectLight.sun();
+  late final _background = Theme.of(context).colorScheme.surfaceContainerHighest;
+
   @override
   void initState() {
     super.initState();
@@ -131,11 +142,11 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
             height: widget.size,
             child: ViewerWidget(
               assetPath: MascotService.model3DAsset(widget.character),
-              initialCameraPosition: Vector3(0, 1, 3),
+              initialCameraPosition: _cameraPosition,
               manipulatorType: ManipulatorType.NONE,
-              directLight: DirectLight.sun(),
+              directLight: _directLight,
               transformToUnitCube: true,
-              background: Theme.of(context).colorScheme.surfaceContainerHighest,
+              background: _background,
               onAssetLoaded: _onAssetLoaded,
             ),
           ),
