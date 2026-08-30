@@ -168,11 +168,34 @@ class MascotService {
     },
   };
 
+  /// How long each cue's clip actually runs (measured in Blender: frame
+  /// count ÷ 24fps), plus a little headroom — the panda's "correct" clip
+  /// alone is 3.33s, well past a one-size-fits-all wait. Getting this wrong
+  /// either cuts a clip off mid-motion or leaves the model frozen on its
+  /// last frame before [MascotService.idleAnimationIndex] takes back over.
+  static const _cueDuration = {
+    MascotCharacter.panda: {
+      Mascot3DCue.hello: Duration(milliseconds: 1000), // clip: 0.77s
+      Mascot3DCue.correct: Duration(milliseconds: 3600), // clip: 3.33s
+      Mascot3DCue.incorrect: Duration(milliseconds: 1900), // clip: 1.67s
+    },
+    MascotCharacter.pug: {
+      Mascot3DCue.hello: Duration(milliseconds: 1700), // clip (Jump): 1.5s
+      Mascot3DCue.correct: Duration(milliseconds: 1700), // clip (Jump): 1.5s
+      // "incorrect" plays Idle once, same clip idle already loops — the
+      // switch back is a no-op visually, so this just needs to be short.
+      Mascot3DCue.incorrect: Duration(milliseconds: 600),
+    },
+  };
+
   static int idleAnimationIndex(MascotCharacter character) =>
       _idleAnimationIndex[character]!;
 
   static int cueAnimationIndex(MascotCharacter character, Mascot3DCue cue) =>
       _cueAnimationIndex[character]![cue]!;
+
+  static Duration cueDuration(MascotCharacter character, Mascot3DCue cue) =>
+      _cueDuration[character]![cue]!;
 
   /// An [equippedIndex] of -1 means "nothing explicitly picked yet" — the
   /// companion should auto-follow the highest outfit the current level has

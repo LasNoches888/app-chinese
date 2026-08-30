@@ -97,10 +97,7 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     final cueIndex = MascotService.cueAnimationIndex(widget.character, cue);
     await asset.playGltfAnimation(cueIndex, loop: false);
     if (!mounted) return;
-    // Cheap approximation rather than querying the clip's real duration —
-    // this is a reaction pop-up, not a cutscene, so a slightly early or
-    // late return to idle is not worth another native round trip for.
-    _cueTimer = Timer(const Duration(seconds: 2), () async {
+    _cueTimer = Timer(MascotService.cueDuration(widget.character, cue), () async {
       if (_asset != null) {
         await _asset!.playGltfAnimation(idleIndex, loop: true);
       }

@@ -31,12 +31,16 @@ UserStats _stats({
 
 void main() {
   group('MascotService.cueAnimationIndex', () {
-    test('every character has an animation for every cue', () {
+    test('every character has an animation and duration for every cue', () {
       for (final character in MascotCharacter.values) {
         for (final cue in Mascot3DCue.values) {
           expect(
             () => MascotService.cueAnimationIndex(character, cue),
             returnsNormally,
+          );
+          expect(
+            MascotService.cueDuration(character, cue),
+            greaterThan(Duration.zero),
           );
         }
       }
