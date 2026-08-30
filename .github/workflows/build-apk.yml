@@ -22,6 +22,14 @@ jobs:
           flutter-version: '3.47.0'
           channel: stable
 
+      - name: Install libc++ headers
+        # thermion_dart's native-assets hook compiles its Linux build with
+        # clang -stdlib=libc++, but ubuntu-latest only ships libstdc++ by
+        # default — without this, every native asset build (triggered by
+        # `pub get`/analyze/test resolving the mascot's 3D dependency)
+        # fails on missing standard headers like <cstdint>.
+        run: sudo apt-get update && sudo apt-get install -y libc++-dev libc++abi-dev
+
       - name: Install dependencies
         working-directory: mobile
         run: flutter pub get
