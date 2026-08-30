@@ -7,6 +7,7 @@ import '../components/app_background.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
 import '../services/xp_service.dart';
+import 'mascot_3d_preview_screen.dart';
 
 /// Pick a companion (panda or pug) and dress it in whatever outfit the
 /// current level has unlocked. Reachable by tapping the mascot on the home
@@ -53,7 +54,26 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     final stats = _stats;
 
     return Scaffold(
-      appBar: AppBar(title: Text(settings.t('mascotWardrobeTitle'))),
+      appBar: AppBar(
+        title: Text(settings.t('mascotWardrobeTitle')),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.view_in_ar),
+            tooltip: settings.t('mascotView3D'),
+            onPressed: stats == null
+                ? null
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => Mascot3DPreviewScreen(
+                        character: MascotCharacter.fromDb(
+                          stats.mascotCharacter,
+                        ),
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
       body: AppBackground(
         child: stats == null
             ? const Center(child: CircularProgressIndicator())

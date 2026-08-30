@@ -129,6 +129,14 @@ class MascotService {
   /// rather than just quietly waiting.
   static const _lonelyAfter = Duration(days: 2);
 
+  /// The 3D model for a companion's base look — a single glTF/GLB per
+  /// character, not yet split per outfit (see assets/mascot_3d/SOURCES.md
+  /// for provenance).
+  static String model3DAsset(MascotCharacter character) => switch (character) {
+    MascotCharacter.panda => 'assets/mascot_3d/panda.glb',
+    MascotCharacter.pug => 'assets/mascot_3d/pug.glb',
+  };
+
   static List<MascotOutfit> outfitsFor(MascotCharacter character) =>
       switch (character) {
         MascotCharacter.panda => pandaOutfits,

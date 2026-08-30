@@ -737,6 +737,10 @@ class Strings {
     'mascotPanda': {AppLocale.ru: 'Панда', AppLocale.en: 'Panda'},
     'mascotPug': {AppLocale.ru: 'Мопс', AppLocale.en: 'Pug'},
     'mascotOutfitsTitle': {AppLocale.ru: 'Наряды', AppLocale.en: 'Outfits'},
+    'mascotView3D': {
+      AppLocale.ru: 'Посмотреть в 3D',
+      AppLocale.en: 'View in 3D',
+    },
     'mascotLockedUntil': {
       AppLocale.ru: 'Открыть на уровне',
       AppLocale.en: 'Unlocks at level',
