@@ -53,8 +53,8 @@ class MascotService {
   static const _correct = 'assets/mascot/panda_04.png';
   static const _incorrect = 'assets/mascot/panda_17.png';
 
-  /// Highest-level tier first, so [_equippedOrHighestUnlocked] can return
-  /// on the first match when falling back.
+  /// Highest-level tier first, so [effectiveOutfit] can return on the first
+  /// match when falling back.
   static const pandaOutfits = [
     MascotOutfit(
       index: 0,
@@ -146,27 +146,31 @@ class MascotService {
     MascotReaction.idle => _idle,
   };
 
-  /// The equipped outfit if it's still unlocked at the current level,
-  /// otherwise the fanciest one that is — covers a character switch (which
-  /// resets the index, but is cheap insurance against any stale index) and
-  /// the pug's single-entry catalog.
-  static MascotOutfit _equippedOrHighestUnlocked(
+  /// An [equippedIndex] of -1 means "nothing explicitly picked yet" — the
+  /// companion should auto-follow the highest outfit the current level has
+  /// earned, same as it always has, until the learner opens the wardrobe
+  /// and picks one. A non-negative index is honoured as long as it's still
+  /// unlocked (it can stop being valid across a character switch, or in
+  /// theory a level dropping); otherwise this falls back the same way.
+  static MascotOutfit effectiveOutfit(
     MascotCharacter character,
     int equippedIndex,
     int level,
   ) {
     final outfits = outfitsFor(character);
+    if (equippedIndex >= 0) {
+      final equipped = outfits
+          .where((o) => o.index == equippedIndex)
+          .firstOrNull;
+      if (equipped != null && equipped.requiredLevel <= level) return equipped;
+    }
     final unlocked = unlockedOutfits(character, level);
-    final equipped = outfits
-        .where((o) => o.index == equippedIndex)
-        .firstOrNull;
-    if (equipped != null && equipped.requiredLevel <= level) return equipped;
     return unlocked.isNotEmpty ? unlocked.last : outfits.first;
   }
 
   /// The home-screen companion: asleep once the learner has been away a
-  /// couple of days, otherwise wearing whatever outfit is equipped (falling
-  /// back to the best unlocked one if the equipped slot isn't valid).
+  /// couple of days, otherwise wearing whatever [effectiveOutfit] resolves
+  /// to.
   static String homeAsset(UserStats stats, {DateTime? now}) {
     final character = MascotCharacter.fromDb(stats.mascotCharacter);
     final last = stats.lastActivityDate;
@@ -175,11 +179,7 @@ class MascotService {
       return _sleepingAssets[character]!;
     }
     final level = XpService.levelForXp(stats.totalXp);
-    return _equippedOrHighestUnlocked(
-      character,
-      stats.equippedOutfit,
-      level,
-    ).asset;
+    return effectiveOutfit(character, stats.equippedOutfit, level).asset;
   }
 }
 

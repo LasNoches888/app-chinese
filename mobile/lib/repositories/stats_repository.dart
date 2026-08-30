@@ -138,13 +138,13 @@ class StatsRepository {
     return stats;
   }
 
-  /// Switches the home-screen companion. Resets the equipped outfit to the
-  /// starter look — the two animals don't share an outfit set, so an index
-  /// that pointed to a valid panda outfit could point at nothing (or the
-  /// wrong thing) for the pug.
+  /// Switches the home-screen companion. Resets the equipped outfit back to
+  /// "auto" (-1) — the two animals don't share an outfit set, so an index
+  /// that pointed to a valid panda outfit could point at the wrong thing
+  /// for the pug.
   Future<UserStats> setMascotCharacter(String character) async {
     var stats = await getStats();
-    stats = stats.copyWith(mascotCharacter: character, equippedOutfit: 0);
+    stats = stats.copyWith(mascotCharacter: character, equippedOutfit: -1);
     await _save(stats);
     return stats;
   }

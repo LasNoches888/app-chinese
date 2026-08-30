@@ -36,7 +36,7 @@ class UserStats {
     required this.listeningCompleted,
     required this.pronunciationCompleted,
     this.mascotCharacter = 'panda',
-    this.equippedOutfit = 0,
+    this.equippedOutfit = -1,
   });
 
   factory UserStats.fromMap(Map<String, Object?> map) => UserStats(
@@ -61,7 +61,7 @@ class UserStats {
     listeningCompleted: map['listening_completed'] as int? ?? 0,
     pronunciationCompleted: map['pronunciation_completed'] as int? ?? 0,
     mascotCharacter: map['mascot_character'] as String? ?? 'panda',
-    equippedOutfit: map['equipped_outfit'] as int? ?? 0,
+    equippedOutfit: map['equipped_outfit'] as int? ?? -1,
   );
 
   UserStats copyWith({

@@ -7,7 +7,7 @@ UserStats _stats({
   int totalXp = 0,
   DateTime? lastActivityDate,
   String mascotCharacter = 'panda',
-  int equippedOutfit = 0,
+  int equippedOutfit = -1,
 }) => UserStats(
   totalXp: totalXp,
   currentStreak: 0,

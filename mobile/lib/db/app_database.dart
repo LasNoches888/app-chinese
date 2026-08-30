@@ -66,8 +66,11 @@ class AppDatabase {
             await db.execute(
               "ALTER TABLE user_stats ADD COLUMN mascot_character TEXT NOT NULL DEFAULT 'panda'",
             );
+            // -1 means "no explicit pick yet" — the home screen should
+            // auto-follow the highest outfit the current level has earned,
+            // same as it always has, until the learner opens the wardrobe.
             await db.execute(
-              'ALTER TABLE user_stats ADD COLUMN equipped_outfit INTEGER NOT NULL DEFAULT 0',
+              'ALTER TABLE user_stats ADD COLUMN equipped_outfit INTEGER NOT NULL DEFAULT -1',
             );
           }
         },
@@ -138,7 +141,7 @@ class AppDatabase {
         listening_completed INTEGER NOT NULL DEFAULT 0,
         pronunciation_completed INTEGER NOT NULL DEFAULT 0,
         mascot_character TEXT NOT NULL DEFAULT 'panda',
-        equipped_outfit INTEGER NOT NULL DEFAULT 0
+        equipped_outfit INTEGER NOT NULL DEFAULT -1
       )
     ''');
     await db.execute('''

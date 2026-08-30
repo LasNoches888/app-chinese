@@ -70,6 +70,11 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     final character = MascotCharacter.fromDb(stats.mascotCharacter);
     final level = XpService.levelForXp(stats.totalXp);
     final outfits = MascotService.outfitsFor(character);
+    final equippedIndex = MascotService.effectiveOutfit(
+      character,
+      stats.equippedOutfit,
+      level,
+    ).index;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -119,7 +124,7 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
                 outfit: outfit,
                 settings: settings,
                 unlocked: outfit.requiredLevel <= level,
-                equipped: outfit.index == stats.equippedOutfit,
+                equipped: outfit.index == equippedIndex,
                 onTap: () => _equip(outfit),
               ),
           ],
