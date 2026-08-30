@@ -23,8 +23,15 @@ subprojects {
 // against 33. Force every Android subproject to the same compileSdk so the
 // check passes regardless of what an individual plugin declares.
 subprojects {
-    afterEvaluate {
-        extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileSdkVersion(36)
+    // ":app" is forced to evaluate early by the other subprojects'
+    // evaluationDependsOn(":app") above, so by the time this block would
+    // run for it, afterEvaluate on it throws ("already evaluated") — it
+    // doesn't need this anyway, since app/build.gradle.kts already sets
+    // compileSdk 36 directly.
+    if (project.name != "app") {
+        afterEvaluate {
+            extensions.findByType(com.android.build.gradle.BaseExtension::class.java)?.compileSdkVersion(36)
+        }
     }
 }
 
