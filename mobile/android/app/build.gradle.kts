@@ -7,7 +7,10 @@ plugins {
 
 android {
     namespace = "com.example.app_chinese"
-    compileSdk = flutter.compileSdkVersion
+    // thermion_flutter's Android dependencies (androidx.annotation,
+    // androidx.exifinterface) need compileSdk 34+; flutter.compileSdkVersion
+    // was still 33.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
