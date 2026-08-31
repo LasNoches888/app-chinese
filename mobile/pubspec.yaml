@@ -52,6 +52,7 @@ flutter:
     - assets/mascot_3d/panda.glb
     - assets/mascot_3d/pug.glb
     - assets/mascot_3d/props/glasses.glb
+    - assets/mascot_3d/env/default_env_ibl.ktx
 
 flutter_launcher_icons:
   android: true

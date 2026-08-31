@@ -19,3 +19,11 @@ The real order (index: name, duration):
 23 (unnamed, 3.37s — the longest clip, used as the "correct answer" dance)
 
 — see MascotService's `_idleAnimationIndex`/`_cueAnimationIndex`.
+
+`env/default_env_ibl.ktx` — thermion_flutter's own generic example IBL
+(`examples/assets/default_env_ibl.ktx` in [nmfisher/thermion](https://github.com/nmfisher/thermion)),
+not anything scene-specific. Direct lights alone leave any face they
+don't hit fully black (no ambient term without an IBL loaded); this
+supplies that. Its matching skybox wasn't taken along, since we render
+our own solid app-themed background instead — see mascot_3d_stage.dart
+and mascot_3d_companion.dart.

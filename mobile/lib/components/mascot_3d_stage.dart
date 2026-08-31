@@ -31,9 +31,20 @@ class Mascot3DStage extends StatefulWidget {
 
 class _Mascot3DStageState extends State<Mascot3DStage> {
   Timer? _spinTimer;
+  ThermionViewer? _viewer;
   ThermionAsset? _asset;
   Matrix4? _baseTransform;
   double _angle = 0;
+
+  // Which outfit's prop (if any) is currently attached, and the loaded
+  // prop asset itself — tracked so a later outfit switch can swap just
+  // the prop instead of tearing down the whole stage. Recreating the
+  // Filament engine per outfit tap (the previous approach, keyed on
+  // outfitIndex) raced Thermion's "only one viewer can be active at a
+  // time" constraint on rapid switches and is the likely source of the
+  // crash-on-outfit-change report.
+  int? _attachedOutfitIndex;
+  ThermionAsset? _propAsset;
 
   // See mobile/lib/components/mascot_3d_companion.dart for why these are
   // cached rather than built fresh in build() — ViewerWidget throws if any
@@ -50,6 +61,34 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   void dispose() {
     _spinTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(Mascot3DStage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // The character can't change without a new widget (a new assetPath,
+    // which ViewerWidget can't apply in place — see the key in
+    // mascot_wardrobe_screen.dart). Only the outfit can change here, so
+    // just swap the prop rather than reloading the whole model.
+    if (widget.outfitIndex != oldWidget.outfitIndex) {
+      unawaited(_updateProp());
+    }
+  }
+
+  Future<void> _updateProp() async {
+    final asset = _asset;
+    final viewer = _viewer;
+    if (asset == null || viewer == null) return;
+    if (_attachedOutfitIndex == widget.outfitIndex) return;
+
+    final oldProp = _propAsset;
+    _propAsset = null;
+    _attachedOutfitIndex = null;
+    if (oldProp != null) {
+      await viewer.destroyAsset(oldProp);
+    }
+    if (!mounted) return;
+    await _attachProp(viewer, asset);
   }
 
   /// Games built for this exact "toy character on a podium" look (Subway
@@ -73,6 +112,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   }
 
   Future<void> _onAssetLoaded(ThermionViewer viewer, ThermionAsset asset) async {
+    _viewer = viewer;
     _asset = asset;
     // Without this, the model just sits in its raw glTF bind pose — for
     // this rig that's a T-pose (arms straight out to the sides), not a
@@ -105,10 +145,18 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       await asset.setTransform(Matrix4.rotationY(_angle) * base);
     });
 
-    // Attach the equipped outfit's 3D prop, if it has one — same pilot
-    // mechanism as before, just now live in the wardrobe's own stage.
+    await _attachProp(viewer, asset);
+  }
+
+  /// Attaches the currently-equipped outfit's 3D prop, if it has one —
+  /// same pilot mechanism as before, just now shared between the initial
+  /// load and a later outfit switch (see [_updateProp]).
+  Future<void> _attachProp(ThermionViewer viewer, ThermionAsset asset) async {
     final prop = MascotService.propForOutfit(widget.character, widget.outfitIndex);
-    if (prop == null) return;
+    if (prop == null) {
+      _attachedOutfitIndex = widget.outfitIndex;
+      return;
+    }
     try {
       final boneNames = await asset.getBoneNames();
       final boneIndex = boneNames.indexOf(prop.boneName);
@@ -125,6 +173,9 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           Vector3.all(prop.scale),
         ),
       );
+      if (!mounted) return;
+      _propAsset = propAsset;
+      _attachedOutfitIndex = widget.outfitIndex;
     } catch (_) {
       // First attempt at bone attachment — better to show the mascot
       // without its prop than crash the whole stage over it.
@@ -143,15 +194,26 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           initialCameraPosition: _cameraPosition,
           manipulatorType: ManipulatorType.NONE,
           directLight: _keyLight,
+          // Direct lights alone leave any face they don't hit fully black
+          // (Filament has no ambient term without one) — hence the
+          // "dark/see-through-looking patches" once the model was finally
+          // framed correctly. This is thermion's own generic default
+          // studio IBL (bundled with its examples), not anything scene-
+          // specific — it only supplies ambient fill, independent of the
+          // `background` color below (only skyboxPath would conflict
+          // with that).
+          iblPath: 'assets/mascot_3d/env/default_env_ibl.ktx',
           // A no-op in this version — see the comment in _onAssetLoaded,
           // which does the equivalent normalization itself. Left false
           // (rather than omitted) so it doesn't look like an oversight.
           transformToUnitCube: false,
           background: _background,
-          // This widget is recreated (via a character+outfit key) rather
-          // than updated whenever either changes, since ViewerWidget can't
-          // change its assetPath in place — so the old engine needs to
-          // actually be torn down each time rather than leaking.
+          // This widget is recreated (via a character-only key, in
+          // mascot_wardrobe_screen.dart) when the character changes,
+          // since ViewerWidget can't change its assetPath in place — so
+          // the old engine needs to actually be torn down each time
+          // rather than leaking. An outfit change alone doesn't recreate
+          // it — see didUpdateWidget.
           destroyEngineOnUnload: true,
           onViewerAvailable: _onViewerAvailable,
           onAssetLoaded: _onAssetLoaded,

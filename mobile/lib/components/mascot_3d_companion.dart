@@ -182,6 +182,10 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
               initialCameraPosition: _cameraPosition,
               manipulatorType: ManipulatorType.NONE,
               directLight: _directLight,
+              // See mobile/lib/components/mascot_3d_stage.dart — without
+              // this, faces the direct lights don't hit render fully
+              // black (no ambient term otherwise).
+              iblPath: 'assets/mascot_3d/env/default_env_ibl.ktx',
               // A no-op in this version — see the comment in
               // _onAssetLoaded, which does the equivalent normalization
               // itself. Left false (rather than omitted) so it doesn't

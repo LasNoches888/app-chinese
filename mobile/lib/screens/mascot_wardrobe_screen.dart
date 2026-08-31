@@ -86,23 +86,21 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
             level,
           ).index;
 
-    // Only the character and the equipped outfit's attached prop (if any)
-    // actually change what's on screen — most outfits are still 2D-only
-    // and share the same 3D model. Keying on the raw outfit index instead
-    // tore down and recreated the whole Filament engine on every single
-    // tap in the grid below, even between two outfits that render
-    // identically; racing that teardown/recreate is very likely why
-    // switching outfits could show a blank colored square or crash — see
-    // the "only one viewer can be active at a time" warning in Thermion's
-    // own docs.
-    final stageProp = MascotService.propForOutfit(character, equippedIndex);
-    final stageKey = '${character.name}_${stageProp?.asset ?? 'none'}';
-
+    // Keyed on the character alone — that's the only thing that requires
+    // a genuinely new 3D model (a new ViewerWidget.assetPath, which can't
+    // change in place). Keying on the outfit index as well used to tear
+    // down and recreate the whole Filament engine on every tap in the
+    // grid below, even between outfits that render identically (most
+    // outfits are still 2D-only); racing that teardown/recreate is very
+    // likely why switching outfits could show a blank colored square or
+    // crash — see the "only one viewer can be active at a time" warning
+    // in Thermion's own docs. Mascot3DStage now swaps the equipped prop
+    // in place (via didUpdateWidget) instead of needing a new widget.
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         Mascot3DStage(
-          key: ValueKey(stageKey),
+          key: ValueKey(character.name),
           character: character,
           outfitIndex: equippedIndex,
         ),
