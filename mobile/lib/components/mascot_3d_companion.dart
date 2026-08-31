@@ -81,6 +81,16 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     super.dispose();
   }
 
+  /// A single directional light leaves anything not facing it essentially
+  /// unlit — there's no ambient/IBL fill in this scene, so the shadowed
+  /// side of the model read as solid black. A second, dimmer light from
+  /// roughly the opposite side stands in for that fill.
+  Future<void> _onViewerAvailable(ThermionViewer viewer) async {
+    await viewer.addDirectLight(
+      DirectLight.sun(direction: Vector3(0.6, -0.3, 0.8), intensity: 45000),
+    );
+  }
+
   Future<void> _onAssetLoaded(ThermionViewer viewer, ThermionAsset asset) async {
     _asset = asset;
     await asset.addAnimationComponent();
@@ -152,6 +162,7 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
               directLight: _directLight,
               transformToUnitCube: true,
               background: _background,
+              onViewerAvailable: _onViewerAvailable,
               onAssetLoaded: _onAssetLoaded,
             ),
           ),

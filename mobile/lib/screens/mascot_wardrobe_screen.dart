@@ -4,10 +4,10 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
+import '../components/mascot_3d_stage.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
 import '../services/xp_service.dart';
-import 'mascot_3d_preview_screen.dart';
 
 /// Pick a companion (panda or pug) and dress it in whatever outfit the
 /// current level has unlocked. Reachable by tapping the mascot on the home
@@ -54,36 +54,7 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     final stats = _stats;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(settings.t('mascotWardrobeTitle')),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.view_in_ar),
-            tooltip: settings.t('mascotView3D'),
-            onPressed: stats == null
-                ? null
-                : () {
-                    final character = MascotCharacter.fromDb(
-                      stats.mascotCharacter,
-                    );
-                    final level = XpService.levelForXp(stats.totalXp);
-                    final outfitIndex = MascotService.effectiveOutfit(
-                      character,
-                      stats.equippedOutfit,
-                      level,
-                    ).index;
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => Mascot3DPreviewScreen(
-                          character: character,
-                          outfitIndex: outfitIndex,
-                        ),
-                      ),
-                    );
-                  },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: Text(settings.t('mascotWardrobeTitle'))),
       body: AppBackground(
         child: stats == null
             ? const Center(child: CircularProgressIndicator())
@@ -109,6 +80,16 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
+        // Keyed on character+outfit so switching either recreates this
+        // widget (a fresh Filament engine) instead of updating it in
+        // place — ViewerWidget can't change its assetPath after it's
+        // built.
+        Mascot3DStage(
+          key: ValueKey('${character.name}_$equippedIndex'),
+          character: character,
+          outfitIndex: equippedIndex,
+        ),
+        const SizedBox(height: 20),
         Text(
           settings.t('mascotPickCompanion'),
           style: Theme.of(context).textTheme.titleMedium,
