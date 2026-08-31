@@ -32,16 +32,45 @@ class MascotOutfit {
   });
 }
 
+/// A model's real, measured bounds (Y-up, from the mesh's bind pose —
+/// see assets/mascot_3d/SOURCES.md), used to normalize it to roughly a
+/// 1-unit-tall character centered at the origin.
+///
+/// ViewerWidget's own `transformToUnitCube: true` looks like it should do
+/// this, but it's a documented no-op in thermion_flutter 0.5.0 (checked
+/// the widget's source directly: the flag is stored and compared in
+/// `didUpdateWidget`, but `_configure()` never actually calls
+/// `transformToUnitCube()` on the loaded asset) — so both 3D widgets
+/// apply this themselves in onAssetLoaded instead of trusting that flag.
+/// Height, not the model's overall bounding-box size, is what's used to
+/// pick the scale: a T-pose's arm-span can be wider than the character is
+/// tall, and normalizing to the widest axis would make an idle (arms-down)
+/// pose render far smaller than intended — height stays the same in
+/// either pose.
+class MascotModelBounds {
+  final double height;
+  final double centerY;
+  final double centerZ;
+
+  const MascotModelBounds({
+    required this.height,
+    required this.centerY,
+    required this.centerZ,
+  });
+}
+
 /// A 3D prop worn by real bone attachment, for outfits that have one.
 /// Coordinates are local to the target bone, in the character rig's own
-/// native units — Thermion's whole-asset unit-cube normalization scales
-/// the bone hierarchy (and anything parented under it) uniformly, so a
-/// prop parented to a bone stays correctly sized without needing to know
-/// that scale factor itself. Only one outfit has a prop so far: this is
-/// a pilot for the bone-attachment mechanism (see entities.mdx's
-/// `setParent` — there's no dedicated "equip" API) before building out
-/// the rest, so the exact offset/scale below is a first guess, not a
-/// calibrated fit — expect it to need adjustment once seen on a device.
+/// native units — [MascotModelBounds]-driven normalization (see above)
+/// scales the whole bone hierarchy (and anything parented under it)
+/// uniformly, so a prop parented to a bone stays correctly sized without
+/// needing to know that scale factor itself. Only one outfit has a prop so
+/// far: this is a pilot for the bone-attachment mechanism (see
+/// entities.mdx's `setParent` — there's no dedicated "equip" API) before
+/// building out the rest, so the exact offset/scale below is a first
+/// guess, not a calibrated fit — expect it to need adjustment once seen on
+/// a device (doubly so now that the base model's own scale was wrong until
+/// this fix).
 class Mascot3DProp {
   final String asset;
   final String boneName;
@@ -159,6 +188,24 @@ class MascotService {
     MascotCharacter.panda => 'assets/mascot_3d/panda.glb',
     MascotCharacter.pug => 'assets/mascot_3d/pug.glb',
   };
+
+  /// Measured directly off each GLB's mesh vertices (bind pose) with
+  /// trimesh — see [MascotModelBounds] for why this exists.
+  static const _modelBounds = {
+    MascotCharacter.panda: MascotModelBounds(
+      height: 3.334,
+      centerY: 1.665,
+      centerZ: -0.204,
+    ),
+    MascotCharacter.pug: MascotModelBounds(
+      height: 1.052,
+      centerY: 0.519,
+      centerZ: 0.112,
+    ),
+  };
+
+  static MascotModelBounds modelBounds(MascotCharacter character) =>
+      _modelBounds[character]!;
 
   static List<MascotOutfit> outfitsFor(MascotCharacter character) =>
       switch (character) {

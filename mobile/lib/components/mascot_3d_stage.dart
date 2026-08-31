@@ -83,7 +83,20 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       MascotService.idleAnimationIndex(widget.character),
       loop: true,
     );
-    _baseTransform = await asset.getLocalTransform();
+    // ViewerWidget's transformToUnitCube flag doesn't actually do anything
+    // (see MascotModelBounds) — without this the model renders at its raw
+    // export scale, several units tall, putting the camera almost inside
+    // its legs. Scale by real measured height and recenter so the
+    // character's vertical midpoint sits at the origin, matching what
+    // `initialCameraPosition` (which always looks at the origin) expects.
+    final bounds = MascotService.modelBounds(widget.character);
+    final scale = 1.0 / bounds.height;
+    _baseTransform = Matrix4.compose(
+      Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
+      Quaternion.identity(),
+      Vector3.all(scale),
+    );
+    await asset.setTransform(_baseTransform!);
     _spinTimer = Timer.periodic(const Duration(milliseconds: 40), (_) async {
       final asset = _asset;
       final base = _baseTransform;
@@ -130,7 +143,10 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           initialCameraPosition: _cameraPosition,
           manipulatorType: ManipulatorType.NONE,
           directLight: _keyLight,
-          transformToUnitCube: true,
+          // A no-op in this version — see the comment in _onAssetLoaded,
+          // which does the equivalent normalization itself. Left false
+          // (rather than omitted) so it doesn't look like an oversight.
+          transformToUnitCube: false,
           background: _background,
           // This widget is recreated (via a character+outfit key) rather
           // than updated whenever either changes, since ViewerWidget can't

@@ -108,6 +108,18 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
       MascotService.idleAnimationIndex(widget.character),
       loop: true,
     );
+
+    // See mobile/lib/components/mascot_3d_stage.dart for why this is
+    // needed — ViewerWidget's transformToUnitCube flag is a no-op.
+    final bounds = MascotService.modelBounds(widget.character);
+    final scale = 1.0 / bounds.height;
+    await asset.setTransform(
+      Matrix4.compose(
+        Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
+        Quaternion.identity(),
+        Vector3.all(scale),
+      ),
+    );
   }
 
   Future<void> _react(Mascot3DCue cue, String message) async {
@@ -170,7 +182,11 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
               initialCameraPosition: _cameraPosition,
               manipulatorType: ManipulatorType.NONE,
               directLight: _directLight,
-              transformToUnitCube: true,
+              // A no-op in this version — see the comment in
+              // _onAssetLoaded, which does the equivalent normalization
+              // itself. Left false (rather than omitted) so it doesn't
+              // look like an oversight.
+              transformToUnitCube: false,
               background: _background,
               onViewerAvailable: _onViewerAvailable,
               onAssetLoaded: _onAssetLoaded,
