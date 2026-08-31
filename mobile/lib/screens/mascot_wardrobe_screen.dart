@@ -71,11 +71,20 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     final character = MascotCharacter.fromDb(stats.mascotCharacter);
     final level = XpService.levelForXp(stats.totalXp);
     final outfits = MascotService.outfitsFor(character);
-    final equippedIndex = MascotService.effectiveOutfit(
-      character,
-      stats.equippedOutfit,
-      level,
-    ).index;
+    // TODO: temporary, same as the `unlocked: true` below — picking any
+    // outfit here should stick regardless of the real requiredLevel while
+    // every outfit is being tried out. effectiveOutfit still enforces that
+    // level gate, so it would silently revert an equip the moment it fell
+    // outside the actual unlocked tier. Go back to
+    // `MascotService.effectiveOutfit(character, stats.equippedOutfit,
+    // level).index` once that's done.
+    final equippedIndex = stats.equippedOutfit >= 0
+        ? stats.equippedOutfit
+        : MascotService.effectiveOutfit(
+            character,
+            stats.equippedOutfit,
+            level,
+          ).index;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),

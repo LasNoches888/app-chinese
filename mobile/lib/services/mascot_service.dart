@@ -189,22 +189,26 @@ class MascotService {
   ) => outfitsFor(character).where((o) => o.requiredLevel <= level).toList();
 
   static const _idleAnimationIndex = {
-    MascotCharacter.panda: 0,
+    MascotCharacter.panda: 10,
     MascotCharacter.pug: 0,
   };
 
   /// One-shot glTF animation clips played mid-lesson before falling back to
-  /// idle. The panda's clips came from Quaternius's "Universal Animation
-  /// Library" with their names stripped by the FBX→GLB conversion, so these
-  /// were picked by eye from mid-clip stills, not from a names list — see
+  /// idle. The panda's clips are Quaternius's "Universal Animation Library"
+  /// — the GLB's own animations array has them cleanly named (Idle, Wave,
+  /// No, ...), but an earlier pass here inspected the rig in Blender
+  /// instead, whose glTF importer renames every action to a generic
+  /// "Chara.NNN" on a name-length collision — so these were picked by eye
+  /// against that scrambled order rather than the real one. Re-derived by
+  /// reading the glTF JSON's `animations[].name` directly — see
   /// assets/mascot_3d/SOURCES.md. The pug's rig only has Idle and Jump, so
   /// every cue reuses Jump (or Idle for "incorrect", since a jump reads as
   /// upbeat regardless of context and a wrong answer shouldn't).
   static const _cueAnimationIndex = {
     MascotCharacter.panda: {
-      Mascot3DCue.hello: 5, // arm raised — reads as a wave
-      Mascot3DCue.correct: 22, // the longest clip (80 frames) — a dance
-      Mascot3DCue.incorrect: 6, // head tilted, hand near face — "thinking"
+      Mascot3DCue.hello: 28, // "Wave"
+      Mascot3DCue.correct: 23, // unnamed but the longest clip, 3.37s
+      Mascot3DCue.incorrect: 14, // "No"
     },
     MascotCharacter.pug: {
       Mascot3DCue.hello: 1,
@@ -213,16 +217,17 @@ class MascotService {
     },
   };
 
-  /// How long each cue's clip actually runs (measured in Blender: frame
-  /// count ÷ 24fps), plus a little headroom — the panda's "correct" clip
-  /// alone is 3.33s, well past a one-size-fits-all wait. Getting this wrong
-  /// either cuts a clip off mid-motion or leaves the model frozen on its
-  /// last frame before [MascotService.idleAnimationIndex] takes back over.
+  /// How long each cue's clip actually runs (read from the glTF's own
+  /// animation sampler timings), plus a little headroom — the panda's
+  /// "correct" clip alone is 3.37s, well past a one-size-fits-all wait.
+  /// Getting this wrong either cuts a clip off mid-motion or leaves the
+  /// model frozen on its last frame before
+  /// [MascotService.idleAnimationIndex] takes back over.
   static const _cueDuration = {
     MascotCharacter.panda: {
-      Mascot3DCue.hello: Duration(milliseconds: 1000), // clip: 0.77s
-      Mascot3DCue.correct: Duration(milliseconds: 3600), // clip: 3.33s
-      Mascot3DCue.incorrect: Duration(milliseconds: 1900), // clip: 1.67s
+      Mascot3DCue.hello: Duration(milliseconds: 1950), // clip: 1.7s
+      Mascot3DCue.correct: Duration(milliseconds: 3600), // clip: 3.37s
+      Mascot3DCue.incorrect: Duration(milliseconds: 1950), // clip: 1.7s
     },
     MascotCharacter.pug: {
       Mascot3DCue.hello: Duration(milliseconds: 1700), // clip (Jump): 1.5s
