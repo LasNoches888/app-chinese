@@ -35,7 +35,7 @@ class Mascot3DCompanion extends StatefulWidget {
     super.key,
     required this.character,
     required this.controller,
-    this.size = 96,
+    this.size = 116,
   });
 
   @override
@@ -55,8 +55,16 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   // value equality. Built once and reused as the same instances for the
   // widget's whole lifetime, which the frequent rebuilds a lesson screen
   // triggers (one per answer) would otherwise hit constantly.
-  late final _cameraPosition = Vector3(0, 1, 3);
-  late final _directLight = DirectLight.sun();
+  //
+  // A dead-on camera lit from the same axis flattens the model — every
+  // visible face gets roughly the same light, so it reads as a 2D cutout
+  // rather than something with volume. Angling the camera to a 3/4 view
+  // and the light off that same axis gives it a visible shading gradient.
+  late final _cameraPosition = Vector3(1.3, 1.3, 2.6);
+  late final _directLight = DirectLight.sun(
+    direction: Vector3(-0.6, -1, -0.2),
+    intensity: 150000,
+  );
   late final _background = Theme.of(context).colorScheme.surfaceContainerHighest;
 
   @override

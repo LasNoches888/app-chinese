@@ -21,8 +21,16 @@ class Mascot3DPreviewScreen extends StatelessWidget {
   // screen is normally stable, but mobile/lib/components/mascot_3d_companion.dart
   // hit exactly this crash from its much more frequent rebuilds, so these
   // are hoisted the same way here rather than waiting to hit it too.
-  static final _cameraPosition = Vector3(0, 1, 3);
-  static final _directLight = DirectLight.sun();
+  //
+  // A dead-on camera lit from the same axis flattens the model — every
+  // visible face gets roughly the same light, so it reads as a 2D cutout
+  // rather than something with volume. Angling the camera to a 3/4 view
+  // and the light off that same axis gives it a visible shading gradient.
+  static final _cameraPosition = Vector3(1.3, 1.3, 2.6);
+  static final _directLight = DirectLight.sun(
+    direction: Vector3(-0.6, -1, -0.2),
+    intensity: 150000,
+  );
 
   @override
   Widget build(BuildContext context) {
