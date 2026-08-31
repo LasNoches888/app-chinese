@@ -140,4 +140,17 @@ void main() {
       expect(unlocked.every((o) => o.requiredLevel <= 6), isTrue);
     });
   });
+
+  group('MascotService.propForOutfit', () {
+    test('the reading-glasses outfit has a prop targeting the Head bone', () {
+      final prop = MascotService.propForOutfit(MascotCharacter.panda, 2);
+      expect(prop, isNotNull);
+      expect(prop!.boneName, 'Head');
+    });
+
+    test('outfits without a prop return null', () {
+      expect(MascotService.propForOutfit(MascotCharacter.panda, 0), isNull);
+      expect(MascotService.propForOutfit(MascotCharacter.pug, 0), isNull);
+    });
+  });
 }

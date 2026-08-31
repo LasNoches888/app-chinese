@@ -62,15 +62,25 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
             tooltip: settings.t('mascotView3D'),
             onPressed: stats == null
                 ? null
-                : () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => Mascot3DPreviewScreen(
-                        character: MascotCharacter.fromDb(
-                          stats.mascotCharacter,
+                : () {
+                    final character = MascotCharacter.fromDb(
+                      stats.mascotCharacter,
+                    );
+                    final level = XpService.levelForXp(stats.totalXp);
+                    final outfitIndex = MascotService.effectiveOutfit(
+                      character,
+                      stats.equippedOutfit,
+                      level,
+                    ).index;
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => Mascot3DPreviewScreen(
+                          character: character,
+                          outfitIndex: outfitIndex,
                         ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
           ),
         ],
       ),

@@ -32,6 +32,34 @@ class MascotOutfit {
   });
 }
 
+/// A 3D prop worn by real bone attachment, for outfits that have one.
+/// Coordinates are local to the target bone, in the character rig's own
+/// native units — Thermion's whole-asset unit-cube normalization scales
+/// the bone hierarchy (and anything parented under it) uniformly, so a
+/// prop parented to a bone stays correctly sized without needing to know
+/// that scale factor itself. Only one outfit has a prop so far: this is
+/// a pilot for the bone-attachment mechanism (see entities.mdx's
+/// `setParent` — there's no dedicated "equip" API) before building out
+/// the rest, so the exact offset/scale below is a first guess, not a
+/// calibrated fit — expect it to need adjustment once seen on a device.
+class Mascot3DProp {
+  final String asset;
+  final String boneName;
+  final double offsetX;
+  final double offsetY;
+  final double offsetZ;
+  final double scale;
+
+  const Mascot3DProp({
+    required this.asset,
+    required this.boneName,
+    this.offsetX = 0,
+    this.offsetY = 0,
+    this.offsetZ = 0,
+    this.scale = 1,
+  });
+}
+
 /// Picks which mascot still fits the moment, and owns the outfit catalog
 /// each character can be dressed in. Kept separate from the widgets that
 /// render it so the picking logic is plain and testable without a widget
@@ -137,6 +165,23 @@ class MascotService {
         MascotCharacter.panda => pandaOutfits,
         MascotCharacter.pug => pugOutfits,
       };
+
+  /// Only the panda's reading-glasses outfit (index 2) has a 3D prop so
+  /// far — see [Mascot3DProp].
+  static const _propsByOutfit = {
+    MascotCharacter.panda: {
+      2: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/glasses.glb',
+        boneName: 'Head',
+        offsetY: 0.3,
+        offsetZ: 0.15,
+        scale: 0.7,
+      ),
+    },
+  };
+
+  static Mascot3DProp? propForOutfit(MascotCharacter character, int outfitIndex) =>
+      _propsByOutfit[character]?[outfitIndex];
 
   static List<MascotOutfit> unlockedOutfits(
     MascotCharacter character,

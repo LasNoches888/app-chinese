@@ -51,6 +51,7 @@ flutter:
     - assets/mascot/hearts/
     - assets/mascot_3d/panda.glb
     - assets/mascot_3d/pug.glb
+    - assets/mascot_3d/props/glasses.glb
 
 flutter_launcher_icons:
   android: true
