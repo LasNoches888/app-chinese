@@ -74,6 +74,15 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
 
   Future<void> _onAssetLoaded(ThermionViewer viewer, ThermionAsset asset) async {
     _asset = asset;
+    // Without this, the model just sits in its raw glTF bind pose — for
+    // this rig that's a T-pose (arms straight out to the sides), not a
+    // standing idle. Same call the lesson companion already makes; the
+    // stage was missing it.
+    await asset.addAnimationComponent();
+    await asset.playGltfAnimation(
+      MascotService.idleAnimationIndex(widget.character),
+      loop: true,
+    );
     _baseTransform = await asset.getLocalTransform();
     _spinTimer = Timer.periodic(const Duration(milliseconds: 40), (_) async {
       final asset = _asset;

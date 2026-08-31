@@ -134,7 +134,10 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
               _OutfitCard(
                 outfit: outfit,
                 settings: settings,
-                unlocked: outfit.requiredLevel <= level,
+                // TODO: temporary — every outfit shows unlocked so the new
+                // 3D stage can be tried out with all of them. Revert to
+                // `outfit.requiredLevel <= level` once that's done.
+                unlocked: true,
                 equipped: outfit.index == equippedIndex,
                 onTap: () => _equip(outfit),
               ),
