@@ -81,13 +81,23 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     super.dispose();
   }
 
-  /// A single directional light leaves anything not facing it essentially
-  /// unlit — there's no ambient/IBL fill in this scene, so the shadowed
-  /// side of the model read as solid black. A second, dimmer light from
-  /// roughly the opposite side stands in for that fill.
+  /// Games built for this exact "toy character" look (Subway Surfers
+  /// among them) mostly skip dynamic lighting altogether — shading is
+  /// baked into the texture with an unlit shader, so there's never a dark
+  /// side to get wrong. Thermion's PBR pipeline doesn't give us that
+  /// shortcut, so the next best thing is lighting from enough directions
+  /// that nothing reads as unlit — three fills roughly opposite and
+  /// perpendicular to the key light, all close to it in strength rather
+  /// than one dim accent, rather than chasing one "correct" light angle.
   Future<void> _onViewerAvailable(ThermionViewer viewer) async {
     await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(0.6, -0.3, 0.8), intensity: 45000),
+      DirectLight.sun(direction: Vector3(0.6, -0.3, 0.8), intensity: 110000),
+    );
+    await viewer.addDirectLight(
+      DirectLight.sun(direction: Vector3(0, 0.8, -0.4), intensity: 70000),
+    );
+    await viewer.addDirectLight(
+      DirectLight.sun(direction: Vector3(-0.3, -0.6, 0.5), intensity: 70000),
     );
   }
 
