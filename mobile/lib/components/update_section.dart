@@ -89,12 +89,19 @@ class _UpdateSectionState extends State<UpdateSection> {
       _progress = 0;
     });
     try {
-      final path = await AppUpdateService.download(
-        update,
-        onProgress: (fraction) {
-          if (mounted) setState(() => _progress = fraction);
-        },
-      );
+      // A prior attempt may have already finished — e.g. the app got
+      // backgrounded mid-download and the OS killed the process, which
+      // drops this widget's state (back to square one, as far as it
+      // knows) but not a download that had actually completed by then.
+      // Without this, that always meant redownloading from zero.
+      final path =
+          await AppUpdateService.alreadyDownloaded(update) ??
+          await AppUpdateService.download(
+            update,
+            onProgress: (fraction) {
+              if (mounted) setState(() => _progress = fraction);
+            },
+          );
       if (!mounted) return;
       // Fires the OS's own installer and returns immediately — the
       // actual install happens in that UI from here on (and, on

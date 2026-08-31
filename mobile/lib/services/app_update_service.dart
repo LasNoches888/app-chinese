@@ -125,6 +125,42 @@ class AppUpdateService {
     );
   }
 
+  /// Where [update]'s installer is (or would be) saved — named after the
+  /// build it holds, so a second download doesn't race a first one still
+  /// being read by the installer, and a stale file from an old check is
+  /// never mistaken for a fresh one.
+  static Future<String> _pathFor(AppUpdate update, {Directory? saveDir}) async {
+    final dir = saveDir ?? await getTemporaryDirectory();
+    final dotIndex = update.assetName.lastIndexOf('.');
+    final extension = dotIndex < 0 ? '' : update.assetName.substring(dotIndex);
+    return '${dir.path}/uchi-update-${update.buildNumber}$extension';
+  }
+
+  /// A previous [download] of [update] already sitting in the cache, if
+  /// one finished completely — checked by size against what GitHub
+  /// reported for the asset, not just existence, since backgrounding the
+  /// app mid-download can get the whole process killed (Android reclaims
+  /// backgrounded apps aggressively, and this download isn't tied to a
+  /// foreground service or any OS-level background-transfer API), which
+  /// leaves a truncated file under the same name rather than no file at
+  /// all. Without this check, every such interruption meant redownloading
+  /// from zero even when a *later* attempt had actually completed, because
+  /// the in-memory UI state (also reset by that same process kill) had no
+  /// way to tell "downloaded" apart from "never tried".
+  static Future<String?> alreadyDownloaded(
+    AppUpdate update, {
+    Directory? saveDir,
+  }) async {
+    final path = await _pathFor(update, saveDir: saveDir);
+    final file = File(path);
+    if (!await file.exists()) return null;
+    final expectedSize = update.assetSizeBytes;
+    if (expectedSize != null && await file.length() != expectedSize) {
+      return null;
+    }
+    return path;
+  }
+
   /// Downloads [update]'s installer to a private cache file, reporting
   /// progress as a 0–1 fraction when the server states a size (GitHub
   /// always does for release assets, so this is effectively always
@@ -150,15 +186,7 @@ class AppUpdateService {
     final total = response.contentLength ?? update.assetSizeBytes ?? 0;
     var received = 0;
 
-    final dir = saveDir ?? await getTemporaryDirectory();
-    final dotIndex = update.assetName.lastIndexOf('.');
-    final extension = dotIndex < 0 ? '' : update.assetName.substring(dotIndex);
-    // Named after the build it holds, so a second download doesn't race
-    // a first one still being read by the installer, and a stale file
-    // from an old check is never mistaken for a fresh one.
-    final file = File(
-      '${dir.path}/uchi-update-${update.buildNumber}$extension',
-    );
+    final file = File(await _pathFor(update, saveDir: saveDir));
     final sink = file.openWrite();
     try {
       await response.stream

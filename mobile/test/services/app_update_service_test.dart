@@ -283,4 +283,73 @@ void main() {
       );
     });
   });
+
+  group('alreadyDownloaded', () {
+    test('finds a completed download from an earlier attempt', () async {
+      final dir = await Directory.systemTemp.createTemp('update_test');
+      addTearDown(() => dir.delete(recursive: true));
+      const update = AppUpdate(
+        buildNumber: 4,
+        assetName: 'app-release.apk',
+        assetUrl: 'https://example.com/x.apk',
+        assetSizeBytes: 5,
+      );
+
+      final downloadedPath = await AppUpdateService.download(
+        update,
+        client: MockClient(
+          (_) async => http.Response.bytes(
+            [1, 2, 3, 4, 5],
+            200,
+            headers: {'content-length': '5'},
+          ),
+        ),
+        saveDir: dir,
+      );
+
+      // Simulates a fresh process: nothing but the file on disk carries
+      // over from the interrupted attempt.
+      final found = await AppUpdateService.alreadyDownloaded(
+        update,
+        saveDir: dir,
+      );
+      expect(found, downloadedPath);
+    });
+
+    test('ignores a file that was never downloaded', () async {
+      final dir = await Directory.systemTemp.createTemp('update_test');
+      addTearDown(() => dir.delete(recursive: true));
+
+      final found = await AppUpdateService.alreadyDownloaded(
+        const AppUpdate(
+          buildNumber: 4,
+          assetName: 'app-release.apk',
+          assetUrl: 'https://example.com/x.apk',
+          assetSizeBytes: 5,
+        ),
+        saveDir: dir,
+      );
+      expect(found, isNull);
+    });
+
+    test('rejects a truncated file left by an interrupted download', () async {
+      // The exact failure this exists for: the process gets killed
+      // mid-write, leaving a partial file under the name a completed
+      // download would have used.
+      final dir = await Directory.systemTemp.createTemp('update_test');
+      addTearDown(() => dir.delete(recursive: true));
+      await File('${dir.path}/uchi-update-4.apk').writeAsBytes([1, 2]);
+
+      final found = await AppUpdateService.alreadyDownloaded(
+        const AppUpdate(
+          buildNumber: 4,
+          assetName: 'app-release.apk',
+          assetUrl: 'https://example.com/x.apk',
+          assetSizeBytes: 5,
+        ),
+        saveDir: dir,
+      );
+      expect(found, isNull);
+    });
+  });
 }
