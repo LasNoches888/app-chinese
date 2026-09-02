@@ -20,6 +20,33 @@ The real order (index: name, duration):
 
 — see MascotService's `_idleAnimationIndex`/`_cueAnimationIndex`.
 
+Both GLBs came out of the FBX conversion with transparency settings their
+meshes don't use, and both had to be corrected — `tool/mascot3d/fix_materials.py`
+does it, and `--check` guards against a re-export bringing it back. The
+panda's material was `alphaMode: BLEND`; the pug's was `alphaMode: MASK`
+with `baseColorFactor` alpha 0. Neither model is actually transparent: the
+panda's atlas is alpha 255 everywhere and its `COLOR_0` alpha is 1.0
+everywhere.
+
+This matters far more than it sounds. `BLEND` puts the mesh in Filament's
+transparent pass, which doesn't write depth and draws triangles in
+submission order instead of by depth, and these materials are also
+`doubleSided`, so back faces aren't culled either. The far side of the
+body then draws over the near side and the character renders as torn
+planes in the right colours. That is what the long-running "shredded
+mesh" was, and — read back — what the first report in this whole thread,
+"dark/see-through patches on the model", already was. It was misread as a
+lighting problem at the time and chased through several rounds of camera,
+lighting and viewer-lifetime changes before anyone checked the material.
+The tell was that it looked equally wrong everywhere the model appeared:
+a bug in a widget can't do that; a bug in the asset can.
+
+`doubleSided` is deliberately left as it is. It only did damage alongside
+`BLEND`, where nothing was depth-sorted; against an opaque material, back
+faces just lose the depth test. Turning culling on would be a small win
+and a real risk — any single-sided surface in these meshes would vanish
+from one side.
+
 The panda's texture is a single 512x512 atlas the GLB names `Sushi_Atlas`.
 That name is a red herring: Quaternius ships one shared palette atlas per
 pack, so it's named after the pack, not this character, and every mesh
