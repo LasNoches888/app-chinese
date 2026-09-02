@@ -46,6 +46,15 @@ ratio, not the pixels: see `MascotService.iblIntensity`.
 - `ViewerWidget.transformToUnitCube` is a no-op in thermion 0.5.0: it's
   stored and compared, but `_configure()` never calls it. Both widgets
   normalize the model themselves.
+- thermion distinguishes a glTF asset from its instances, and its own API
+  is inconsistent about which one it wants: `addAnimationComponent()`
+  silently redirects to `instances[0]`, while `playGltfAnimation()` and
+  the bone getters use the receiver's handle as-is. Call them on what
+  `loadGltf` returns and the animator is registered on one native object
+  while "play" goes to another, so nothing drives the skeleton and the
+  mesh renders as torn geometry with intact materials. Use
+  `poseTarget()` (lib/components/mascot_3d_instance.dart) for anything
+  touching animation, bones or the pose transform.
 - Meshes are concatenated when rendering, so index buffers need offsetting
   by the running **vertex** count. (`panda.glb` has two meshes, `Headband`
   first at 200 verts — getting this wrong silently shreds the topology

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:thermion_flutter/thermion_flutter.dart';
 
 import '../services/mascot_service.dart';
+import 'mascot_3d_instance.dart';
 
 /// Lets a screen trigger the mascot's mid-lesson reactions without holding
 /// a reference to the widget's private State — same shape as
@@ -107,9 +108,13 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   }
 
   Future<void> _onAssetLoaded(ThermionViewer viewer, ThermionAsset asset) async {
-    _asset = asset;
-    await asset.addAnimationComponent();
-    await asset.playGltfAnimation(
+    // Animation and transform calls have to target the asset's instance,
+    // not the asset ViewerWidget hands over — see poseTarget. Getting
+    // this wrong left the skeleton undriven and the mesh shredded.
+    final posed = await poseTarget(asset);
+    _asset = posed;
+    await posed.addAnimationComponent();
+    await posed.playGltfAnimation(
       MascotService.idleAnimationIndex(widget.character),
       loop: true,
     );
@@ -118,7 +123,7 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     // needed — ViewerWidget's transformToUnitCube flag is a no-op.
     final bounds = MascotService.modelBounds(widget.character);
     final scale = 1.0 / bounds.height;
-    await asset.setTransform(
+    await posed.setTransform(
       Matrix4.compose(
         Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
         Quaternion.identity(),

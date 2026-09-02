@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:thermion_flutter/thermion_flutter.dart';
 
 import '../services/mascot_service.dart';
+import 'mascot_3d_instance.dart';
 
 /// A big, always-visible "podium" view of the companion — the primary way
 /// to see it in 3D, embedded directly in the wardrobe rather than tucked
@@ -33,7 +34,11 @@ class Mascot3DStage extends StatefulWidget {
 class _Mascot3DStageState extends State<Mascot3DStage> {
   Timer? _spinTimer;
   ThermionViewer? _viewer;
+  // What loadGltf returned, kept only so it can be destroyed; and the
+  // instance every animation, bone and transform call has to target
+  // instead — see poseTarget in mascot_3d_instance.dart.
   ThermionAsset? _asset;
+  ThermionAsset? _posed;
   Camera? _camera;
   double _angle = 0;
 
@@ -107,7 +112,8 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   }
 
   Future<void> _updateProp() async {
-    final asset = _asset;
+    // The instance, not the asset — _attachProp reads bones off it.
+    final asset = _posed;
     final viewer = _viewer;
     if (asset == null || viewer == null) return;
     if (_attachedOutfitIndex == widget.outfitIndex) return;
@@ -197,6 +203,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     final oldAsset = _asset;
     _propAsset = null;
     _asset = null;
+    _posed = null;
     _attachedOutfitIndex = null;
     if (oldProp != null) await viewer.destroyAsset(oldProp);
     if (oldAsset != null) await viewer.destroyAsset(oldAsset);
@@ -212,12 +219,17 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       return;
     }
     _asset = asset;
+    // Animation, bones and the pose transform all have to go to the
+    // asset's instance, not the asset — see poseTarget. Mixing the two is
+    // what left the skeleton undriven and the mesh shredded.
+    final posed = await poseTarget(asset);
+    _posed = posed;
 
     // Without this, the model just sits in its raw glTF bind pose — for
     // this rig that's a T-pose (arms straight out to the sides), not a
     // standing idle.
-    await asset.addAnimationComponent();
-    await asset.playGltfAnimation(
+    await posed.addAnimationComponent();
+    await posed.playGltfAnimation(
       MascotService.idleAnimationIndex(widget.character),
       loop: true,
     );
@@ -231,7 +243,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     final scale = 1.0 / bounds.height;
     // Set once and never touched again — the spin is the camera's job now,
     // see _startSpin.
-    await asset.setTransform(
+    await posed.setTransform(
       Matrix4.compose(
         Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
         Quaternion.identity(),
@@ -239,7 +251,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       ),
     );
 
-    await _attachProp(viewer, asset);
+    await _attachProp(viewer, posed);
   }
 
   /// Attaches the currently-equipped outfit's 3D prop, if it has one —
