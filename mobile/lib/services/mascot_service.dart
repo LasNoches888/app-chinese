@@ -195,15 +195,31 @@ class MascotService {
   /// showed the character stops reading somewhere past 80% ambient and
   /// starts looking like a lit 3D object rather than a cartoon below 60%.
   ///
-  /// Both are lux, so the darkest lit surface sits at
-  /// `ibl / (ibl + key)` of the brightest: 180000/230000 = 78%. That one
-  /// ratio is the whole lighting setup, which is why there's a single key
-  /// light here rather than the previous key-plus-three-fills — filling
+  /// A single key light rather than the old key-plus-three-fills: filling
   /// from every side is exactly what an indirect light already does, and
   /// stacking direct lights to fake it was what made the old setup both
   /// contrasty and hard to reason about.
-  static const iblIntensity = 180000.0;
-  static const keyLightIntensity = 50000.0;
+  ///
+  /// These two numbers are NOT in comparable units, which is the trap
+  /// here. A first pass at this treated both as lux and set ibl=180000
+  /// against key=50000, reasoning that the 230000 total was below the old
+  /// setup's 430000 and would therefore be no brighter. On device it came
+  /// out badly overexposed — the navy washed to pale lavender and the
+  /// sash to pale yellow. A directional light's intensity is the
+  /// illuminance it casts from one direction; an IBL's scales an
+  /// environment lighting the model from every direction at once, so it
+  /// buys far more total light per unit. Treat raising `iblIntensity` as
+  /// a much bigger change than the same delta on the key light, and
+  /// change it in small steps.
+  ///
+  /// So the ambient share is still the thing being tuned — the darkest
+  /// lit surface wants to sit near 78% of the brightest — but the level
+  /// is now anchored to the old setup's exposure, which was correct even
+  /// though its contrast wasn't: this keeps the IBL close to the 30000 it
+  /// used to run at and takes the flattening out of the direct side
+  /// instead, where the units are known.
+  static const iblIntensity = 40000.0;
+  static const keyLightIntensity = 110000.0;
 
   /// The 3D model for a companion's base look — a single glTF/GLB per
   /// character, not yet split per outfit (see assets/mascot_3d/SOURCES.md
