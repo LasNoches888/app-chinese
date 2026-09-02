@@ -49,6 +49,10 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   Timer? _messageTimer;
   Timer? _cueTimer;
 
+  /// The scale-and-centre transform, kept so it can be put back after every
+  /// animation change — see [_applyPose].
+  Matrix4? _poseTransform;
+
   // ViewerWidget only allows manipulatorType to change after it's built —
   // every other property throws ("create a new widget to change this
   // property") if it differs across rebuilds, which Vector3/DirectLight
@@ -123,13 +127,32 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     // needed — ViewerWidget's transformToUnitCube flag is a no-op.
     final bounds = MascotService.modelBounds(widget.character);
     final scale = 1.0 / bounds.height;
-    await posed.setTransform(
-      Matrix4.compose(
-        Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
-        Quaternion.identity(),
-        Vector3.all(scale),
-      ),
+    _poseTransform = Matrix4.compose(
+      Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
+      Quaternion.identity(),
+      Vector3.all(scale),
     );
+    await _applyPose();
+  }
+
+  /// Puts the scale-and-centre transform back on the model.
+  ///
+  /// Has to be re-applied after every [playGltfAnimation], not just once at
+  /// load. Every clip in this rig — idle and each cue alike — carries
+  /// translation/rotation/scale channels for the armature root, all of them
+  /// identity, so starting a clip resets the very node this transform is
+  /// written to. The model snaps back to its export scale, several units
+  /// tall against a camera 1.9 units out, and the circle goes empty.
+  ///
+  /// It's why the mascot vanished on a reaction while the wardrobe podium
+  /// stayed fine: the podium plays an animation once at load and never
+  /// again, so nothing ever resets it, whereas a reaction plays a cue and
+  /// then idle again.
+  Future<void> _applyPose() async {
+    final asset = _asset;
+    final pose = _poseTransform;
+    if (asset == null || pose == null) return;
+    await asset.setTransform(pose);
   }
 
   Future<void> _react(Mascot3DCue cue, String message) async {
@@ -146,10 +169,15 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     final idleIndex = MascotService.idleAnimationIndex(widget.character);
     final cueIndex = MascotService.cueAnimationIndex(widget.character, cue);
     await asset.playGltfAnimation(cueIndex, loop: false);
+    // Starting a clip resets the armature root this transform lives on —
+    // see _applyPose. Without putting it straight back, the mascot jumps to
+    // its export scale and disappears off the edges of its own circle.
+    await _applyPose();
     if (!mounted) return;
     _cueTimer = Timer(MascotService.cueDuration(widget.character, cue), () async {
       if (_asset != null) {
         await _asset!.playGltfAnimation(idleIndex, loop: true);
+        await _applyPose();
       }
     });
   }

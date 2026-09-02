@@ -9,12 +9,8 @@ import 'mascot_3d_instance.dart';
 
 /// A big, always-visible "podium" view of the companion — the primary way
 /// to see it in 3D, embedded directly in the wardrobe rather than tucked
-/// behind a button. No touch controls: earlier versions used
-/// ManipulatorType.ORBIT, but embedded inside the wardrobe's scrollable
-/// list, a drag meant to orbit the camera just as often got stolen by the
-/// list's own scroll gesture instead, reading as "the camera is broken."
-/// A slow automatic spin shows the model from every angle without needing
-/// any gesture to fight over.
+/// behind a button. Swipe sideways to turn it; see [_onDrag] for why the
+/// gesture is horizontal-only rather than ManipulatorType.ORBIT.
 class Mascot3DStage extends StatefulWidget {
   final MascotCharacter character;
   final int outfitIndex;
@@ -32,7 +28,6 @@ class Mascot3DStage extends StatefulWidget {
 }
 
 class _Mascot3DStageState extends State<Mascot3DStage> {
-  Timer? _spinTimer;
   ThermionViewer? _viewer;
   // What loadGltf returned, kept only so it can be destroyed; and the
   // instance every animation, bone and transform call has to target
@@ -77,12 +72,12 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   // frame the character fills is just height/that. d = 1.62 puts it at
   // 70%, and 0.23 of height gives an 8° downward tilt. Verified by
   // projecting the posed mesh through this exact camera at every 30° of
-  // the auto-spin: worst-case margin to the frame edge is 17%.
+  // a full turn: worst-case margin to the frame edge is 17%.
   late final _cameraPosition = Vector3(0, 0.23, 1.60);
 
-  /// Horizontal distance from the origin the auto-spin orbits at — taken
-  /// straight from [_cameraPosition] so the spin can never drift away
-  /// from the framing that was measured for it.
+  /// Horizontal distance from the origin the turntable orbits at — taken
+  /// straight from [_cameraPosition] so turning the model can never drift
+  /// away from the framing that was measured for it.
   late final _orbitRadius = math.sqrt(
     _cameraPosition.x * _cameraPosition.x +
         _cameraPosition.z * _cameraPosition.z,
@@ -92,12 +87,6 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     intensity: MascotService.keyLightIntensity,
   );
   late final _background = Theme.of(context).colorScheme.surfaceContainerHighest;
-
-  @override
-  void dispose() {
-    _spinTimer?.cancel();
-    super.dispose();
-  }
 
   @override
   void didUpdateWidget(Mascot3DStage oldWidget) {
@@ -141,39 +130,42 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       intensity: MascotService.iblIntensity,
     );
     await _loadCharacter();
-    _startSpin();
+    await _lookFromAngle();
   }
 
-  /// Orbits the camera around the model rather than rotating the model.
+  /// Points the camera at the model from the current [_angle].
   ///
-  /// This used to spin the character itself, calling `asset.setTransform`
-  /// 25 times a second. That is the one thing this widget did that the
-  /// lesson companion — which sets a transform once and has rendered
-  /// correctly throughout — never did, and it's why the podium showed a
-  /// shredded mesh while the companion showed the same GLB intact at the
-  /// same moment. This rig's root node is `CharacterArmature`, which is
-  /// also the parent of the whole bone hierarchy, so writing its
-  /// transform on a timer means overwriting the node the glTF animator is
-  /// concurrently computing the skinning matrices from. Torn geometry
-  /// with correct materials is exactly what losing that race looks like.
+  /// Note this moves the camera, never the model. An earlier version
+  /// turned the character itself by calling `asset.setTransform` on a
+  /// timer, which meant overwriting the armature root the glTF animator
+  /// computes its skinning matrices from, while it was doing so. Since the
+  /// camera always looks at the origin and the model is normalized to sit
+  /// there, orbiting the eye gives an identical picture and leaves the
+  /// asset's transform alone.
+  Future<void> _lookFromAngle() async {
+    final camera = _camera;
+    if (camera == null) return;
+    await camera.lookAt(
+      Vector3(
+        _orbitRadius * math.sin(_angle),
+        _cameraPosition.y,
+        _orbitRadius * math.cos(_angle),
+      ),
+    );
+  }
+
+  /// Turntable drag: horizontal only, on purpose.
   ///
-  /// Moving the model is never necessary here anyway: the camera always
-  /// looks at the origin and the model is normalized to sit there, so
-  /// orbiting the eye gives the identical picture while leaving the
-  /// asset's transform to the animation system alone.
-  void _startSpin() {
-    _spinTimer ??= Timer.periodic(const Duration(milliseconds: 40), (_) async {
-      final camera = _camera;
-      if (!mounted || camera == null) return;
-      _angle += 0.012;
-      await camera.lookAt(
-        Vector3(
-          _orbitRadius * math.sin(_angle),
-          _cameraPosition.y,
-          _orbitRadius * math.cos(_angle),
-        ),
-      );
-    });
+  /// An earlier version used ManipulatorType.ORBIT, and inside the
+  /// wardrobe's scrolling list a drag meant to turn the model was as
+  /// likely to be claimed by the list's own vertical drag recognizer,
+  /// which read as "the camera is broken". Claiming only horizontal drags
+  /// leaves vertical ones to the list, so the two gestures never compete:
+  /// swipe sideways to turn the character, up and down to scroll.
+  void _onDrag(DragUpdateDetails details) {
+    // A full width of travel is a bit more than one full turn.
+    _angle -= details.delta.dx * 0.012;
+    unawaited(_lookFromAngle());
   }
 
   /// Swaps the model on the viewer this widget already has, rather than
@@ -241,8 +233,8 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     // `initialCameraPosition` (which always looks at the origin) expects.
     final bounds = MascotService.modelBounds(widget.character);
     final scale = 1.0 / bounds.height;
-    // Set once and never touched again — the spin is the camera's job now,
-    // see _startSpin.
+    // Set once and never touched again — turning the model is the
+    // camera's job, see _onDrag.
     await posed.setTransform(
       Matrix4.compose(
         Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
@@ -295,40 +287,45 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       child: SizedBox(
         height: widget.height,
         width: double.infinity,
-        child: ViewerWidget(
-          // No assetPath on purpose: it can't change once the widget is
-          // built, which is what forced a whole new viewer per character.
-          // _loadCharacter loads and swaps the model itself instead.
-          initialCameraPosition: _cameraPosition,
-          manipulatorType: ManipulatorType.NONE,
-          directLight: _keyLight,
-          // Direct lights alone leave any face they don't hit fully black
-          // (Filament has no ambient term without one) — hence the
-          // "dark/see-through-looking patches" once the model was finally
-          // framed correctly. It only supplies ambient fill, independent
-          // of the `background` color below (only skyboxPath would
-          // conflict with that). Loaded here so ViewerWidget has one from
-          // the first frame; _onViewerAvailable immediately reloads it at
-          // the intensity the flat cartoon look actually needs.
-          iblPath: MascotService.iblAsset,
-          // A no-op in this version — see the comment in _loadCharacter,
-          // which does the equivalent normalization itself. Left false
-          // (rather than omitted) so it doesn't look like an oversight.
-          transformToUnitCube: false,
-          background: _background,
-          // Deliberately NOT destroyEngineOnUnload. That flag reads like
-          // "clean up after this widget", but ViewerWidget implements it
-          // as `FilamentApp.instance!.destroy()` — the process-wide
-          // singleton, not this widget's engine. Setting it here (this
-          // was the only place in the app that did) meant leaving the
-          // wardrobe tore down the engine for everything else, so the
-          // lesson companion afterwards rendered an empty circle.
-          //
-          // Nothing leaks by leaving it off: _performTearDown always
-          // disposes this widget's own viewer and its texture regardless
-          // of the flag. Only the shared engine survives, which is what
-          // you want when 3D appears on more than one screen.
-          onViewerAvailable: _onViewerAvailable,
+        // Horizontal drags turn the character; vertical ones fall through
+        // to the wardrobe's list so scrolling still works — see _onDrag.
+        child: GestureDetector(
+          onHorizontalDragUpdate: _onDrag,
+          child: ViewerWidget(
+            // No assetPath on purpose: it can't change once the widget is
+            // built, which is what forced a whole new viewer per character.
+            // _loadCharacter loads and swaps the model itself instead.
+            initialCameraPosition: _cameraPosition,
+            manipulatorType: ManipulatorType.NONE,
+            directLight: _keyLight,
+            // Direct lights alone leave any face they don't hit fully black
+            // (Filament has no ambient term without one) — hence the
+            // "dark/see-through-looking patches" once the model was finally
+            // framed correctly. It only supplies ambient fill, independent
+            // of the `background` color below (only skyboxPath would
+            // conflict with that). Loaded here so ViewerWidget has one from
+            // the first frame; _onViewerAvailable immediately reloads it at
+            // the intensity the flat cartoon look actually needs.
+            iblPath: MascotService.iblAsset,
+            // A no-op in this version — see the comment in _loadCharacter,
+            // which does the equivalent normalization itself. Left false
+            // (rather than omitted) so it doesn't look like an oversight.
+            transformToUnitCube: false,
+            background: _background,
+            // Deliberately NOT destroyEngineOnUnload. That flag reads like
+            // "clean up after this widget", but ViewerWidget implements it
+            // as `FilamentApp.instance!.destroy()` — the process-wide
+            // singleton, not this widget's engine. Setting it here (this
+            // was the only place in the app that did) meant leaving the
+            // wardrobe tore down the engine for everything else, so the
+            // lesson companion afterwards rendered an empty circle.
+            //
+            // Nothing leaks by leaving it off: _performTearDown always
+            // disposes this widget's own viewer and its texture regardless
+            // of the flag. Only the shared engine survives, which is what
+            // you want when 3D appears on more than one screen.
+            onViewerAvailable: _onViewerAvailable,
+          ),
         ),
       ),
     );
