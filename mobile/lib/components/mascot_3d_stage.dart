@@ -221,13 +221,23 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           // (rather than omitted) so it doesn't look like an oversight.
           transformToUnitCube: false,
           background: _background,
-          // This widget is recreated (via a character-only key, in
-          // mascot_wardrobe_screen.dart) when the character changes,
-          // since ViewerWidget can't change its assetPath in place — so
-          // the old engine needs to actually be torn down each time
-          // rather than leaking. An outfit change alone doesn't recreate
-          // it — see didUpdateWidget.
-          destroyEngineOnUnload: true,
+          // Deliberately NOT destroyEngineOnUnload. That flag reads like
+          // "clean up after this widget", but ViewerWidget implements it
+          // as `FilamentApp.instance!.destroy()` — the process-wide
+          // singleton, not this widget's engine. Setting it here (this
+          // was the only place in the app that did) meant leaving the
+          // wardrobe tore down the engine for everything else, so the
+          // lesson companion afterwards rendered an empty circle; and
+          // because this widget is keyed on the character
+          // (mascot_wardrobe_screen.dart), switching panda/pug destroyed
+          // that engine from the outgoing widget's dispose while the
+          // incoming one was already building a viewer on it, which took
+          // the app down.
+          //
+          // Nothing leaks by leaving it off: _performTearDown always
+          // disposes this widget's own viewer and its texture regardless
+          // of the flag. Only the shared engine survives, which is what
+          // you want when 3D appears on more than one screen.
           onViewerAvailable: _onViewerAvailable,
           onAssetLoaded: _onAssetLoaded,
         ),
