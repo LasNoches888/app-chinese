@@ -157,11 +157,30 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final message = _message;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        if (_message != null)
+        // The bubble's slot is always occupied, and the viewer below is
+        // keyed, so that showing a reaction can't disturb the viewer's
+        // identity in this list.
+        //
+        // This was written as `if (_message != null) Container(...)`, which
+        // reads harmlessly but isn't: Flutter matches a multi-child
+        // widget's children by position and type, so the list going from
+        // [ClipRRect] to [Container, ClipRRect] makes it compare a
+        // Container against the old ClipRRect at index 0, decide they're
+        // unrelated, and throw away that whole subtree — the ViewerWidget,
+        // its State and its Filament viewer with it. Every reaction tore
+        // the 3D companion down and rebuilt it, and the replacement raced
+        // the teardown and came up blank. It showed up as the mascot
+        // vanishing on wrong answers specifically, because a wrong answer
+        // always reacts while a correct one only does every third time
+        // (see lesson_session_screen.dart).
+        if (message == null)
+          const SizedBox.shrink()
+        else
           Container(
             constraints: const BoxConstraints(maxWidth: 200),
             margin: const EdgeInsets.only(bottom: 8),
@@ -178,11 +197,12 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
               ],
             ),
             child: Text(
-              _message!,
+              message,
               style: TextStyle(fontSize: 13, color: scheme.onSurface),
             ),
           ),
         ClipRRect(
+          key: const ValueKey('mascot-3d-viewer'),
           borderRadius: BorderRadius.circular(widget.size / 2),
           child: SizedBox(
             width: widget.size,
