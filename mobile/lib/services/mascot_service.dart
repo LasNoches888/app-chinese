@@ -181,6 +181,30 @@ class MascotService {
   /// rather than just quietly waiting.
   static const _lonelyAfter = Duration(days: 2);
 
+  /// thermion's own generic studio IBL. Supplies the ambient term Filament
+  /// otherwise has none of — see assets/mascot_3d/SOURCES.md.
+  static const iblAsset = 'assets/mascot_3d/env/default_env_ibl.ktx';
+
+  /// The mascot is meant to read as a flat, toy-like cartoon (the look
+  /// Subway Surfers and friends get by baking shading into the texture and
+  /// drawing it unlit). This atlas has no baked shading, so going fully
+  /// unlit isn't an option: the panda's arms and torso are the same navy
+  /// `#403c57`, and with no shading at all they merge into one shape and
+  /// the muzzle disappears off the face. What works instead is keeping
+  /// shading but flattening it — rendering the model across the range
+  /// showed the character stops reading somewhere past 80% ambient and
+  /// starts looking like a lit 3D object rather than a cartoon below 60%.
+  ///
+  /// Both are lux, so the darkest lit surface sits at
+  /// `ibl / (ibl + key)` of the brightest: 180000/230000 = 78%. That one
+  /// ratio is the whole lighting setup, which is why there's a single key
+  /// light here rather than the previous key-plus-three-fills — filling
+  /// from every side is exactly what an indirect light already does, and
+  /// stacking direct lights to fake it was what made the old setup both
+  /// contrasty and hard to reason about.
+  static const iblIntensity = 180000.0;
+  static const keyLightIntensity = 50000.0;
+
   /// The 3D model for a companion's base look — a single glTF/GLB per
   /// character, not yet split per outfit (see assets/mascot_3d/SOURCES.md
   /// for provenance).
@@ -251,10 +275,21 @@ class MascotService {
   /// assets/mascot_3d/SOURCES.md. The pug's rig only has Idle and Jump, so
   /// every cue reuses Jump (or Idle for "incorrect", since a jump reads as
   /// upbeat regardless of context and a wrong answer shouldn't).
+  ///
+  /// "correct" used to be clip 23, chosen only for being the longest at
+  /// 3.37s. Measuring how far the skinned mesh actually travels over each
+  /// clip (peak vertex range, against a model normalized to 1 unit tall)
+  /// showed why that read as the mascot doing nothing: clip 23 peaks at
+  /// 0.158, barely above Idle's own 0.062, so a correct answer bought
+  /// three and a half seconds of near-stillness. Jump peaks at 0.630 and
+  /// is unambiguous as celebration. Wave (0.895) is the only clip with
+  /// both big motion and real length, and it's already "hello". Punch
+  /// (0.969) and Sword (0.871) move more than Jump but read as aggression
+  /// — wrong note for a child getting an answer right.
   static const _cueAnimationIndex = {
     MascotCharacter.panda: {
       Mascot3DCue.hello: 28, // "Wave"
-      Mascot3DCue.correct: 23, // unnamed but the longest clip, 3.37s
+      Mascot3DCue.correct: 11, // "Jump"
       Mascot3DCue.incorrect: 14, // "No"
     },
     MascotCharacter.pug: {
@@ -273,7 +308,10 @@ class MascotService {
   static const _cueDuration = {
     MascotCharacter.panda: {
       Mascot3DCue.hello: Duration(milliseconds: 1950), // clip: 1.7s
-      Mascot3DCue.correct: Duration(milliseconds: 3600), // clip: 3.37s
+      // Jump is short and snappy; the speech bubble stays up for its own
+      // 4s regardless, so the mascot settling back to idle well before
+      // then is fine — better than holding a last frame.
+      Mascot3DCue.correct: Duration(milliseconds: 550), // clip (Jump): 0.3s
       Mascot3DCue.incorrect: Duration(milliseconds: 1950), // clip: 1.7s
     },
     MascotCharacter.pug: {

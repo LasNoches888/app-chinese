@@ -20,6 +20,29 @@ The real order (index: name, duration):
 
 — see MascotService's `_idleAnimationIndex`/`_cueAnimationIndex`.
 
+The panda's texture is a single 512x512 atlas the GLB names `Sushi_Atlas`.
+That name is a red herring: Quaternius ships one shared palette atlas per
+pack, so it's named after the pack, not this character, and every mesh
+just samples flat colours out of it. Don't conclude from the name that the
+wrong texture got packed in — check the UVs instead. Sampling the atlas at
+the panda's own UVs gives a white-and-black head (`#e9e9e9`/`#242424`) with
+a navy `#403c57` body, a green `#84b717` sash and an orange `#ec8742`
+headband. That's the character's design — Quaternius's panda is already
+dressed in a kung-fu outfit — not a texture mix-up.
+
+The two 3D widgets' `initialCameraPosition` values are derived, not
+eyeballed. thermion never calls `setLensProjection` with an explicit lens,
+so the camera keeps the default 28mm `kFocalLength` against Filament's
+24mm sensor height: a fixed vertical FOV of 2*atan(12/28) = 46.4°, which
+`ThermionViewerFFI.setViewport` preserves across resizes because it reads
+`getFocalLength()` back before reprojecting. `ViewerWidget` always points
+the camera at the origin (`camera.lookAt(position)` with a null focus,
+which defaults to `Vector3.zero()`), and both widgets normalize the model
+to 1 unit tall centred there, so the character fills
+`1 / (2 * distance * tan(23.2°))` of the frame height. That's the number
+the camera positions are tuned against — see the comments in
+mascot_3d_stage.dart and mascot_3d_companion.dart.
+
 `env/default_env_ibl.ktx` — thermion_flutter's own generic example IBL
 (`examples/assets/default_env_ibl.ktx` in [nmfisher/thermion](https://github.com/nmfisher/thermion)),
 not anything scene-specific. Direct lights alone leave any face they

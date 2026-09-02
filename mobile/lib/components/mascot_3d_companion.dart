@@ -59,11 +59,27 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   // A dead-on camera lit from the same axis flattens the model — every
   // visible face gets roughly the same light, so it reads as a 2D cutout
   // rather than something with volume. Angling the camera to a 3/4 view
-  // and the light off that same axis gives it a visible shading gradient.
-  late final _cameraPosition = Vector3(1.3, 1.3, 2.6);
+  // (25° around) and the light off that same axis gives it a visible
+  // shading gradient.
+  //
+  // Distance and height are derived the same way as the podium's — see
+  // mascot_3d_stage.dart for the 46.4° vertical FOV this all hangs off.
+  // The old (1.3, 1.3, 2.6) sat 3.18 units from a 1-unit character, so it
+  // filled 39% of an already-small 116px circle: about 45px of actual
+  // character, far too little to read a wave or a head-shake, which is
+  // why the reactions came across as an indistinct twitch. d = 1.91 takes
+  // that to 65%, and 0.26 of height gives the same 8° tilt as the podium.
+  //
+  // Sized against the circular crop rather than the square frame: this is
+  // clipped to a circle (ClipRRect, radius = size/2), so a raised arm can
+  // leave the visible area while still inside the viewport. Checked by
+  // projecting every clip the companion plays — idle, Wave, "No", and the
+  // long celebration — and taking the largest radius from centre, which
+  // Wave reaches at 0.90 of the circle.
+  late final _cameraPosition = Vector3(0.80, 0.26, 1.71);
   late final _directLight = DirectLight.sun(
     direction: Vector3(-0.6, -1, -0.2),
-    intensity: 150000,
+    intensity: MascotService.keyLightIntensity,
   );
   late final _background = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -81,23 +97,12 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     super.dispose();
   }
 
-  /// Games built for this exact "toy character" look (Subway Surfers
-  /// among them) mostly skip dynamic lighting altogether — shading is
-  /// baked into the texture with an unlit shader, so there's never a dark
-  /// side to get wrong. Thermion's PBR pipeline doesn't give us that
-  /// shortcut, so the next best thing is lighting from enough directions
-  /// that nothing reads as unlit — three fills roughly opposite and
-  /// perpendicular to the key light, all close to it in strength rather
-  /// than one dim accent, rather than chasing one "correct" light angle.
+  /// Same flat-cartoon lighting as the podium — see mascot_3d_stage.dart's
+  /// _onViewerAvailable and MascotService.iblIntensity.
   Future<void> _onViewerAvailable(ThermionViewer viewer) async {
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(0.6, -0.3, 0.8), intensity: 110000),
-    );
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(0, 0.8, -0.4), intensity: 70000),
-    );
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(-0.3, -0.6, 0.5), intensity: 70000),
+    await viewer.loadIbl(
+      MascotService.iblAsset,
+      intensity: MascotService.iblIntensity,
     );
   }
 
@@ -184,8 +189,9 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
               directLight: _directLight,
               // See mobile/lib/components/mascot_3d_stage.dart — without
               // this, faces the direct lights don't hit render fully
-              // black (no ambient term otherwise).
-              iblPath: 'assets/mascot_3d/env/default_env_ibl.ktx',
+              // black (no ambient term otherwise). _onViewerAvailable
+              // reloads it at the intensity the cartoon look needs.
+              iblPath: MascotService.iblAsset,
               // A no-op in this version — see the comment in
               // _onAssetLoaded, which does the equivalent normalization
               // itself. Left false (rather than omitted) so it doesn't

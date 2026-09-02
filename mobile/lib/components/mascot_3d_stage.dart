@@ -50,10 +50,27 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   // cached rather than built fresh in build() — ViewerWidget throws if any
   // property other than manipulatorType differs across rebuilds, and
   // neither Vector3 nor DirectLight override value equality.
-  late final _cameraPosition = Vector3(0.4, 1.15, 2.6);
+  //
+  // Framed against the "toy character on a podium" reference look: the
+  // character standing upright and filling most of the frame, seen from
+  // roughly eye level. The previous (0.4, 1.15, 2.6) was 2.87 units out
+  // and 24° above a model that's only 1 unit tall, which left it filling
+  // 39% of the frame height and viewed steeply from above — small, and
+  // foreshortened enough to read as "leaning over" rather than standing.
+  //
+  // thermion never sets a lens itself, so the camera keeps Filament's
+  // default 28mm (thermion's kFocalLength) against a 24mm sensor height —
+  // a fixed 2*atan(12/28) = 46.4° vertical FOV, which setViewport
+  // preserves across resizes since it reads getFocalLength() back. So the
+  // visible height at the origin is 2*d*tan(23.2°) and the fraction of the
+  // frame the character fills is just height/that. d = 1.62 puts it at
+  // 70%, and 0.23 of height gives an 8° downward tilt. Verified by
+  // projecting the posed mesh through this exact camera at every 30° of
+  // the auto-spin: worst-case margin to the frame edge is 17%.
+  late final _cameraPosition = Vector3(0, 0.23, 1.60);
   late final _keyLight = DirectLight.sun(
     direction: Vector3(-0.6, -1, -0.2),
-    intensity: 150000,
+    intensity: MascotService.keyLightIntensity,
   );
   late final _background = Theme.of(context).colorScheme.surfaceContainerHighest;
 
@@ -91,23 +108,19 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     await _attachProp(viewer, asset);
   }
 
-  /// Games built for this exact "toy character on a podium" look (Subway
-  /// Surfers among them) mostly skip dynamic lighting altogether — shading
-  /// is baked into the texture with an unlit shader, so there's never a
-  /// dark side to get wrong. Thermion's PBR pipeline doesn't give us that
-  /// shortcut, so the next best thing is lighting from enough directions
-  /// that nothing reads as unlit — three fills roughly opposite and
-  /// perpendicular to the key light, all close to it in strength rather
-  /// than one dim accent, rather than chasing one "correct" light angle.
+  /// Reloads the IBL that ViewerWidget already loaded, at the intensity the
+  /// cartoon look needs — see MascotService.iblIntensity for the ratio and
+  /// why there are no fill lights any more. ViewerWidget hardcodes
+  /// `loadIbl(path)`, taking thermion's 30000 default, which against the
+  /// old 400000 of stacked direct lights left ambient at barely a
+  /// thirteenth of the total: the model came out contrasty and muddy
+  /// rather than flat and toy-like. `loadIbl` defaults to
+  /// `destroyExisting: true` and this runs after _configure()'s own load,
+  /// so it replaces rather than stacks.
   Future<void> _onViewerAvailable(ThermionViewer viewer) async {
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(0.6, -0.3, 0.8), intensity: 110000),
-    );
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(0, 0.8, -0.4), intensity: 70000),
-    );
-    await viewer.addDirectLight(
-      DirectLight.sun(direction: Vector3(-0.3, -0.6, 0.5), intensity: 70000),
+    await viewer.loadIbl(
+      MascotService.iblAsset,
+      intensity: MascotService.iblIntensity,
     );
   }
 
@@ -197,12 +210,12 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           // Direct lights alone leave any face they don't hit fully black
           // (Filament has no ambient term without one) — hence the
           // "dark/see-through-looking patches" once the model was finally
-          // framed correctly. This is thermion's own generic default
-          // studio IBL (bundled with its examples), not anything scene-
-          // specific — it only supplies ambient fill, independent of the
-          // `background` color below (only skyboxPath would conflict
-          // with that).
-          iblPath: 'assets/mascot_3d/env/default_env_ibl.ktx',
+          // framed correctly. It only supplies ambient fill, independent
+          // of the `background` color below (only skyboxPath would
+          // conflict with that). Loaded here so ViewerWidget has one from
+          // the first frame; _onViewerAvailable immediately reloads it at
+          // the intensity the flat cartoon look actually needs.
+          iblPath: MascotService.iblAsset,
           // A no-op in this version — see the comment in _onAssetLoaded,
           // which does the equivalent normalization itself. Left false
           // (rather than omitted) so it doesn't look like an oversight.
