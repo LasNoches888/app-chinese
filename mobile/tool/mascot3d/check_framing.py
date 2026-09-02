@@ -14,10 +14,12 @@ lib/components/mascot_3d_stage.dart and mascot_3d_companion.dart -- this
 check is only meaningful if it's checking what actually ships.
 """
 import math
+import os
 
 import numpy as np
 
 import preview as P
+from preview import measured_bounds
 
 TY = math.tan(math.atan(0.5 * P.SENSOR_MM / P.FOCAL_MM))
 
@@ -52,8 +54,29 @@ def report(label, v, eye, aspect, circular):
     return bad
 
 
-print(f"STAGE  eye={STAGE_EYE}  aspect=330/260  idle, swept through the spin")
 worst = 0
+
+# The numbers MascotService normalizes by, against the ones actually in the
+# GLB. Getting these wrong doesn't fail loudly — it just scales the model
+# to the wrong size, and the camera ends up somewhere inside it.
+print("BOUNDS  declared (MascotService) vs measured (GLB)")
+_measured = measured_bounds()
+for name, value, got in zip(("height", "centerY", "centerZ"),
+                            (P.HEIGHT, P.CENTER_Y, P.CENTER_Z), _measured):
+    off = abs(value - got)
+    bad = off > max(0.02, abs(got) * 0.02)
+    worst += 1 if bad else 0
+    print(f"  {name:8s} declared {value:+.3f}  measured {got:+.3f}  "
+          f"{'MISMATCH' if bad else 'ok'}")
+
+IS_PANDA = os.path.basename(P.GLB) == "panda.glb"
+if not IS_PANDA:
+    # The clip indices below are the panda's; other models have their own.
+    print("\n(skipping the spin/cue checks — they're keyed to panda.glb)")
+    print("\nCLEAN" if worst == 0 else f"\n{worst} problem(s) found")
+    raise SystemExit(1 if worst else 0)
+
+print(f"\nSTAGE  eye={STAGE_EYE}  aspect=330/260  idle, swept through the spin")
 for ang in range(0, 360, 30):
     v, _, _ = P.skinned(10, 0.5)
     n = P.normalize(v, spin_deg=ang)

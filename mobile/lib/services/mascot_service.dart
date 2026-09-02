@@ -229,8 +229,17 @@ class MascotService {
     MascotCharacter.pug => 'assets/mascot_3d/pug.glb',
   };
 
-  /// Measured directly off each GLB's mesh vertices (bind pose) with
-  /// trimesh — see [MascotModelBounds] for why this exists.
+  /// Measured directly off each GLB's mesh vertices (bind pose) — see
+  /// [MascotModelBounds] for why this exists, and
+  /// `tool/mascot3d/check_framing.py`, which re-measures them from the GLB
+  /// and fails if these drift.
+  ///
+  /// The pug's numbers were wrong until they were checked that way: height
+  /// 1.052 against a real 2.659, and every figure short by the same factor
+  /// of 2.53, so they'd clearly been taken from a differently-scaled copy
+  /// of the model. That left it scaled by 1/1.052 instead of 1/2.659 —
+  /// still two and a half units tall against a camera 1.6 units out, i.e.
+  /// the camera inside the dog, which is exactly how it looked.
   static const _modelBounds = {
     MascotCharacter.panda: MascotModelBounds(
       height: 3.334,
@@ -238,9 +247,9 @@ class MascotService {
       centerZ: -0.204,
     ),
     MascotCharacter.pug: MascotModelBounds(
-      height: 1.052,
-      centerY: 0.519,
-      centerZ: 0.112,
+      height: 2.659,
+      centerY: 1.312,
+      centerZ: 0.282,
     ),
   };
 

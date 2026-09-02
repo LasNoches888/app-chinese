@@ -146,11 +146,17 @@ def skinned(anim_idx, t):
     g = globals_for(pose)
     verts, cols, tris = [], [], []
     nverts = 0  # running vertex count -- len(verts) counts arrays, not vertices
-    atlas_bv = gltf["bufferViews"][gltf["images"][0]["bufferView"]]
-    atlas = Image.open(io.BytesIO(blob[atlas_bv.get("byteOffset", 0):
-                                       atlas_bv.get("byteOffset", 0) + atlas_bv["byteLength"]])).convert("RGB")
-    px = np.asarray(atlas)
-    ah, aw, _ = px.shape
+    # Not every model is textured: pug.glb has no image at all and colours
+    # its primitives with plain baseColorFactor materials instead.
+    images = gltf.get("images")
+    if images:
+        atlas_bv = gltf["bufferViews"][images[0]["bufferView"]]
+        atlas = Image.open(io.BytesIO(blob[atlas_bv.get("byteOffset", 0):
+                                           atlas_bv.get("byteOffset", 0) + atlas_bv["byteLength"]])).convert("RGB")
+        px = np.asarray(atlas)
+        ah, aw, _ = px.shape
+    else:
+        px = None
 
     for ni, node in enumerate(gltf["nodes"]):
         if "mesh" not in node:
@@ -180,10 +186,16 @@ def skinned(anim_idx, t):
                 world = (g[ni] @ np.concatenate([p, np.ones((len(p), 1))], 1).T).T
             verts.append(world[:, :3])
 
-            uv = acc(a["TEXCOORD_0"]) if "TEXCOORD_0" in a else np.zeros((len(p), 2))
-            u = np.clip((uv[:, 0] * aw).astype(int), 0, aw - 1)
-            v = np.clip((uv[:, 1] * ah).astype(int), 0, ah - 1)
-            cols.append(px[v, u].astype(np.float64) / 255.0)
+            if px is not None:
+                uv = acc(a["TEXCOORD_0"]) if "TEXCOORD_0" in a else np.zeros((len(p), 2))
+                u = np.clip((uv[:, 0] * aw).astype(int), 0, aw - 1)
+                v = np.clip((uv[:, 1] * ah).astype(int), 0, ah - 1)
+                cols.append(px[v, u].astype(np.float64) / 255.0)
+            else:
+                mat = gltf["materials"][prim["material"]] if "material" in prim else {}
+                rgba = mat.get("pbrMetallicRoughness", {}).get(
+                    "baseColorFactor", [0.8, 0.8, 0.8, 1])
+                cols.append(np.tile(np.array(rgba[:3]), (len(p), 1)))
 
             idx = acc(prim["indices"])[:, 0].astype(int).reshape(-1, 3) + base
             tris.append(idx)
@@ -191,7 +203,28 @@ def skinned(anim_idx, t):
 
 
 # ------------------------------------------------- app-side normalization
-HEIGHT, CENTER_Y, CENTER_Z = 3.334, 1.665, -0.204   # MascotService._modelBounds
+# What MascotService._modelBounds declares for each model. Keep in sync —
+# measured_bounds() below re-derives them from the GLB, and
+# check_framing.py fails if the two disagree, which is how the pug's were
+# caught being short by a factor of 2.53 (camera ended up inside the dog).
+DECLARED_BOUNDS = {
+    "panda.glb": (3.334, 1.665, -0.204),
+    "pug.glb": (2.659, 1.312, 0.282),
+}
+HEIGHT, CENTER_Y, CENTER_Z = DECLARED_BOUNDS.get(
+    os.path.basename(GLB), DECLARED_BOUNDS["panda.glb"]
+)
+
+
+def measured_bounds(anim_idx=None, t=0.0):
+    """Height and centre actually present in the GLB, for comparison with
+    what the Dart declares."""
+    v, _, _ = skinned(anim_idx, t)
+    return (
+        float(v[:, 1].max() - v[:, 1].min()),
+        float((v[:, 1].max() + v[:, 1].min()) / 2),
+        float((v[:, 2].max() + v[:, 2].min()) / 2),
+    )
 
 
 def normalize(v, spin_deg=0.0):
