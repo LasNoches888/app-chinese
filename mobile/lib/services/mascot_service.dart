@@ -264,14 +264,23 @@ class MascotService {
 
   /// Only the panda's reading-glasses outfit (index 2) has a 3D prop so
   /// far — see [Mascot3DProp].
+  ///
+  /// These numbers are measured, not guessed — `tool/mascot3d/fit_prop.py`
+  /// reports them. The offsets are in the Head bone's own frame, which is
+  /// rotated 22° about X relative to the model, so eyeballing them doesn't
+  /// work: the previous (0.3, 0.15) put the glasses inside the skull with
+  /// only the arms poking out. In that frame the head runs from Y -0.13 to
+  /// +1.00, the eye patches sit at Y +0.53, and the face reaches Z +0.72,
+  /// so the lenses want to land just proud of that. Scale is the head's
+  /// width at eye height (1.29) over the model's own width (1.94).
   static const _propsByOutfit = {
     MascotCharacter.panda: {
       2: Mascot3DProp(
         asset: 'assets/mascot_3d/props/glasses.glb',
         boneName: 'Head',
-        offsetY: 0.3,
-        offsetZ: 0.15,
-        scale: 0.7,
+        offsetY: 0.53,
+        offsetZ: 0.60,
+        scale: 0.67,
       ),
     },
   };

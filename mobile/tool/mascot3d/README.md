@@ -59,3 +59,21 @@ ratio, not the pixels: see `MascotService.iblIntensity`.
   by the running **vertex** count. (`panda.glb` has two meshes, `Headband`
   first at 200 verts — getting this wrong silently shreds the topology
   into stretched triangles rather than erroring.)
+
+## Fitting a bone-attached prop
+
+`Mascot3DProp`'s offsets are in the **target bone's** frame, not the
+model's. The panda's Head bone is rotated 22° about X, so guessing them
+doesn't work — the glasses' first values put them inside the skull with
+only the arms showing.
+
+```bash
+python fit_prop.py            # measures the bone's frame and the prop's size
+python preview_prop.py        # renders the panda actually wearing it
+```
+
+`fit_prop.py` reports where the bone's own vertices sit in its frame, so
+you can read off the face front and eye height directly; `preview_prop.py`
+then draws the result through the same offset → bone → normalization chain
+the app uses. For the Head bone the useful numbers are: head spans Y -0.13
+to +1.00, eyes at Y +0.53, face front at Z +0.72, width at eye height 1.29.
