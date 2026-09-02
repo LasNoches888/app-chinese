@@ -46,6 +46,11 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   int? _attachedOutfitIndex;
   ThermionAsset? _propAsset;
 
+  // Bumped on every character load so a load that's been superseded (two
+  // quick taps between panda and pug) can notice mid-flight and drop what
+  // it was building instead of racing the newer one into _asset.
+  int _loadGeneration = 0;
+
   // See mobile/lib/components/mascot_3d_companion.dart for why these are
   // cached rather than built fresh in build() — ViewerWidget throws if any
   // property other than manipulatorType differs across rebuilds, and
@@ -83,11 +88,11 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   @override
   void didUpdateWidget(Mascot3DStage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // The character can't change without a new widget (a new assetPath,
-    // which ViewerWidget can't apply in place — see the key in
-    // mascot_wardrobe_screen.dart). Only the outfit can change here, so
-    // just swap the prop rather than reloading the whole model.
-    if (widget.outfitIndex != oldWidget.outfitIndex) {
+    // Both a character and an outfit change are now handled in place, on
+    // the one viewer this widget creates and keeps — see _loadCharacter.
+    if (widget.character != oldWidget.character) {
+      unawaited(_loadCharacter());
+    } else if (widget.outfitIndex != oldWidget.outfitIndex) {
       unawaited(_updateProp());
     }
   }
@@ -108,29 +113,67 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     await _attachProp(viewer, asset);
   }
 
-  /// Reloads the IBL that ViewerWidget already loaded, at the intensity the
-  /// cartoon look needs — see MascotService.iblIntensity for the ratio and
-  /// why there are no fill lights any more. ViewerWidget hardcodes
-  /// `loadIbl(path)`, taking thermion's 30000 default, which against the
-  /// old 400000 of stacked direct lights left ambient at barely a
-  /// thirteenth of the total: the model came out contrasty and muddy
-  /// rather than flat and toy-like. `loadIbl` defaults to
+  /// Sets the IBL to the intensity the cartoon look needs (ViewerWidget
+  /// hardcodes thermion's 30000 default — see MascotService.iblIntensity),
+  /// then loads the character itself. `loadIbl` defaults to
   /// `destroyExisting: true` and this runs after _configure()'s own load,
   /// so it replaces rather than stacks.
   Future<void> _onViewerAvailable(ThermionViewer viewer) async {
+    _viewer = viewer;
     await viewer.loadIbl(
       MascotService.iblAsset,
       intensity: MascotService.iblIntensity,
     );
+    await _loadCharacter();
   }
 
-  Future<void> _onAssetLoaded(ThermionViewer viewer, ThermionAsset asset) async {
-    _viewer = viewer;
+  /// Swaps the model on the viewer this widget already has, rather than
+  /// letting a new widget bring a whole new viewer with it.
+  ///
+  /// The character used to arrive through ViewerWidget's `assetPath`,
+  /// which can't change once built, so the wardrobe keyed this widget on
+  /// the character and a panda/pug tap replaced the whole thing — new
+  /// widget, new viewer, new Filament resources. That was never really
+  /// safe. It first showed up as a crash (the outgoing widget destroying
+  /// the shared engine under the incoming one), and once that was fixed
+  /// the same race surfaced instead as a shredded mesh: the outgoing
+  /// viewer's teardown freeing GLB buffers the incoming viewer had
+  /// already loaded and was drawing from. The lesson companion, which
+  /// only ever builds one viewer, was fine throughout — which is the
+  /// clearest evidence it's the recreation itself that's the problem.
+  ///
+  /// So this widget now owns the model's lifetime: one viewer for as long
+  /// as the wardrobe is open, and a character change is a destroy plus a
+  /// load on it — exactly what an outfit's prop swap already did.
+  Future<void> _loadCharacter() async {
+    final viewer = _viewer;
+    if (viewer == null) return;
+    final generation = ++_loadGeneration;
+
+    final oldProp = _propAsset;
+    final oldAsset = _asset;
+    _propAsset = null;
+    _asset = null;
+    _attachedOutfitIndex = null;
+    _baseTransform = null;
+    if (oldProp != null) await viewer.destroyAsset(oldProp);
+    if (oldAsset != null) await viewer.destroyAsset(oldAsset);
+    if (!mounted || generation != _loadGeneration) return;
+
+    final asset = await viewer.loadGltf(
+      MascotService.model3DAsset(widget.character),
+    );
+    if (!mounted || generation != _loadGeneration) {
+      // Superseded while the GLB was loading — drop it rather than let it
+      // become the visible model over the newer character's.
+      await viewer.destroyAsset(asset);
+      return;
+    }
     _asset = asset;
+
     // Without this, the model just sits in its raw glTF bind pose — for
     // this rig that's a T-pose (arms straight out to the sides), not a
-    // standing idle. Same call the lesson companion already makes; the
-    // stage was missing it.
+    // standing idle.
     await asset.addAnimationComponent();
     await asset.playGltfAnimation(
       MascotService.idleAnimationIndex(widget.character),
@@ -150,7 +193,9 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       Vector3.all(scale),
     );
     await asset.setTransform(_baseTransform!);
-    _spinTimer = Timer.periodic(const Duration(milliseconds: 40), (_) async {
+    // One timer for the widget's whole life, not one per model — it reads
+    // whatever _asset currently is, so a character swap just carries on.
+    _spinTimer ??= Timer.periodic(const Duration(milliseconds: 40), (_) async {
       final asset = _asset;
       final base = _baseTransform;
       if (!mounted || asset == null || base == null) return;
@@ -203,7 +248,9 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
         height: widget.height,
         width: double.infinity,
         child: ViewerWidget(
-          assetPath: MascotService.model3DAsset(widget.character),
+          // No assetPath on purpose: it can't change once the widget is
+          // built, which is what forced a whole new viewer per character.
+          // _loadCharacter loads and swaps the model itself instead.
           initialCameraPosition: _cameraPosition,
           manipulatorType: ManipulatorType.NONE,
           directLight: _keyLight,
@@ -216,7 +263,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           // the first frame; _onViewerAvailable immediately reloads it at
           // the intensity the flat cartoon look actually needs.
           iblPath: MascotService.iblAsset,
-          // A no-op in this version — see the comment in _onAssetLoaded,
+          // A no-op in this version — see the comment in _loadCharacter,
           // which does the equivalent normalization itself. Left false
           // (rather than omitted) so it doesn't look like an oversight.
           transformToUnitCube: false,
@@ -227,19 +274,13 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
           // singleton, not this widget's engine. Setting it here (this
           // was the only place in the app that did) meant leaving the
           // wardrobe tore down the engine for everything else, so the
-          // lesson companion afterwards rendered an empty circle; and
-          // because this widget is keyed on the character
-          // (mascot_wardrobe_screen.dart), switching panda/pug destroyed
-          // that engine from the outgoing widget's dispose while the
-          // incoming one was already building a viewer on it, which took
-          // the app down.
+          // lesson companion afterwards rendered an empty circle.
           //
           // Nothing leaks by leaving it off: _performTearDown always
           // disposes this widget's own viewer and its texture regardless
           // of the flag. Only the shared engine survives, which is what
           // you want when 3D appears on more than one screen.
           onViewerAvailable: _onViewerAvailable,
-          onAssetLoaded: _onAssetLoaded,
         ),
       ),
     );

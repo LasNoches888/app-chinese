@@ -86,24 +86,19 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
             level,
           ).index;
 
-    // Keyed on the character alone — that's the only thing that requires
-    // a genuinely new 3D model (a new ViewerWidget.assetPath, which can't
-    // change in place). Keying on the outfit index as well used to tear
-    // down and recreate the whole Filament engine on every tap in the
-    // grid below, even between outfits that render identically (most
-    // outfits are still 2D-only); racing that teardown/recreate is very
-    // likely why switching outfits could show a blank colored square or
-    // crash — see the "only one viewer can be active at a time" warning
-    // in Thermion's own docs. Mascot3DStage now swaps the equipped prop
-    // in place (via didUpdateWidget) instead of needing a new widget.
+    // Deliberately unkeyed. This used to carry a ValueKey on the character
+    // so that a panda/pug tap built a new Mascot3DStage, because the model
+    // arrived through ViewerWidget.assetPath, which can't change in place.
+    // But a new stage means a new Filament viewer, and recreating one
+    // while the outgoing one tears down raced its way through a series of
+    // symptoms: outfit taps showing a blank square, then a crash on
+    // character switch, then a shredded mesh once the crash was fixed.
+    // Mascot3DStage now loads and swaps the model on a single viewer of
+    // its own, so nothing here needs to force it to be rebuilt.
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        Mascot3DStage(
-          key: ValueKey(character.name),
-          character: character,
-          outfitIndex: equippedIndex,
-        ),
+        Mascot3DStage(character: character, outfitIndex: equippedIndex),
         const SizedBox(height: 20),
         Text(
           settings.t('mascotPickCompanion'),
