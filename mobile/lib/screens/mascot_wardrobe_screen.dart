@@ -142,6 +142,7 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
           children: [
             for (final outfit in outfits)
               _OutfitCard(
+                key: ValueKey('outfit-${outfit.index}'),
                 outfit: outfit,
                 settings: settings,
                 // TODO: temporary — every outfit shows unlocked so the new
@@ -213,6 +214,7 @@ class _OutfitCard extends StatelessWidget {
   final VoidCallback onTap;
 
   const _OutfitCard({
+    super.key,
     required this.outfit,
     required this.settings,
     required this.unlocked,
