@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:thermion_flutter/thermion_flutter.dart';
@@ -33,7 +34,7 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   Timer? _spinTimer;
   ThermionViewer? _viewer;
   ThermionAsset? _asset;
-  Matrix4? _baseTransform;
+  Camera? _camera;
   double _angle = 0;
 
   // Which outfit's prop (if any) is currently attached, and the loaded
@@ -73,6 +74,14 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   // projecting the posed mesh through this exact camera at every 30° of
   // the auto-spin: worst-case margin to the frame edge is 17%.
   late final _cameraPosition = Vector3(0, 0.23, 1.60);
+
+  /// Horizontal distance from the origin the auto-spin orbits at — taken
+  /// straight from [_cameraPosition] so the spin can never drift away
+  /// from the framing that was measured for it.
+  late final _orbitRadius = math.sqrt(
+    _cameraPosition.x * _cameraPosition.x +
+        _cameraPosition.z * _cameraPosition.z,
+  );
   late final _keyLight = DirectLight.sun(
     direction: Vector3(-0.6, -1, -0.2),
     intensity: MascotService.keyLightIntensity,
@@ -120,11 +129,45 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   /// so it replaces rather than stacks.
   Future<void> _onViewerAvailable(ThermionViewer viewer) async {
     _viewer = viewer;
+    _camera = await viewer.getActiveCamera();
     await viewer.loadIbl(
       MascotService.iblAsset,
       intensity: MascotService.iblIntensity,
     );
     await _loadCharacter();
+    _startSpin();
+  }
+
+  /// Orbits the camera around the model rather than rotating the model.
+  ///
+  /// This used to spin the character itself, calling `asset.setTransform`
+  /// 25 times a second. That is the one thing this widget did that the
+  /// lesson companion — which sets a transform once and has rendered
+  /// correctly throughout — never did, and it's why the podium showed a
+  /// shredded mesh while the companion showed the same GLB intact at the
+  /// same moment. This rig's root node is `CharacterArmature`, which is
+  /// also the parent of the whole bone hierarchy, so writing its
+  /// transform on a timer means overwriting the node the glTF animator is
+  /// concurrently computing the skinning matrices from. Torn geometry
+  /// with correct materials is exactly what losing that race looks like.
+  ///
+  /// Moving the model is never necessary here anyway: the camera always
+  /// looks at the origin and the model is normalized to sit there, so
+  /// orbiting the eye gives the identical picture while leaving the
+  /// asset's transform to the animation system alone.
+  void _startSpin() {
+    _spinTimer ??= Timer.periodic(const Duration(milliseconds: 40), (_) async {
+      final camera = _camera;
+      if (!mounted || camera == null) return;
+      _angle += 0.012;
+      await camera.lookAt(
+        Vector3(
+          _orbitRadius * math.sin(_angle),
+          _cameraPosition.y,
+          _orbitRadius * math.cos(_angle),
+        ),
+      );
+    });
   }
 
   /// Swaps the model on the viewer this widget already has, rather than
@@ -155,7 +198,6 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     _propAsset = null;
     _asset = null;
     _attachedOutfitIndex = null;
-    _baseTransform = null;
     if (oldProp != null) await viewer.destroyAsset(oldProp);
     if (oldAsset != null) await viewer.destroyAsset(oldAsset);
     if (!mounted || generation != _loadGeneration) return;
@@ -187,21 +229,15 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     // `initialCameraPosition` (which always looks at the origin) expects.
     final bounds = MascotService.modelBounds(widget.character);
     final scale = 1.0 / bounds.height;
-    _baseTransform = Matrix4.compose(
-      Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
-      Quaternion.identity(),
-      Vector3.all(scale),
+    // Set once and never touched again — the spin is the camera's job now,
+    // see _startSpin.
+    await asset.setTransform(
+      Matrix4.compose(
+        Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
+        Quaternion.identity(),
+        Vector3.all(scale),
+      ),
     );
-    await asset.setTransform(_baseTransform!);
-    // One timer for the widget's whole life, not one per model — it reads
-    // whatever _asset currently is, so a character swap just carries on.
-    _spinTimer ??= Timer.periodic(const Duration(milliseconds: 40), (_) async {
-      final asset = _asset;
-      final base = _baseTransform;
-      if (!mounted || asset == null || base == null) return;
-      _angle += 0.012;
-      await asset.setTransform(Matrix4.rotationY(_angle) * base);
-    });
 
     await _attachProp(viewer, asset);
   }
