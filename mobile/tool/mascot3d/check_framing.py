@@ -19,6 +19,7 @@ import os
 import numpy as np
 
 import preview as P
+import preview_prop as PP
 from preview import measured_bounds
 
 TY = math.tan(math.atan(0.5 * P.SENSOR_MM / P.FOCAL_MM))
@@ -81,6 +82,30 @@ for ang in range(0, 360, 30):
     v, _, _ = P.skinned(10, 0.5)
     n = P.normalize(v, spin_deg=ang)
     worst += report(f"spin {ang:3d}deg", n, STAGE_EYE, 330 / 260, False)
+
+# Bone-attached props (MascotService._propsByOutfit) ride the same camera
+# and spin as the body, so a prop sized/placed without checking this can
+# clip even when the body alone never would -- exactly what happened with
+# the chef hat's first pass. Placed by hand here (not read from Dart) since
+# there's no Dart->Python bridge; keep these in sync with MascotService.
+PROPS = [
+    ("chef_hat.glb", "Head", (0, 0.90, 0.13), 0.58),
+]
+for name, bone, offset, scale in PROPS:
+    path = os.path.join(os.path.dirname(P.GLB), "props", name)
+    if not os.path.exists(path):
+        continue
+    prop_v, _, _ = PP.load_prop(path)
+    pose = P.sample(10, 0.5)
+    world = P.globals_for(pose)
+    bone_idx = next(i for i, nd in enumerate(P.gltf["nodes"]) if nd.get("name") == bone)
+    M = world[bone_idx]
+    for ang in range(0, 360, 30):
+        body_v, _, _ = P.skinned(10, 0.5)
+        local = np.array(offset) + prop_v * scale
+        placed = (M @ np.concatenate([local, np.ones((len(local), 1))], 1).T).T[:, :3]
+        n = P.normalize(np.vstack([body_v, placed]), spin_deg=ang)
+        worst += report(f"{name} spin {ang:3d}deg", n, STAGE_EYE, 330 / 260, False)
 
 print(f"\nLESSON  eye={LESSON_EYE}  aspect=1  circular crop")
 for label, idx, t in [("idle 10", 10, 0.5),

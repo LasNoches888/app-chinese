@@ -262,25 +262,53 @@ class MascotService {
         MascotCharacter.pug => pugOutfits,
       };
 
-  /// Only the panda's reading-glasses outfit (index 2) has a 3D prop so
-  /// far — see [Mascot3DProp].
+  /// 3D props for the panda's outfits, on top of the base kung-fu look the
+  /// model already wears — see SOURCES.md. Each is a bone-attached prop
+  /// rather than a full reclothing: thermion can't transplant a skinned
+  /// mesh's bone weights onto a different skeleton, so an actual costume
+  /// change (a different silhouette, not an accessory) would mean
+  /// hand-rigging a whole new body in Blender. An accessory sidesteps
+  /// that — same body, something small parented to a bone.
   ///
-  /// These numbers are measured, not guessed — `tool/mascot3d/fit_prop.py`
-  /// reports them. The offsets are in the Head bone's own frame, which is
-  /// rotated 22° about X relative to the model, so eyeballing them doesn't
-  /// work: the previous (0.3, 0.15) put the glasses inside the skull with
-  /// only the arms poking out. In that frame the head runs from Y -0.13 to
-  /// +1.00, the eye patches sit at Y +0.53, and the face reaches Z +0.72,
-  /// so the lenses want to land just proud of that. Scale is the head's
-  /// width at eye height (1.29) over the model's own width (1.94).
+  /// Every offset here is measured, not guessed — `tool/mascot3d/fit_prop.py`
+  /// reports where the target bone's own vertices sit in its own frame, and
+  /// `tool/mascot3d/check_framing.py` confirms the result doesn't clip the
+  /// podium camera at any angle of the turntable. Skipping that step is
+  /// exactly how the glasses' first offset ended up inside the skull.
+  ///
+  /// Outfits without an entry here (bubble tea, kung fu, samurai, pilot)
+  /// still only change the 2D icon — no 3D prop exists for them yet.
   static const _propsByOutfit = {
     MascotCharacter.panda: {
+      // Reading glasses. The Head bone is rotated 22° about X relative to
+      // the model, so its frame's "up"/"forward" aren't the character's —
+      // the original (0.3, 0.15) guess put the glasses inside the skull
+      // with only the arms poking out. In the bone's own frame the head
+      // runs Y -0.13 to +1.00, the eye patches sit at Y +0.53, the face
+      // reaches Z +0.72; scale is the head's width at eye height (1.29)
+      // over the glasses model's own width (1.94).
       2: Mascot3DProp(
         asset: 'assets/mascot_3d/props/glasses.glb',
         boneName: 'Head',
         offsetY: 0.53,
         offsetZ: 0.60,
         scale: 0.67,
+      ),
+      // Chef's toque: two primitives (a cylinder crown, a squashed sphere
+      // top) built with tool/mascot3d/make_prop.py rather than modeled or
+      // generated — flat white, matching the atlas's own flat-colour
+      // style, and exact rather than approximate for a shape this simple.
+      // Sized down from an initial pass (offset 0/1.12/0.20, scale 0.85)
+      // that read fine head-on but clipped the podium's turntable camera
+      // at several angles, checked the same way as the framing camera
+      // itself — projecting through the shipped lens rather than eyeballing
+      // a screenshot.
+      5: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/chef_hat.glb',
+        boneName: 'Head',
+        offsetY: 0.90,
+        offsetZ: 0.13,
+        scale: 0.58,
       ),
     },
   };

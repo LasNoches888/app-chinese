@@ -215,6 +215,12 @@ HEIGHT, CENTER_Y, CENTER_Z = DECLARED_BOUNDS.get(
     os.path.basename(GLB), DECLARED_BOUNDS["panda.glb"]
 )
 
+# MascotService._idleAnimationIndex, keyed the same way as DECLARED_BOUNDS —
+# fit_prop.py and other tools that need to pose a model before measuring it
+# read this rather than hardcoding the panda's index 10.
+IDLE_ANIMATION_INDEX = {"panda.glb": 10, "pug.glb": 0}
+IDLE = IDLE_ANIMATION_INDEX.get(os.path.basename(GLB), 0)
+
 
 def measured_bounds(anim_idx=None, t=0.0):
     """Height and centre actually present in the GLB, for comparison with
@@ -315,7 +321,6 @@ def fill_fraction(v, eye):
 
 
 if __name__ == "__main__":
-    IDLE = 10
     v0, cols, tris = skinned(IDLE, 0.5)
     v = normalize(v0)
     print(f"posed height {v[:,1].max()-v[:,1].min():.3f}  "

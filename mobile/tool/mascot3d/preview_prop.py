@@ -1,21 +1,26 @@
-"""Render the panda wearing the glasses, using the exact transform chain
-the app uses, so the prop's offset/scale can be checked before shipping.
+"""Render a character wearing a bone-attached prop, using the exact
+transform chain the app uses, so the fit can be checked before shipping.
 
 App chain: prop vertices are placed by Mascot3DProp's offset+scale in the
 target bone's local space, the bone's world matrix carries them onto the
-posed head, and the model-wide normalization scales the lot.
+posed model, and the model-wide normalization scales the lot. This mirrors
+that chain exactly against $MASCOT_GLB (defaults to panda.glb).
+
+    python preview_prop.py prop.glb bone offX offY offZ scale [out.png]
+
+    python preview_prop.py props/glasses.glb Head 0 0.53 0.60 0.67
+    MASCOT_GLB=../../assets/mascot_3d/pug.glb \\
+        python preview_prop.py props/pug_eyes.glb Head 0 0 0 1 pug-eyes.png
 """
 import json
 import os
 import struct
+import sys
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 import preview as P
-
-GLASSES = os.path.join(os.path.dirname(P.GLB), "props", "glasses.glb")
-IDLE = 10
 
 
 def load_prop(path):
@@ -58,45 +63,34 @@ def load_prop(path):
         P.gltf, P.blob = saved
 
 
-# --- the panda, posed ----------------------------------------------------
-pv, pc, pt = P.skinned(IDLE, 0.5)
-pose = P.sample(IDLE, 0.5)
-world = P.globals_for(pose)
-head = next(i for i, nd in enumerate(P.gltf["nodes"]) if nd.get("name") == "Head")
-M = world[head]
+def render_fitted(prop_path, bone_name, offset, scale, eye=(0.0, 0.23, 1.60),
+                  size=(460, 420)):
+    body_v, body_c, body_t = P.skinned(P.IDLE, 0.5)
+    pose = P.sample(P.IDLE, 0.5)
+    world = P.globals_for(pose)
+    bone = next(i for i, nd in enumerate(P.gltf["nodes"]) if nd.get("name") == bone_name)
+    M = world[bone]
 
-# --- the glasses, placed the way Mascot3DProp places them ---------------
-gv, gc, gt = load_prop(GLASSES)
+    prop_v, prop_c, prop_t = load_prop(prop_path)
+    local = np.array(offset) + prop_v * scale
+    placed = (M @ np.concatenate([local, np.ones((len(local), 1))], 1).T).T[:, :3]
+
+    all_v = np.vstack([body_v, placed])
+    all_c = np.vstack([body_c, prop_c])
+    all_t = np.vstack([body_t, prop_t + len(body_v)])
+    n = P.normalize(all_v)
+    return P.render(n, all_c, all_t, eye, *size)
 
 
-def place(offset, scale):
-    local = np.array(offset) + gv * scale
-    return (M @ np.concatenate([local, np.ones((len(local), 1))], 1).T).T[:, :3]
+if __name__ == "__main__":
+    if len(sys.argv) < 7:
+        print(__doc__)
+        raise SystemExit(1)
+    prop_path, bone = sys.argv[1], sys.argv[2]
+    offset = tuple(float(x) for x in sys.argv[3:6])
+    scale = float(sys.argv[6])
+    out = sys.argv[7] if len(sys.argv) > 7 else "prop-fit.png"
 
-
-CANDIDATES = [
-    ("shipping now\noffset (0, 0.30, 0.15)  scale 0.70", (0, 0.30, 0.15), 0.70),
-    ("measured fit\noffset (0, 0.53, 0.60)  scale 0.67", (0, 0.53, 0.60), 0.67),
-]
-
-W, H = 460, 420
-panels = []
-for label, off, sc in CANDIDATES:
-    placed = place(off, sc)
-    allv = np.vstack([pv, placed])
-    allc = np.vstack([pc, gc])
-    allt = np.vstack([pt, gt + len(pv)])
-    n = P.normalize(allv)
-    panels.append((label, P.render(n, allc, allt, (0.0, 0.23, 1.60), W, H)))
-
-TOP, PAD = 52, 18
-sheet = Image.new("RGB", (PAD + (W + PAD) * len(panels), H + TOP + PAD), (255, 255, 255))
-dr = ImageDraw.Draw(sheet)
-x = PAD
-for label, im in panels:
-    dr.multiline_text((x, 8), label, fill=(20, 20, 20), spacing=3)
-    sheet.paste(im, (x, TOP))
-    dr.rectangle([x - 1, TOP - 1, x + W, TOP + H], outline=(200, 200, 205))
-    x += W + PAD
-sheet.save("glasses-fit.png")
-print("wrote glasses-fit.png")
+    img = render_fitted(prop_path, bone, offset, scale)
+    img.save(out)
+    print(f"wrote {out}")

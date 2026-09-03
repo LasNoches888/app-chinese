@@ -28,7 +28,7 @@ BONE = sys.argv[1] if len(sys.argv) > 1 else "Head"
 PROP = sys.argv[2] if len(sys.argv) > 2 else os.path.join(
     os.path.dirname(P.GLB), "props", "glasses.glb")
 
-IDLE = 10
+IDLE = P.IDLE  # MascotService._idleAnimationIndex, per model — see preview.py
 
 
 def prop_bounds(path):
