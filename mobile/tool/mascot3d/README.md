@@ -59,6 +59,13 @@ ratio, not the pixels: see `MascotService.iblIntensity`.
   by the running **vertex** count. (`panda.glb` has two meshes, `Headband`
   first at 200 verts — getting this wrong silently shreds the topology
   into stretched triangles rather than erroring.)
+- `playGltfAnimation()`'s `crossfade` defaults to 0.0. Calling it while an
+  animation is already playing (`replaceActive: true`, also the default)
+  divides by that duration for the fade-out blend — 0.0/0.0 is NaN, no
+  exception, and it gets written over the instance's root transform (and
+  everything under it) via `mix(a, b, NaN)`. The model doesn't reset, it
+  renders nothing. Always pass a small non-zero `crossfade` (0.1-0.2s) on
+  any `playGltfAnimation()` call after the first one for a given instance.
 
 ## Fitting a bone-attached prop
 

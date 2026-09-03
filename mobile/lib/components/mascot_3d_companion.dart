@@ -49,10 +49,6 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
   Timer? _messageTimer;
   Timer? _cueTimer;
 
-  /// The scale-and-centre transform, kept so it can be put back after every
-  /// animation change — see [_applyPose].
-  Matrix4? _poseTransform;
-
   // ViewerWidget only allows manipulatorType to change after it's built —
   // every other property throws ("create a new widget to change this
   // property") if it differs across rebuilds, which Vector3/DirectLight
@@ -124,36 +120,47 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     );
 
     // See mobile/lib/components/mascot_3d_stage.dart for why this is
-    // needed — ViewerWidget's transformToUnitCube flag is a no-op.
+    // needed — ViewerWidget's transformToUnitCube flag is a no-op. Set once
+    // and never touched again: nothing else ever writes to this entity once
+    // playGltfAnimation is called with a non-zero crossfade — see _react.
     final bounds = MascotService.modelBounds(widget.character);
     final scale = 1.0 / bounds.height;
-    _poseTransform = Matrix4.compose(
-      Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
-      Quaternion.identity(),
-      Vector3.all(scale),
+    await posed.setTransform(
+      Matrix4.compose(
+        Vector3(0, -scale * bounds.centerY, -scale * bounds.centerZ),
+        Quaternion.identity(),
+        Vector3.all(scale),
+      ),
     );
-    await _applyPose();
   }
 
-  /// Puts the scale-and-centre transform back on the model.
+  /// A cue used to make the mascot vanish — not fade, not shrink, just
+  /// render nothing — and it took reading thermion's own C++ to find out
+  /// why. `playGltfAnimation`'s `crossfade` defaults to 0.0, and when it
+  /// replaces an already-playing animation (`replaceActive: true`, also the
+  /// default — true every time here, since Idle is always running first),
+  /// `GltfAnimationComponentManager::addGltfAnimation` sets
+  /// `fadeOutDuration = crossfade`, i.e. 0.0. Its `update()` then computes
+  /// `alpha = elapsedInSeconds / fadeOutDuration` for the fade-out blend —
+  /// 0.0 / 0.0 is NaN in IEEE-754, no exception, it just propagates.
+  /// `Animator::applyCrossFade(alpha)` walks the instance's root entity
+  /// (the one this widget's own scale/recentre transform lives on, per
+  /// FilamentInstance::getRoot()'s own doc: "the transform root ... which
+  /// has no matching glTF node") and every child under it, writing a
+  /// NaN-poisoned matrix over each one via `mix(a, b, alpha)`. NaN vertex
+  /// positions aren't drawn — the model doesn't reset, it disappears.
   ///
-  /// Has to be re-applied after every [playGltfAnimation], not just once at
-  /// load. Every clip in this rig — idle and each cue alike — carries
-  /// translation/rotation/scale channels for the armature root, all of them
-  /// identity, so starting a clip resets the very node this transform is
-  /// written to. The model snaps back to its export scale, several units
-  /// tall against a camera 1.9 units out, and the circle goes empty.
+  /// The wardrobe podium never hits this: it calls playGltfAnimation
+  /// exactly once per character, while `animations.size() == 0`, which
+  /// skips the fade-out branch entirely. Every reaction here replaces an
+  /// already-playing Idle, so it always took this path — for both
+  /// characters, on every single cue, which is why the mascot vanishing
+  /// tracked "does it react" rather than which animal or which cue.
   ///
-  /// It's why the mascot vanished on a reaction while the wardrobe podium
-  /// stayed fine: the podium plays an animation once at load and never
-  /// again, so nothing ever resets it, whereas a reaction plays a cue and
-  /// then idle again.
-  Future<void> _applyPose() async {
-    final asset = _asset;
-    final pose = _poseTransform;
-    if (asset == null || pose == null) return;
-    await asset.setTransform(pose);
-  }
+  /// A non-zero crossfade sidesteps the whole thing: `elapsedInSeconds`
+  /// starts at 0.0 too, but 0.0 / 0.15 is a normal, finite 0.0 — no NaN, and
+  /// a quick blend between clips reads as smoother than a hard cut anyway.
+  static const _crossfade = 0.15;
 
   Future<void> _react(Mascot3DCue cue, String message) async {
     if (!mounted) return;
@@ -168,16 +175,19 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
     if (asset == null) return;
     final idleIndex = MascotService.idleAnimationIndex(widget.character);
     final cueIndex = MascotService.cueAnimationIndex(widget.character, cue);
-    await asset.playGltfAnimation(cueIndex, loop: false);
-    // Starting a clip resets the armature root this transform lives on —
-    // see _applyPose. Without putting it straight back, the mascot jumps to
-    // its export scale and disappears off the edges of its own circle.
-    await _applyPose();
+    await asset.playGltfAnimation(
+      cueIndex,
+      loop: false,
+      crossfade: _crossfade,
+    );
     if (!mounted) return;
     _cueTimer = Timer(MascotService.cueDuration(widget.character, cue), () async {
       if (_asset != null) {
-        await _asset!.playGltfAnimation(idleIndex, loop: true);
-        await _applyPose();
+        await _asset!.playGltfAnimation(
+          idleIndex,
+          loop: true,
+          crossfade: _crossfade,
+        );
       }
     });
   }
@@ -190,22 +200,20 @@ class _Mascot3DCompanionState extends State<Mascot3DCompanion> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        // The bubble's slot is always occupied, and the viewer below is
-        // keyed, so that showing a reaction can't disturb the viewer's
-        // identity in this list.
-        //
-        // This was written as `if (_message != null) Container(...)`, which
-        // reads harmlessly but isn't: Flutter matches a multi-child
-        // widget's children by position and type, so the list going from
-        // [ClipRRect] to [Container, ClipRRect] makes it compare a
-        // Container against the old ClipRRect at index 0, decide they're
-        // unrelated, and throw away that whole subtree — the ViewerWidget,
-        // its State and its Filament viewer with it. Every reaction tore
-        // the 3D companion down and rebuilt it, and the replacement raced
-        // the teardown and came up blank. It showed up as the mascot
-        // vanishing on wrong answers specifically, because a wrong answer
-        // always reacts while a correct one only does every third time
-        // (see lesson_session_screen.dart).
+        // The bubble's slot is always occupied (a SizedBox.shrink() rather
+        // than being absent from the list) so its position never shifts.
+        // An earlier version wrote this as `if (_message != null)
+        // Container(...)`, on a theory that the list changing length would
+        // make Flutter tear down and rebuild the ViewerWidget below. It
+        // doesn't: Element.updateChildren scans from both ends, and its
+        // *bottom-up* pass matches trailing widgets of the same type
+        // regardless of key (Widget.canUpdate compares `key == key`, and
+        // null == null is true in Dart) — so the ClipRRect below, being
+        // last in the list either way, was never actually at risk here.
+        // The real cause of the vanishing mascot was the crossfade bug
+        // documented on `_crossfade` above. This form is kept only because
+        // it's simpler than the conditional-omission version, not because
+        // the list shape mattered.
         if (message == null)
           const SizedBox.shrink()
         else
