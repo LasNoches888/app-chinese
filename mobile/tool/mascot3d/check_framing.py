@@ -5,13 +5,24 @@ Projects the mesh itself (not a rendered image) so the answer is exact:
   * lesson -- every clip the companion actually plays, against the CIRCULAR
               crop (ClipRRect radius = size/2), not just the square frame
 
-Run this after changing a camera position, a model, or a cue clip:
+Run this after changing a camera position, a model, a prop, or a cue clip:
 
     python check_framing.py
+    MASCOT_GLB=../../assets/mascot_3d/pug.glb python check_framing.py
 
-Keep the two eye positions below in sync with `_cameraPosition` in
-lib/components/mascot_3d_stage.dart and mascot_3d_companion.dart -- this
-check is only meaningful if it's checking what actually ships.
+The stage check runs for whichever $MASCOT_GLB is set to (panda by
+default), using that model's own camera distance and idle index
+(preview.py's STAGE_CAMERA_DISTANCE / IDLE_ANIMATION_INDEX) -- it used to
+skip straight past every other model, which is exactly how the pug's
+camera distance shipped clipping the frame at 5 of 12 angles: it was only
+ever eyeballed from two angles, never swept. Props, cue clips and the
+lesson-companion check are panda-only below since that's the only
+character with either so far.
+
+Keep the two eye positions in sync with `_cameraPosition` /
+`stageCameraDistance` in lib/components/mascot_3d_stage.dart and
+mascot_3d_companion.dart -- this check is only meaningful if it's checking
+what actually ships.
 """
 import math
 import os
@@ -24,8 +35,7 @@ from preview import measured_bounds
 
 TY = math.tan(math.atan(0.5 * P.SENSOR_MM / P.FOCAL_MM))
 
-STAGE_EYE = (0.0, 0.23, 1.60)    # mascot_3d_stage.dart
-LESSON_EYE = (0.80, 0.26, 1.71)  # mascot_3d_companion.dart
+LESSON_EYE = (0.80, 0.26, 1.71)  # mascot_3d_companion.dart -- panda-only for now
 
 
 def ndc(v, eye, aspect):
@@ -70,46 +80,56 @@ for name, value, got in zip(("height", "centerY", "centerZ"),
     print(f"  {name:8s} declared {value:+.3f}  measured {got:+.3f}  "
           f"{'MISMATCH' if bad else 'ok'}")
 
-IS_PANDA = os.path.basename(P.GLB) == "panda.glb"
-if not IS_PANDA:
-    # The clip indices below are the panda's; other models have their own.
-    print("\n(skipping the spin/cue checks — they're keyed to panda.glb)")
-    print("\nCLEAN" if worst == 0 else f"\n{worst} problem(s) found")
-    raise SystemExit(1 if worst else 0)
-
-print(f"\nSTAGE  eye={STAGE_EYE}  aspect=330/260  idle, swept through the spin")
+# Every model's own camera distance (MascotService.stageCameraDistance),
+# swept through a full turn -- this is the check that would have caught
+# the pug's clipping camera before it shipped.
+print(f"\nSTAGE  eye={P.STAGE_EYE}  aspect=330/260  idle, swept through the spin")
 for ang in range(0, 360, 30):
-    v, _, _ = P.skinned(10, 0.5)
+    v, _, _ = P.skinned(P.IDLE, 0.5)
     n = P.normalize(v, spin_deg=ang)
-    worst += report(f"spin {ang:3d}deg", n, STAGE_EYE, 330 / 260, False)
+    worst += report(f"spin {ang:3d}deg", n, P.STAGE_EYE, 330 / 260, False)
 
 # Bone-attached props (MascotService._propsByOutfit) ride the same camera
 # and spin as the body, so a prop sized/placed without checking this can
 # clip even when the body alone never would -- exactly what happened with
-# the chef hat's first pass. Placed by hand here (not read from Dart) since
-# there's no Dart->Python bridge; keep these in sync with MascotService.
-PROPS = [
-    ("chef_hat.glb", "Head", (0, 0.90, 0.13), 0.58),
-    ("star_badge.glb", "Torso", (0, 0.35, 0.56), 1.0),
-    ("samurai_headband.glb", "Head", (0, 0.68, 0.02), 1.0),
-    ("pilot_gear.glb", "Head", (0, 0, 0), 1.0),
-    ("bubble_tea.glb", "LowerArm.R", (-0.15, 0.20, -0.35), 1.0),
-]
-for name, bone, offset, scale in PROPS:
+# both the chef hat's first pass and the pug's eyes needing the camera fix
+# above. Placed by hand here (not read from Dart) since there's no
+# Dart->Python bridge; keep these in sync with MascotService.
+PROPS_BY_MODEL = {
+    "panda.glb": [
+        ("chef_hat.glb", "Head", (0, 0.90, 0.13), 0.58),
+        ("star_badge.glb", "Torso", (0, 0.35, 0.56), 1.0),
+        ("samurai_headband.glb", "Head", (0, 0.68, 0.02), 1.0),
+        ("pilot_gear.glb", "Head", (0, 0, 0), 1.0),
+        ("bubble_tea.glb", "LowerArm.R", (-0.15, 0.20, -0.35), 1.0),
+    ],
+    "pug.glb": [
+        ("pug_eyes.glb", "Head", (0, 0, 0), 1.0),
+    ],
+}
+for name, bone, offset, scale in PROPS_BY_MODEL.get(os.path.basename(P.GLB), []):
     path = os.path.join(os.path.dirname(P.GLB), "props", name)
     if not os.path.exists(path):
         continue
     prop_v, _, _ = PP.load_prop(path)
-    pose = P.sample(10, 0.5)
+    pose = P.sample(P.IDLE, 0.5)
     world = P.globals_for(pose)
     bone_idx = next(i for i, nd in enumerate(P.gltf["nodes"]) if nd.get("name") == bone)
     M = world[bone_idx]
     for ang in range(0, 360, 30):
-        body_v, _, _ = P.skinned(10, 0.5)
+        body_v, _, _ = P.skinned(P.IDLE, 0.5)
         local = np.array(offset) + prop_v * scale
         placed = (M @ np.concatenate([local, np.ones((len(local), 1))], 1).T).T[:, :3]
         n = P.normalize(np.vstack([body_v, placed]), spin_deg=ang)
-        worst += report(f"{name} spin {ang:3d}deg", n, STAGE_EYE, 330 / 260, False)
+        worst += report(f"{name} spin {ang:3d}deg", n, P.STAGE_EYE, 330 / 260, False)
+
+IS_PANDA = os.path.basename(P.GLB) == "panda.glb"
+if not IS_PANDA:
+    # Cue clips and the lesson-companion camera below are keyed to the
+    # panda's own animation indices -- no other character has either yet.
+    print("\n(skipping cues/lesson checks — panda-only so far)")
+    print("\nCLEAN" if worst == 0 else f"\n{worst} problem(s) found")
+    raise SystemExit(1 if worst else 0)
 
 print(f"\nLESSON  eye={LESSON_EYE}  aspect=1  circular crop")
 for label, idx, t in [("idle 10", 10, 0.5),

@@ -69,19 +69,36 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
   // a fixed 2*atan(12/28) = 46.4° vertical FOV, which setViewport
   // preserves across resizes since it reads getFocalLength() back. So the
   // visible height at the origin is 2*d*tan(23.2°) and the fraction of the
-  // frame the character fills is just height/that. d = 1.62 puts it at
-  // 70%, and 0.23 of height gives an 8° downward tilt. Verified by
+  // frame the character fills is just height/that. d = 1.62 puts the panda
+  // at 70%, and 0.23 of height gives an 8° downward tilt. Verified by
   // projecting the posed mesh through this exact camera at every 30° of
   // a full turn: worst-case margin to the frame edge is 17%.
-  late final _cameraPosition = Vector3(0, 0.23, 1.60);
-
-  /// Horizontal distance from the origin the turntable orbits at — taken
-  /// straight from [_cameraPosition] so turning the model can never drift
-  /// away from the framing that was measured for it.
-  late final _orbitRadius = math.sqrt(
-    _cameraPosition.x * _cameraPosition.x +
-        _cameraPosition.z * _cameraPosition.z,
+  //
+  // Only sets the STARTING distance ViewerWidget needs before this widget
+  // can take over — that constructor argument can't change once built (see
+  // build() below), unlike the live camera _lookFromAngle() drives, so this
+  // is only really accurate for whichever character happens to be first.
+  // [_orbitRadius] is what actually matters after that.
+  late final _cameraPosition = Vector3(
+    0,
+    0.23,
+    MascotService.stageCameraDistance(widget.character),
   );
+
+  /// Horizontal distance from the origin the turntable orbits at.
+  ///
+  /// Deliberately NOT cached like [_cameraPosition] — it has to track
+  /// [widget.character] across a switch, not just at construction. Sharing
+  /// the panda's own 1.60 with the pug seemed fine from the couple of
+  /// angles it was eyeballed at, but a pug is a quadruped, low and long
+  /// nose-to-tail rather than roughly as wide as tall the way the panda
+  /// stands, so at the rotations where that length faces across the frame
+  /// instead of into it, 1.60 clips the edge by as much as 9% — never
+  /// caught because nothing had swept a full turn on the pug specifically
+  /// until it was. See MascotService.stageCameraDistance for the value
+  /// this reads and how it was found the same way: sweeping every 15° of
+  /// a full turn and requiring a positive margin at all of them.
+  double get _orbitRadius => MascotService.stageCameraDistance(widget.character);
   late final _keyLight = DirectLight.sun(
     direction: Vector3(-0.6, -1, -0.2),
     intensity: MascotService.keyLightIntensity,
@@ -130,7 +147,6 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       intensity: MascotService.iblIntensity,
     );
     await _loadCharacter();
-    await _lookFromAngle();
   }
 
   /// Points the camera at the model from the current [_angle].
@@ -244,6 +260,11 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
     );
 
     await _attachProp(viewer, posed);
+    // The orbit distance is per-character (MascotService.stageCameraDistance)
+    // and _orbitRadius reads widget.character fresh, so a character switch
+    // needs this re-run too — not just the very first load — or the camera
+    // stays at the OLD character's distance until the next manual drag.
+    await _lookFromAngle();
   }
 
   /// Attaches the currently-equipped outfit's 3D prop, if it has one —

@@ -221,6 +221,17 @@ HEIGHT, CENTER_Y, CENTER_Z = DECLARED_BOUNDS.get(
 IDLE_ANIMATION_INDEX = {"panda.glb": 10, "pug.glb": 0}
 IDLE = IDLE_ANIMATION_INDEX.get(os.path.basename(GLB), 0)
 
+# MascotService.stageCameraDistance -- how far the podium's camera sits, per
+# character. Sharing the panda's own 1.60 with the pug looked fine from a
+# couple of angles but was never swept through a full turn: a pug is low
+# and long nose-to-tail rather than roughly as wide as tall like the panda
+# standing upright, so at the rotations where that length faces across the
+# frame it clips the edge by as much as 9%. check_framing.py sweeps every
+# model's own distance through a full turn now specifically because of that
+# miss.
+STAGE_CAMERA_DISTANCE = {"panda.glb": 1.60, "pug.glb": 2.0}
+STAGE_EYE = (0.0, 0.23, STAGE_CAMERA_DISTANCE.get(os.path.basename(GLB), 1.60))
+
 
 def measured_bounds(anim_idx=None, t=0.0):
     """Height and centre actually present in the GLB, for comparison with

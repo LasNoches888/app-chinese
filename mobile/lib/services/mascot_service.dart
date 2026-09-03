@@ -256,6 +256,25 @@ class MascotService {
   static MascotModelBounds modelBounds(MascotCharacter character) =>
       _modelBounds[character]!;
 
+  /// How far back the wardrobe podium's camera sits, per character — see
+  /// mascot_3d_stage.dart's `_orbitRadius` for the frame-fill math this
+  /// feeds. A single shared distance (the panda's own 1.60) seemed fine
+  /// from the two angles it was eyeballed at, but never got swept through
+  /// a full turntable: the pug is a quadruped, low and long nose-to-tail
+  /// rather than roughly as wide as tall like the panda standing upright,
+  /// so at the rotations where that length faces across the frame instead
+  /// of into it, 1.60 clips the frame edge by as much as 9%. 2.0 was found
+  /// the same way the panda's distance was — sweeping every 15° of a full
+  /// turn and requiring a positive margin at all of them — and leaves 19%
+  /// to spare at the tightest angle.
+  static const _stageCameraDistance = {
+    MascotCharacter.panda: 1.60,
+    MascotCharacter.pug: 2.0,
+  };
+
+  static double stageCameraDistance(MascotCharacter character) =>
+      _stageCameraDistance[character]!;
+
   static List<MascotOutfit> outfitsFor(MascotCharacter character) =>
       switch (character) {
         MascotCharacter.panda => pandaOutfits,
@@ -359,6 +378,22 @@ class MascotService {
         offsetX: -0.15,
         offsetY: 0.20,
         offsetZ: -0.35,
+      ),
+    },
+    // The pug's face is otherwise blank — its two materials (Beige, Brown)
+    // are flat colour with no eye geometry at all, unlike the panda's
+    // atlas, which paints them on. Four primitives (white sclera, black
+    // pupil, mirrored) on its only outfit. Position took several passes:
+    // level with the mask's own vertices put them submerged in the head
+    // (a flat-shaded low-poly surface isn't perfectly symmetric between
+    // its own left/right, so one eye could poke through a gap in the
+    // rendering pipeline used to check this while the other stayed
+    // buried), and matching the near-black mask colour made them
+    // invisible outright even once placed correctly.
+    MascotCharacter.pug: {
+      0: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/pug_eyes.glb',
+        boneName: 'Head',
       ),
     },
   };
