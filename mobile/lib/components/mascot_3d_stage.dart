@@ -295,9 +295,14 @@ class _Mascot3DStageState extends State<Mascot3DStage> {
       if (!mounted) return;
       _propAsset = propAsset;
       _attachedOutfitIndex = widget.outfitIndex;
-    } catch (_) {
-      // First attempt at bone attachment — better to show the mascot
-      // without its prop than crash the whole stage over it.
+    } catch (error) {
+      // Better to show the mascot without its prop than crash the whole
+      // stage over it — but silently, as this used to be, is exactly how
+      // six new props (declared in MascotService but never added to
+      // pubspec.yaml's assets list) went a full day looking like "only
+      // the first prop I ever wired up actually works" instead of the
+      // one-line asset-declaration bug it was.
+      debugPrint('Mascot3DStage: failed to attach ${prop.asset}: $error');
     }
   }
 
