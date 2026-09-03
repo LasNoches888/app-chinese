@@ -276,8 +276,9 @@ class MascotService {
   /// podium camera at any angle of the turntable. Skipping that step is
   /// exactly how the glasses' first offset ended up inside the skull.
   ///
-  /// Outfits without an entry here (bubble tea, kung fu, samurai, pilot)
-  /// still only change the 2D icon — no 3D prop exists for them yet.
+  /// Kung fu (index 4) has no entry and needs none — Quaternius's panda is
+  /// already wearing it. That leaves every panda outfit with either a real
+  /// 3D prop or no 3D difference by design, rather than a missing one.
   static const _propsByOutfit = {
     MascotCharacter.panda: {
       // Reading glasses. The Head bone is rotated 22° about X relative to
@@ -309,6 +310,55 @@ class MascotService {
         offsetY: 0.90,
         offsetZ: 0.13,
         scale: 0.58,
+      ),
+      // Star badge: a small gold disc on the chest, parented to Torso
+      // rather than Head. Its own vertices sit centred on its local
+      // origin, so the offset alone places it — found by first placing it
+      // where the torso's own front-facing vertices measure (Z max 0.48
+      // in that band) and discovering that's just *inside* the body: a
+      // flat disc needs to clear the surface it's pinned to, not touch it,
+      // so 0.56 (proud of that measured surface) is what actually reads
+      // as sitting on the chest rather than buried in it.
+      1: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/star_badge.glb',
+        boneName: 'Torso',
+        offsetY: 0.35,
+        offsetZ: 0.56,
+      ),
+      // Samurai headband: a flat ring, parented to Head. Getting the
+      // radius from the model's own eye-height width (as the glasses did)
+      // produced a halo floating well clear of the skull, because that
+      // width includes the muzzle's own forward bulge, not the narrower
+      // curve directly at brow height where a band actually sits. Found
+      // by measuring the head's cross-section radius band by band instead
+      // and matching the one at Y≈0.6-0.7, where it sits snug against the
+      // brow.
+      6: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/samurai_headband.glb',
+        boneName: 'Head',
+        offsetY: 0.68,
+        offsetZ: 0.02,
+      ),
+      // Pilot cap + goggles: one prop, three primitives (leather dome,
+      // two dark lenses) built and positioned as one unit, so the offset
+      // here is zero and the shape's own local coordinates are already in
+      // the Head bone's frame.
+      7: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/pilot_gear.glb',
+        boneName: 'Head',
+      ),
+      // Bubble tea cup, parented to the forearm rather than the head —
+      // the first prop attached anywhere but Head, and bone choice matters
+      // as much as offset: LowerArm.R is the last joint this rig actually
+      // has on that limb (no separate hand/wrist bone), so "held in the
+      // hand" means parenting to the forearm and offsetting toward where
+      // the hand would be relative to it.
+      3: Mascot3DProp(
+        asset: 'assets/mascot_3d/props/bubble_tea.glb',
+        boneName: 'LowerArm.R',
+        offsetX: -0.15,
+        offsetY: 0.20,
+        offsetZ: -0.35,
       ),
     },
   };

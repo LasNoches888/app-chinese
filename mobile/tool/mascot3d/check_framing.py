@@ -90,6 +90,10 @@ for ang in range(0, 360, 30):
 # there's no Dart->Python bridge; keep these in sync with MascotService.
 PROPS = [
     ("chef_hat.glb", "Head", (0, 0.90, 0.13), 0.58),
+    ("star_badge.glb", "Torso", (0, 0.35, 0.56), 1.0),
+    ("samurai_headband.glb", "Head", (0, 0.68, 0.02), 1.0),
+    ("pilot_gear.glb", "Head", (0, 0, 0), 1.0),
+    ("bubble_tea.glb", "LowerArm.R", (-0.15, 0.20, -0.35), 1.0),
 ]
 for name, bone, offset, scale in PROPS:
     path = os.path.join(os.path.dirname(P.GLB), "props", name)
