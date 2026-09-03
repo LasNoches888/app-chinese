@@ -148,9 +148,18 @@ void main() {
       expect(prop!.boneName, 'Head');
     });
 
+    test('the pug\'s only outfit has its eyes as a prop', () {
+      final prop = MascotService.propForOutfit(MascotCharacter.pug, 0);
+      expect(prop, isNotNull);
+      expect(prop!.boneName, 'Head');
+    });
+
     test('outfits without a prop return null', () {
+      // Index 0 (Starter) has none by design -- it's the base look. Index 4
+      // (Kung Fu) has none because the panda's base body already wears it,
+      // see MascotService's own comment on _propsByOutfit.
       expect(MascotService.propForOutfit(MascotCharacter.panda, 0), isNull);
-      expect(MascotService.propForOutfit(MascotCharacter.pug, 0), isNull);
+      expect(MascotService.propForOutfit(MascotCharacter.panda, 4), isNull);
     });
   });
 }
