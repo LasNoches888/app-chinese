@@ -736,6 +736,7 @@ class Strings {
     },
     'mascotPanda': {AppLocale.ru: 'Панда', AppLocale.en: 'Panda'},
     'mascotPug': {AppLocale.ru: 'Мопс', AppLocale.en: 'Pug'},
+    'mascotOwl': {AppLocale.ru: 'Сова', AppLocale.en: 'Owl'},
     'mascotOutfitsTitle': {AppLocale.ru: 'Наряды', AppLocale.en: 'Outfits'},
     'mascotLockedUntil': {
       AppLocale.ru: 'Открыть на уровне',
@@ -756,6 +757,7 @@ class Strings {
     'outfitSamurai': {AppLocale.ru: 'Самурай', AppLocale.en: 'Samurai'},
     'outfitPilot': {AppLocale.ru: 'Пилот', AppLocale.en: 'Pilot'},
     'outfitPugDefault': {AppLocale.ru: 'Обычный', AppLocale.en: 'Everyday'},
+    'outfitOwlDefault': {AppLocale.ru: 'Обычный', AppLocale.en: 'Everyday'},
   };
 
   static String of(AppLocale locale, String key) =>

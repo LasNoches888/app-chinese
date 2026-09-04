@@ -4,14 +4,14 @@ import 'package:provider/provider.dart';
 import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
-import '../components/mascot_3d_stage.dart';
+import '../components/mascot_stage.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
 import '../services/xp_service.dart';
 
-/// Pick a companion (panda or pug) and dress it in whatever outfit the
-/// current level has unlocked. Reachable by tapping the mascot on the home
-/// screen.
+/// Pick a companion (panda, pug, or owl) and dress it in whatever outfit
+/// the current level has unlocked. Reachable by tapping the mascot on the
+/// home screen.
 class MascotWardrobeScreen extends StatefulWidget {
   const MascotWardrobeScreen({super.key});
 
@@ -86,19 +86,10 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
             level,
           ).index;
 
-    // Deliberately unkeyed. This used to carry a ValueKey on the character
-    // so that a panda/pug tap built a new Mascot3DStage, because the model
-    // arrived through ViewerWidget.assetPath, which can't change in place.
-    // But a new stage means a new Filament viewer, and recreating one
-    // while the outgoing one tears down raced its way through a series of
-    // symptoms: outfit taps showing a blank square, then a crash on
-    // character switch, then a shredded mesh once the crash was fixed.
-    // Mascot3DStage now loads and swaps the model on a single viewer of
-    // its own, so nothing here needs to force it to be rebuilt.
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        Mascot3DStage(character: character, outfitIndex: equippedIndex),
+        MascotStage(character: character, outfitIndex: equippedIndex),
         const SizedBox(height: 20),
         Text(
           settings.t('mascotPickCompanion'),
@@ -124,6 +115,15 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
                 onTap: () => _pickCharacter(MascotCharacter.pug),
               ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _CharacterCard(
+                character: MascotCharacter.owl,
+                label: settings.t('mascotOwl'),
+                selected: character == MascotCharacter.owl,
+                onTap: () => _pickCharacter(MascotCharacter.owl),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 24),
@@ -146,7 +146,7 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
                 outfit: outfit,
                 settings: settings,
                 // TODO: temporary — every outfit shows unlocked so the new
-                // 3D stage can be tried out with all of them. Revert to
+                // art can be tried out with all of them. Revert to
                 // `outfit.requiredLevel <= level` once that's done.
                 unlocked: true,
                 equipped: outfit.index == equippedIndex,
@@ -198,7 +198,13 @@ class _CharacterCard extends StatelessWidget {
           children: [
             Image.asset(asset, height: 64),
             const SizedBox(height: 8),
-            Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),

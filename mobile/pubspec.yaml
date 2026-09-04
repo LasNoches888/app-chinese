@@ -29,7 +29,6 @@ dependencies:
   # FFI-backed factory instead (see main.dart). Previously dev-only,
   # since tests were the only thing using it before desktop existed.
   sqflite_common_ffi: ^2.3.3
-  thermion_flutter: ^0.5.0
 
 dev_dependencies:
   flutter_test:
@@ -49,10 +48,6 @@ flutter:
     - assets/images/
     - assets/mascot/
     - assets/mascot/hearts/
-    - assets/mascot_3d/panda.glb
-    - assets/mascot_3d/pug.glb
-    - assets/mascot_3d/props/
-    - assets/mascot_3d/env/default_env_ibl.ktx
 
 flutter_launcher_icons:
   android: true

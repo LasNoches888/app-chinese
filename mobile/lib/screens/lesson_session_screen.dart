@@ -7,7 +7,7 @@ import '../api/app_settings.dart';
 import '../api/app_strings.dart';
 import '../app_repositories.dart';
 import '../components/exercise_widgets.dart';
-import '../components/mascot_3d_companion.dart';
+import '../components/mascot_companion.dart';
 import '../data/mascot_jokes.dart';
 import '../models/exercise_question.dart';
 import '../services/exercise_generator.dart';
@@ -58,7 +58,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
   bool _answering = false;
   MascotCharacter _character = MascotCharacter.panda;
   int _correctStreak = 0;
-  final _mascotController = Mascot3DCompanionController();
+  final _mascotController = MascotCompanionController();
   final _random = Random();
 
   @override
@@ -86,7 +86,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
     if (questions.isNotEmpty) {
       final settings = context.read<AppSettings>();
       _mascotController.react(
-        Mascot3DCue.hello,
+        MascotCue.hello,
         settings.locale == AppLocale.ru ? 'Погнали! 🐼' : "Let's go! 🐼",
       );
     }
@@ -138,7 +138,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         if (_correctStreak % 3 == 0) {
           final joke = MascotJokes.all[_random.nextInt(MascotJokes.all.length)];
           _mascotController.react(
-            Mascot3DCue.correct,
+            MascotCue.correct,
             settings.locale == AppLocale.ru ? joke.ru : joke.en,
           );
         }
@@ -146,7 +146,7 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         _correctStreak = 0;
         final answer = _correctAnswerText(question);
         _mascotController.react(
-          Mascot3DCue.incorrect,
+          MascotCue.incorrect,
           settings.locale == AppLocale.ru
               ? 'Ничего, бывает! Правильный ответ: $answer'
               : "No worries! The answer was: $answer",
@@ -276,13 +276,11 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
               ),
             ),
             // A floating companion rather than inline in the header — it
-            // needs room for its speech bubble, and a persistent (not
-            // recreated per-reaction) 3D view here is what keeps triggering
-            // a reaction cheap instead of re-spinning up a render engine.
+            // needs room for its speech bubble.
             Positioned(
               right: 8,
               bottom: 8,
-              child: Mascot3DCompanion(
+              child: MascotCompanion(
                 character: _character,
                 controller: _mascotController,
               ),

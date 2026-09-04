@@ -30,23 +30,6 @@ UserStats _stats({
 );
 
 void main() {
-  group('MascotService.cueAnimationIndex', () {
-    test('every character has an animation and duration for every cue', () {
-      for (final character in MascotCharacter.values) {
-        for (final cue in Mascot3DCue.values) {
-          expect(
-            () => MascotService.cueAnimationIndex(character, cue),
-            returnsNormally,
-          );
-          expect(
-            MascotService.cueDuration(character, cue),
-            greaterThan(Duration.zero),
-          );
-        }
-      }
-    });
-  });
-
   group('MascotService.homeAsset', () {
     final now = DateTime(2026, 1, 10);
 
@@ -128,6 +111,29 @@ void main() {
       );
       expect(asset, 'assets/mascot/hearts/pug_1.png');
     });
+
+    test('the owl companion uses the owl catalog', () {
+      final asset = MascotService.homeAsset(
+        _stats(totalXp: 5000, lastActivityDate: now, mascotCharacter: 'owl'),
+        now: now,
+      );
+      expect(asset, MascotService.owlOutfits[0].asset);
+    });
+
+    test(
+      'a lonely owl falls back to its normal outfit, not a crash -- it has '
+      'no dedicated sleepy art yet',
+      () {
+        final asset = MascotService.homeAsset(
+          _stats(
+            mascotCharacter: 'owl',
+            lastActivityDate: now.subtract(const Duration(days: 3)),
+          ),
+          now: now,
+        );
+        expect(asset, MascotService.owlOutfits[0].asset);
+      },
+    );
   });
 
   group('MascotService.unlockedOutfits', () {
@@ -138,28 +144,6 @@ void main() {
       );
       expect(unlocked, hasLength(3));
       expect(unlocked.every((o) => o.requiredLevel <= 6), isTrue);
-    });
-  });
-
-  group('MascotService.propForOutfit', () {
-    test('the reading-glasses outfit has a prop targeting the Head bone', () {
-      final prop = MascotService.propForOutfit(MascotCharacter.panda, 2);
-      expect(prop, isNotNull);
-      expect(prop!.boneName, 'Head');
-    });
-
-    test('the pug\'s only outfit has its eyes as a prop', () {
-      final prop = MascotService.propForOutfit(MascotCharacter.pug, 0);
-      expect(prop, isNotNull);
-      expect(prop!.boneName, 'Head');
-    });
-
-    test('outfits without a prop return null', () {
-      // Index 0 (Starter) has none by design -- it's the base look. Index 4
-      // (Kung Fu) has none because the panda's base body already wears it,
-      // see MascotService's own comment on _propsByOutfit.
-      expect(MascotService.propForOutfit(MascotCharacter.panda, 0), isNull);
-      expect(MascotService.propForOutfit(MascotCharacter.panda, 4), isNull);
     });
   });
 }

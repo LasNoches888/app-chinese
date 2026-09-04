@@ -1,13 +1,14 @@
 import '../models/user_stats.dart';
 import 'xp_service.dart';
 
-/// A moment worth reacting to with the 3D companion mid-lesson.
-enum Mascot3DCue { hello, correct, incorrect }
+/// A moment worth reacting to with the companion mid-lesson.
+enum MascotCue { hello, correct, incorrect }
 
 /// The animal a learner has picked as their home-screen companion.
 enum MascotCharacter {
   panda('panda'),
-  pug('pug');
+  pug('pug'),
+  owl('owl');
 
   final String dbValue;
   const MascotCharacter(this.dbValue);
@@ -32,63 +33,6 @@ class MascotOutfit {
   });
 }
 
-/// A model's real, measured bounds (Y-up, from the mesh's bind pose —
-/// see assets/mascot_3d/SOURCES.md), used to normalize it to roughly a
-/// 1-unit-tall character centered at the origin.
-///
-/// ViewerWidget's own `transformToUnitCube: true` looks like it should do
-/// this, but it's a documented no-op in thermion_flutter 0.5.0 (checked
-/// the widget's source directly: the flag is stored and compared in
-/// `didUpdateWidget`, but `_configure()` never actually calls
-/// `transformToUnitCube()` on the loaded asset) — so both 3D widgets
-/// apply this themselves in onAssetLoaded instead of trusting that flag.
-/// Height, not the model's overall bounding-box size, is what's used to
-/// pick the scale: a T-pose's arm-span can be wider than the character is
-/// tall, and normalizing to the widest axis would make an idle (arms-down)
-/// pose render far smaller than intended — height stays the same in
-/// either pose.
-class MascotModelBounds {
-  final double height;
-  final double centerY;
-  final double centerZ;
-
-  const MascotModelBounds({
-    required this.height,
-    required this.centerY,
-    required this.centerZ,
-  });
-}
-
-/// A 3D prop worn by real bone attachment, for outfits that have one.
-/// Coordinates are local to the target bone, in the character rig's own
-/// native units — [MascotModelBounds]-driven normalization (see above)
-/// scales the whole bone hierarchy (and anything parented under it)
-/// uniformly, so a prop parented to a bone stays correctly sized without
-/// needing to know that scale factor itself. Only one outfit has a prop so
-/// far: this is a pilot for the bone-attachment mechanism (see
-/// entities.mdx's `setParent` — there's no dedicated "equip" API) before
-/// building out the rest, so the exact offset/scale below is a first
-/// guess, not a calibrated fit — expect it to need adjustment once seen on
-/// a device (doubly so now that the base model's own scale was wrong until
-/// this fix).
-class Mascot3DProp {
-  final String asset;
-  final String boneName;
-  final double offsetX;
-  final double offsetY;
-  final double offsetZ;
-  final double scale;
-
-  const Mascot3DProp({
-    required this.asset,
-    required this.boneName,
-    this.offsetX = 0,
-    this.offsetY = 0,
-    this.offsetZ = 0,
-    this.scale = 1,
-  });
-}
-
 /// Picks which mascot still fits the moment, and owns the outfit catalog
 /// each character can be dressed in. Kept separate from the widgets that
 /// render it so the picking logic is plain and testable without a widget
@@ -99,9 +43,8 @@ class Mascot3DProp {
 /// modelled as unlocking a fancier outfit as the level goes up rather than
 /// a literal size change that the art can't actually back up.
 ///
-/// The pug only has the six portraits left over from the removed hearts
-/// indicator (full health down to spent) — there's no outfit set for it
-/// yet, so it ships with a single look until new art exists.
+/// The pug and owl each ship with a single look for now — there's no outfit
+/// set drawn for either yet.
 class MascotService {
   MascotService._();
 
@@ -158,20 +101,35 @@ class MascotService {
     ),
   ];
 
-  /// Reuses the least-damaged of the old hearts portraits as the pug's one
-  /// look, until a real outfit set is drawn for it.
+  /// The pug's one look, now drawn to match the panda's flat "die-cut
+  /// sticker" art style instead of reusing a portrait from the removed
+  /// hearts indicator.
   static const pugOutfits = [
     MascotOutfit(
       index: 0,
-      asset: 'assets/mascot/hearts/pug_5.png',
+      asset: 'assets/mascot/pug_01.png',
       labelKey: 'outfitPugDefault',
+      requiredLevel: 1,
+    ),
+  ];
+
+  /// The owl's one look — same "ships with a single look until a real
+  /// outfit set is drawn" precedent as the pug above.
+  static const owlOutfits = [
+    MascotOutfit(
+      index: 0,
+      asset: 'assets/mascot/owl_01.png',
+      labelKey: 'outfitOwlDefault',
       requiredLevel: 1,
     ),
   ];
 
   /// The "missing you" still shown after a stale streak, per character.
   /// The pug has no dedicated sleepy pose, so this reuses the desaturated,
-  /// low-health portrait — it already reads as "not doing great".
+  /// low-health portrait — it already reads as "not doing great". The owl
+  /// has no entry at all yet: [homeAsset] falls back to its normal outfit
+  /// asset for a lonely owl rather than crashing, the same way it would for
+  /// any future character before dedicated sleepy art exists.
   static const _sleepingAssets = {
     MascotCharacter.panda: 'assets/mascot/panda_14.png',
     MascotCharacter.pug: 'assets/mascot/hearts/pug_1.png',
@@ -181,303 +139,17 @@ class MascotService {
   /// rather than just quietly waiting.
   static const _lonelyAfter = Duration(days: 2);
 
-  /// thermion's own generic studio IBL. Supplies the ambient term Filament
-  /// otherwise has none of — see assets/mascot_3d/SOURCES.md.
-  static const iblAsset = 'assets/mascot_3d/env/default_env_ibl.ktx';
-
-  /// The mascot is meant to read as a flat, toy-like cartoon (the look
-  /// Subway Surfers and friends get by baking shading into the texture and
-  /// drawing it unlit). This atlas has no baked shading, so going fully
-  /// unlit isn't an option: the panda's arms and torso are the same navy
-  /// `#403c57`, and with no shading at all they merge into one shape and
-  /// the muzzle disappears off the face. What works instead is keeping
-  /// shading but flattening it — rendering the model across the range
-  /// showed the character stops reading somewhere past 80% ambient and
-  /// starts looking like a lit 3D object rather than a cartoon below 60%.
-  ///
-  /// A single key light rather than the old key-plus-three-fills: filling
-  /// from every side is exactly what an indirect light already does, and
-  /// stacking direct lights to fake it was what made the old setup both
-  /// contrasty and hard to reason about.
-  ///
-  /// These two numbers are NOT in comparable units, which is the trap
-  /// here. A first pass at this treated both as lux and set ibl=180000
-  /// against key=50000, reasoning that the 230000 total was below the old
-  /// setup's 430000 and would therefore be no brighter. On device it came
-  /// out badly overexposed — the navy washed to pale lavender and the
-  /// sash to pale yellow. A directional light's intensity is the
-  /// illuminance it casts from one direction; an IBL's scales an
-  /// environment lighting the model from every direction at once, so it
-  /// buys far more total light per unit. Treat raising `iblIntensity` as
-  /// a much bigger change than the same delta on the key light, and
-  /// change it in small steps.
-  ///
-  /// So the ambient share is still the thing being tuned — the darkest
-  /// lit surface wants to sit near 78% of the brightest — but the level
-  /// is now anchored to the old setup's exposure, which was correct even
-  /// though its contrast wasn't: this keeps the IBL close to the 30000 it
-  /// used to run at and takes the flattening out of the direct side
-  /// instead, where the units are known.
-  static const iblIntensity = 40000.0;
-  static const keyLightIntensity = 110000.0;
-
-  /// The 3D model for a companion's base look — a single glTF/GLB per
-  /// character, not yet split per outfit (see assets/mascot_3d/SOURCES.md
-  /// for provenance).
-  static String model3DAsset(MascotCharacter character) => switch (character) {
-    MascotCharacter.panda => 'assets/mascot_3d/panda.glb',
-    MascotCharacter.pug => 'assets/mascot_3d/pug.glb',
-  };
-
-  /// Measured directly off each GLB's mesh vertices (bind pose) — see
-  /// [MascotModelBounds] for why this exists, and
-  /// `tool/mascot3d/check_framing.py`, which re-measures them from the GLB
-  /// and fails if these drift.
-  ///
-  /// The pug's numbers were wrong until they were checked that way: height
-  /// 1.052 against a real 2.659, and every figure short by the same factor
-  /// of 2.53, so they'd clearly been taken from a differently-scaled copy
-  /// of the model. That left it scaled by 1/1.052 instead of 1/2.659 —
-  /// still two and a half units tall against a camera 1.6 units out, i.e.
-  /// the camera inside the dog, which is exactly how it looked.
-  static const _modelBounds = {
-    MascotCharacter.panda: MascotModelBounds(
-      height: 3.334,
-      centerY: 1.665,
-      centerZ: -0.204,
-    ),
-    MascotCharacter.pug: MascotModelBounds(
-      height: 2.659,
-      centerY: 1.312,
-      centerZ: 0.282,
-    ),
-  };
-
-  static MascotModelBounds modelBounds(MascotCharacter character) =>
-      _modelBounds[character]!;
-
-  /// How far back the wardrobe podium's camera sits, per character — see
-  /// mascot_3d_stage.dart's `_orbitRadius` for the frame-fill math this
-  /// feeds. A single shared distance (the panda's own 1.60) seemed fine
-  /// from the two angles it was eyeballed at, but never got swept through
-  /// a full turntable: the pug is a quadruped, low and long nose-to-tail
-  /// rather than roughly as wide as tall like the panda standing upright,
-  /// so at the rotations where that length faces across the frame instead
-  /// of into it, 1.60 clips the frame edge by as much as 9%. 2.0 was found
-  /// the same way the panda's distance was — sweeping every 15° of a full
-  /// turn and requiring a positive margin at all of them — and leaves 19%
-  /// to spare at the tightest angle.
-  static const _stageCameraDistance = {
-    MascotCharacter.panda: 1.60,
-    MascotCharacter.pug: 2.0,
-  };
-
-  static double stageCameraDistance(MascotCharacter character) =>
-      _stageCameraDistance[character]!;
-
   static List<MascotOutfit> outfitsFor(MascotCharacter character) =>
       switch (character) {
         MascotCharacter.panda => pandaOutfits,
         MascotCharacter.pug => pugOutfits,
+        MascotCharacter.owl => owlOutfits,
       };
-
-  /// 3D props for the panda's outfits, on top of the base kung-fu look the
-  /// model already wears — see SOURCES.md. Each is a bone-attached prop
-  /// rather than a full reclothing: thermion can't transplant a skinned
-  /// mesh's bone weights onto a different skeleton, so an actual costume
-  /// change (a different silhouette, not an accessory) would mean
-  /// hand-rigging a whole new body in Blender. An accessory sidesteps
-  /// that — same body, something small parented to a bone.
-  ///
-  /// Every offset here is measured, not guessed — `tool/mascot3d/fit_prop.py`
-  /// reports where the target bone's own vertices sit in its own frame, and
-  /// `tool/mascot3d/check_framing.py` confirms the result doesn't clip the
-  /// podium camera at any angle of the turntable. Skipping that step is
-  /// exactly how the glasses' first offset ended up inside the skull.
-  ///
-  /// Kung fu (index 4) has no entry and needs none — Quaternius's panda is
-  /// already wearing it. That leaves every panda outfit with either a real
-  /// 3D prop or no 3D difference by design, rather than a missing one.
-  static const _propsByOutfit = {
-    MascotCharacter.panda: {
-      // Reading glasses. The Head bone is rotated 22° about X relative to
-      // the model, so its frame's "up"/"forward" aren't the character's —
-      // the original (0.3, 0.15) guess put the glasses inside the skull
-      // with only the arms poking out. In the bone's own frame the head
-      // runs Y -0.13 to +1.00, the eye patches sit at Y +0.53, the face
-      // reaches Z +0.72; scale is the head's width at eye height (1.29)
-      // over the glasses model's own width (1.94).
-      2: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/glasses.glb',
-        boneName: 'Head',
-        offsetY: 0.53,
-        offsetZ: 0.60,
-        scale: 0.67,
-      ),
-      // Chef's toque: two primitives (a cylinder crown, a squashed sphere
-      // top) built with tool/mascot3d/make_prop.py rather than modeled or
-      // generated — flat white, matching the atlas's own flat-colour
-      // style, and exact rather than approximate for a shape this simple.
-      // Sized down from an initial pass (offset 0/1.12/0.20, scale 0.85)
-      // that read fine head-on but clipped the podium's turntable camera
-      // at several angles, checked the same way as the framing camera
-      // itself — projecting through the shipped lens rather than eyeballing
-      // a screenshot.
-      5: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/chef_hat.glb',
-        boneName: 'Head',
-        offsetY: 0.90,
-        offsetZ: 0.13,
-        scale: 0.58,
-      ),
-      // Star badge: a small gold disc on the chest, parented to Torso
-      // rather than Head. Its own vertices sit centred on its local
-      // origin, so the offset alone places it — found by first placing it
-      // where the torso's own front-facing vertices measure (Z max 0.48
-      // in that band) and discovering that's just *inside* the body: a
-      // flat disc needs to clear the surface it's pinned to, not touch it,
-      // so 0.56 (proud of that measured surface) is what actually reads
-      // as sitting on the chest rather than buried in it.
-      1: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/star_badge.glb',
-        boneName: 'Torso',
-        offsetY: 0.35,
-        offsetZ: 0.56,
-      ),
-      // Samurai headband: a flat ring, parented to Head. Getting the
-      // radius from the model's own eye-height width (as the glasses did)
-      // produced a halo floating well clear of the skull, because that
-      // width includes the muzzle's own forward bulge, not the narrower
-      // curve directly at brow height where a band actually sits. Found
-      // by measuring the head's cross-section radius band by band instead
-      // and matching the one at Y≈0.6-0.7, where it sits snug against the
-      // brow.
-      6: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/samurai_headband.glb',
-        boneName: 'Head',
-        offsetY: 0.68,
-        offsetZ: 0.02,
-      ),
-      // Pilot cap + goggles: one prop, three primitives (leather dome,
-      // two dark lenses) built and positioned as one unit, so the offset
-      // here is zero and the shape's own local coordinates are already in
-      // the Head bone's frame.
-      7: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/pilot_gear.glb',
-        boneName: 'Head',
-      ),
-      // Bubble tea cup, parented to the forearm rather than the head —
-      // the first prop attached anywhere but Head, and bone choice matters
-      // as much as offset: LowerArm.R is the last joint this rig actually
-      // has on that limb (no separate hand/wrist bone), so "held in the
-      // hand" means parenting to the forearm and offsetting toward where
-      // the hand would be relative to it.
-      3: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/bubble_tea.glb',
-        boneName: 'LowerArm.R',
-        offsetX: -0.15,
-        offsetY: 0.20,
-        offsetZ: -0.35,
-      ),
-    },
-    // The pug's face is otherwise blank — its two materials (Beige, Brown)
-    // are flat colour with no eye geometry at all, unlike the panda's
-    // atlas, which paints them on. Four primitives (white sclera, black
-    // pupil, mirrored) on its only outfit. Position took several passes:
-    // level with the mask's own vertices put them submerged in the head
-    // (a flat-shaded low-poly surface isn't perfectly symmetric between
-    // its own left/right, so one eye could poke through a gap in the
-    // rendering pipeline used to check this while the other stayed
-    // buried), and matching the near-black mask colour made them
-    // invisible outright even once placed correctly.
-    MascotCharacter.pug: {
-      0: Mascot3DProp(
-        asset: 'assets/mascot_3d/props/pug_eyes.glb',
-        boneName: 'Head',
-      ),
-    },
-  };
-
-  static Mascot3DProp? propForOutfit(MascotCharacter character, int outfitIndex) =>
-      _propsByOutfit[character]?[outfitIndex];
 
   static List<MascotOutfit> unlockedOutfits(
     MascotCharacter character,
     int level,
   ) => outfitsFor(character).where((o) => o.requiredLevel <= level).toList();
-
-  static const _idleAnimationIndex = {
-    MascotCharacter.panda: 10,
-    MascotCharacter.pug: 0,
-  };
-
-  /// One-shot glTF animation clips played mid-lesson before falling back to
-  /// idle. The panda's clips are Quaternius's "Universal Animation Library"
-  /// — the GLB's own animations array has them cleanly named (Idle, Wave,
-  /// No, ...), but an earlier pass here inspected the rig in Blender
-  /// instead, whose glTF importer renames every action to a generic
-  /// "Chara.NNN" on a name-length collision — so these were picked by eye
-  /// against that scrambled order rather than the real one. Re-derived by
-  /// reading the glTF JSON's `animations[].name` directly — see
-  /// assets/mascot_3d/SOURCES.md. The pug's rig only has Idle and Jump, so
-  /// every cue reuses Jump (or Idle for "incorrect", since a jump reads as
-  /// upbeat regardless of context and a wrong answer shouldn't).
-  ///
-  /// "correct" used to be clip 23, chosen only for being the longest at
-  /// 3.37s. Measuring how far the skinned mesh actually travels over each
-  /// clip (peak vertex range, against a model normalized to 1 unit tall)
-  /// showed why that read as the mascot doing nothing: clip 23 peaks at
-  /// 0.158, barely above Idle's own 0.062, so a correct answer bought
-  /// three and a half seconds of near-stillness. Jump peaks at 0.630 and
-  /// is unambiguous as celebration. Wave (0.895) is the only clip with
-  /// both big motion and real length, and it's already "hello". Punch
-  /// (0.969) and Sword (0.871) move more than Jump but read as aggression
-  /// — wrong note for a child getting an answer right.
-  static const _cueAnimationIndex = {
-    MascotCharacter.panda: {
-      Mascot3DCue.hello: 28, // "Wave"
-      Mascot3DCue.correct: 11, // "Jump"
-      Mascot3DCue.incorrect: 14, // "No"
-    },
-    MascotCharacter.pug: {
-      Mascot3DCue.hello: 1,
-      Mascot3DCue.correct: 1,
-      Mascot3DCue.incorrect: 0,
-    },
-  };
-
-  /// How long each cue's clip actually runs (read from the glTF's own
-  /// animation sampler timings), plus a little headroom — the panda's
-  /// "correct" clip alone is 3.37s, well past a one-size-fits-all wait.
-  /// Getting this wrong either cuts a clip off mid-motion or leaves the
-  /// model frozen on its last frame before
-  /// [MascotService.idleAnimationIndex] takes back over.
-  static const _cueDuration = {
-    MascotCharacter.panda: {
-      Mascot3DCue.hello: Duration(milliseconds: 1950), // clip: 1.7s
-      // Jump is short and snappy; the speech bubble stays up for its own
-      // 4s regardless, so the mascot settling back to idle well before
-      // then is fine — better than holding a last frame.
-      Mascot3DCue.correct: Duration(milliseconds: 550), // clip (Jump): 0.3s
-      Mascot3DCue.incorrect: Duration(milliseconds: 1950), // clip: 1.7s
-    },
-    MascotCharacter.pug: {
-      Mascot3DCue.hello: Duration(milliseconds: 1700), // clip (Jump): 1.5s
-      Mascot3DCue.correct: Duration(milliseconds: 1700), // clip (Jump): 1.5s
-      // "incorrect" plays Idle once, same clip idle already loops — the
-      // switch back is a no-op visually, so this just needs to be short.
-      Mascot3DCue.incorrect: Duration(milliseconds: 600),
-    },
-  };
-
-  static int idleAnimationIndex(MascotCharacter character) =>
-      _idleAnimationIndex[character]!;
-
-  static int cueAnimationIndex(MascotCharacter character, Mascot3DCue cue) =>
-      _cueAnimationIndex[character]![cue]!;
-
-  static Duration cueDuration(MascotCharacter character, Mascot3DCue cue) =>
-      _cueDuration[character]![cue]!;
 
   /// An [equippedIndex] of -1 means "nothing explicitly picked yet" — the
   /// companion should auto-follow the highest outfit the current level has
@@ -503,13 +175,16 @@ class MascotService {
 
   /// The home-screen companion: asleep once the learner has been away a
   /// couple of days, otherwise wearing whatever [effectiveOutfit] resolves
-  /// to.
+  /// to. A character with no dedicated sleepy pose in [_sleepingAssets]
+  /// (currently the owl) just stays in its normal outfit instead of
+  /// crashing on a missing entry.
   static String homeAsset(UserStats stats, {DateTime? now}) {
     final character = MascotCharacter.fromDb(stats.mascotCharacter);
     final last = stats.lastActivityDate;
     final effectiveNow = now ?? DateTime.now();
     if (last != null && effectiveNow.difference(last) >= _lonelyAfter) {
-      return _sleepingAssets[character]!;
+      final sleepy = _sleepingAssets[character];
+      if (sleepy != null) return sleepy;
     }
     final level = XpService.levelForXp(stats.totalXp);
     return effectiveOutfit(character, stats.equippedOutfit, level).asset;

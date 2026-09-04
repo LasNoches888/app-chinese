@@ -15,38 +15,17 @@ import 'package:app_chinese/services/mascot_service.dart';
 /// `unlocked: true`, onTap is wired, `equipped_outfit` is written and read
 /// back, and the level gate that used to revert a pick was already lifted.
 /// This pins down whether the screen's own logic is at fault.
-///
-/// The screen also builds the 3D stage, which can't initialize without a
-/// platform — Flutter substitutes an error widget for just that subtree
-/// and keeps the rest, so the grid is still testable as long as the
-/// resulting errors are drained rather than failing the test.
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfiNoIsolate;
   });
 
-  /// Swallow anything raised by the 3D stage; a real failure in the grid
-  /// still shows up as a failed expectation.
-  void drain3DErrors(WidgetTester tester) {
-    var caught = tester.takeException();
-    while (caught != null) {
-      caught = tester.takeException();
-    }
-  }
-
   Future<void> pumpWardrobe(WidgetTester tester) async {
     tester.view.physicalSize = const Size(1080, 4000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-
-    final previousOnError = FlutterError.onError;
-    FlutterError.onError = (details) {
-      if (details.library == 'thermion_flutter') return;
-      previousOnError?.call(details);
-    };
-    addTearDown(() => FlutterError.onError = previousOnError);
 
     late AppSettings settings;
     late AppRepositories repos;
@@ -68,7 +47,6 @@ void main() {
     );
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    drain3DErrors(tester);
   }
 
   Finder cardFor(int index) => find.byKey(ValueKey('outfit-$index'));
@@ -83,7 +61,6 @@ void main() {
     await tester.tap(cardFor(index));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    drain3DErrors(tester);
   }
 
   testWidgets('every panda outfit renders a card', (tester) async {
