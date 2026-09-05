@@ -26,6 +26,13 @@ void main() {
       overridePath: inMemoryDatabasePath,
     );
     stats = repos.stats;
+    // inMemoryDatabasePath's connection isn't actually fresh per call --
+    // sqflite's default singleInstance:true hands back the same open
+    // in-memory database for every openDatabase() on that literal path
+    // within this test process, so a previous test's writes are still
+    // sitting in the row otherwise. Start every test from a known-clean
+    // slate explicitly rather than depending on that isolation.
+    await stats.resetAllProgress();
   });
 
   test('switching character does not disturb XP earned earlier', () async {
