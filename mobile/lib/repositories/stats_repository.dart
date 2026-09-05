@@ -142,18 +142,32 @@ class StatsRepository {
   /// "auto" (-1) — the two animals don't share an outfit set, so an index
   /// that pointed to a valid panda outfit could point at the wrong thing
   /// for the pug.
+  ///
+  /// A targeted UPDATE rather than the usual read-modify-write through
+  /// [_save] — that pattern (read every column, change one, write every
+  /// column back) races with any *other* in-flight stats write started
+  /// from an older snapshot: XP from a lesson still finishing, an
+  /// achievement check, a daily-goal change. Whichever of those saves last
+  /// wins and rewrites every column from its own stale copy, silently
+  /// putting the mascot back to whatever it was before this call — which
+  /// is exactly what "pick pug, leave the wardrobe, it's panda again"
+  /// looks like from the outside. Touching only the columns this call
+  /// actually means to change makes that impossible here, regardless of
+  /// what the other write turns out to be.
   Future<UserStats> setMascotCharacter(String character) async {
-    var stats = await getStats();
-    stats = stats.copyWith(mascotCharacter: character, equippedOutfit: -1);
-    await _save(stats);
-    return stats;
+    await db.update('user_stats', {
+      'mascot_character': character,
+      'equipped_outfit': -1,
+    }, where: 'id = 1');
+    return getStats();
   }
 
+  /// Same targeted-UPDATE reasoning as [setMascotCharacter].
   Future<UserStats> setEquippedOutfit(int outfitIndex) async {
-    var stats = await getStats();
-    stats = stats.copyWith(equippedOutfit: outfitIndex);
-    await _save(stats);
-    return stats;
+    await db.update('user_stats', {
+      'equipped_outfit': outfitIndex,
+    }, where: 'id = 1');
+    return getStats();
   }
 
   /// Wipes all learning progress (XP, streak, SRS history, completed
