@@ -10,11 +10,17 @@ import 'package:app_chinese/services/mascot_service.dart';
 
 /// The wardrobe's outfit grid.
 ///
-/// Tapping an outfit did nothing on device — no crash, no change, the tick
-/// stayed put. Reading the code doesn't explain it: every card is passed
-/// `unlocked: true`, onTap is wired, `equipped_outfit` is written and read
-/// back, and the level gate that used to revert a pick was already lifted.
-/// This pins down whether the screen's own logic is at fault.
+/// Every outfit card here needs a level high enough to actually unlock it
+/// (StarBadge at 3, BubbleTea at 7, ...) -- the wardrobe used to show every
+/// outfit as unlocked regardless of level while the new 2D art was being
+/// tried out, which is exactly what let a pick silently revert once you
+/// left: MascotService.effectiveOutfit (what the home screen and this
+/// screen's own podium both call) has always enforced the real gate, so an
+/// equip the wardrobe let through past it just got rejected the moment
+/// anything re-read it. Now that the wardrobe enforces the same gate, a
+/// fresh (XP: 0) profile could no longer equip most outfits at all -- so
+/// the fixture below levels the profile up first, the same way a player
+/// would have to.
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -34,6 +40,9 @@ void main() {
       repos = await AppRepositories.initialize(
         overridePath: inMemoryDatabasePath,
       );
+      // Comfortably past level 20 (Pilot, the highest-gated panda outfit)
+      // so every card in the grid is actually tappable.
+      await repos.stats.addXpAndRecordActivity(5000);
     });
 
     await tester.pumpWidget(

@@ -71,20 +71,16 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
     final character = MascotCharacter.fromDb(stats.mascotCharacter);
     final level = XpService.levelForXp(stats.totalXp);
     final outfits = MascotService.outfitsFor(character);
-    // TODO: temporary, same as the `unlocked: true` below — picking any
-    // outfit here should stick regardless of the real requiredLevel while
-    // every outfit is being tried out. effectiveOutfit still enforces that
-    // level gate, so it would silently revert an equip the moment it fell
-    // outside the actual unlocked tier. Go back to
-    // `MascotService.effectiveOutfit(character, stats.equippedOutfit,
-    // level).index` once that's done.
-    final equippedIndex = stats.equippedOutfit >= 0
-        ? stats.equippedOutfit
-        : MascotService.effectiveOutfit(
-            character,
-            stats.equippedOutfit,
-            level,
-          ).index;
+    // The real level gate — same call homeAsset() makes. Equipping an
+    // outfit the wardrobe let you tap but that the home screen then
+    // rejects (see effectiveOutfit's own requiredLevel check) is exactly
+    // what "pick Samurai, leave, it's back to plain panda" looked like:
+    // the two screens disagreeing about whether it was actually unlocked.
+    final equippedIndex = MascotService.effectiveOutfit(
+      character,
+      stats.equippedOutfit,
+      level,
+    ).index;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -145,10 +141,7 @@ class _MascotWardrobeScreenState extends State<MascotWardrobeScreen> {
                 key: ValueKey('outfit-${outfit.index}'),
                 outfit: outfit,
                 settings: settings,
-                // TODO: temporary — every outfit shows unlocked so the new
-                // art can be tried out with all of them. Revert to
-                // `outfit.requiredLevel <= level` once that's done.
-                unlocked: true,
+                unlocked: outfit.requiredLevel <= level,
                 equipped: outfit.index == equippedIndex,
                 onTap: () => _equip(outfit),
               ),
