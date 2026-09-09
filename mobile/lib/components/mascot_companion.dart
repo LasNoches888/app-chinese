@@ -111,7 +111,6 @@ class _MascotCompanionState extends State<MascotCompanion> {
         MascotAnimatedImage(
           asset: MascotService.outfitsFor(widget.character).first.asset,
           size: widget.size,
-          circular: true,
           tappable: true,
           controller: _imageController,
         ),
