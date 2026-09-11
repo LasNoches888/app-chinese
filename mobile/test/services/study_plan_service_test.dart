@@ -17,6 +17,7 @@ void main() {
     int dailyChallenges = 0,
     int listening = 0,
     int pronunciation = 0,
+    int writing = 0,
   }) => UserStats(
     totalXp: 0,
     currentStreak: currentStreak,
@@ -34,6 +35,7 @@ void main() {
     raceWins: 0,
     listeningCompleted: listening,
     pronunciationCompleted: pronunciation,
+    writingCompleted: writing,
   );
 
   const plan = StudyPlan(
@@ -50,6 +52,7 @@ void main() {
       PlanStep.words(10, 'Выучить 10 слов', 'подробности'),
       PlanStep.streak(3, 'Серия 3 дня', 'подробности'),
       PlanStep.listening(2, 'Два диалога', 'подробности'),
+      PlanStep.writing(2, 'Два иероглифа', 'подробности'),
     ],
   );
 
@@ -111,11 +114,15 @@ void main() {
       expect(evaluate(s: stats(listening: 2)).steps[3].isDone, isTrue);
     });
 
+    test('writing milestones follow the writing counter', () {
+      expect(evaluate(s: stats(writing: 2)).steps[4].isDone, isTrue);
+    });
+
     test('a fully finished plan reports complete', () {
       final p = evaluate(
         decks: {'greetings'},
         known: 10,
-        s: stats(currentStreak: 3, listening: 2),
+        s: stats(currentStreak: 3, listening: 2, writing: 2),
       );
       expect(p.isComplete, isTrue);
       expect(p.fraction, 1.0);
@@ -137,10 +144,11 @@ void main() {
     });
 
     test('moves on once the leading plan is finished', () {
-      // Same profile plus the last two steps of "first steps" — it drops
-      // out of the running rather than staying pinned as "continue".
+      // Same profile plus the rest of "first steps" (listening included) —
+      // it drops out of the running rather than staying pinned as
+      // "continue".
       final all = StudyPlanService.evaluateAll(
-        stats: stats(currentStreak: 3, perfectLessons: 1),
+        stats: stats(currentStreak: 3, perfectLessons: 1, listening: 3),
         completedDeckIds: {'greetings', 'numbers', 'people'},
         knownWordCount: 5,
       );
@@ -166,6 +174,7 @@ void main() {
           dailyChallenges: 20,
           listening: 50,
           pronunciation: 50,
+          writing: 50,
         ),
         completedDeckIds: {
           for (final p in kStudyPlans)
@@ -236,12 +245,13 @@ void main() {
       }
     });
 
-    test('plans cover listening and speaking, not just vocabulary', () {
+    test('plans cover listening, writing and speaking, not just vocabulary', () {
       final kinds = {
         for (final p in kStudyPlans)
           for (final s in p.steps) s.kind,
       };
       expect(kinds, contains(PlanStepKind.listening));
+      expect(kinds, contains(PlanStepKind.writing));
       expect(kinds, contains(PlanStepKind.pronunciation));
     });
   });

@@ -25,6 +25,7 @@ UserStats _stats({
   raceWins: 0,
   listeningCompleted: 0,
   pronunciationCompleted: 0,
+  writingCompleted: 0,
   mascotCharacter: mascotCharacter,
   equippedOutfit: equippedOutfit,
 );

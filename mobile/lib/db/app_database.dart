@@ -7,7 +7,7 @@ import 'package:sqflite/sqflite.dart';
 /// for any of it; the backend is only ever consulted for `/chat`.
 class AppDatabase {
   static const _dbName = 'app_chinese.db';
-  static const _schemaVersion = 5;
+  static const _schemaVersion = 6;
 
   static Database? _instance;
 
@@ -71,6 +71,14 @@ class AppDatabase {
             // same as it always has, until the learner opens the wardrobe.
             await db.execute(
               'ALTER TABLE user_stats ADD COLUMN equipped_outfit INTEGER NOT NULL DEFAULT -1',
+            );
+          }
+          if (oldVersion < 6) {
+            // Writing (recall-the-hanzi) becomes its own study-plan
+            // milestone from HSK 2 onward — same reasoning as the
+            // listening/pronunciation columns added above.
+            await db.execute(
+              'ALTER TABLE user_stats ADD COLUMN writing_completed INTEGER NOT NULL DEFAULT 0',
             );
           }
         },
@@ -140,6 +148,7 @@ class AppDatabase {
         race_wins INTEGER NOT NULL DEFAULT 0,
         listening_completed INTEGER NOT NULL DEFAULT 0,
         pronunciation_completed INTEGER NOT NULL DEFAULT 0,
+        writing_completed INTEGER NOT NULL DEFAULT 0,
         mascot_character TEXT NOT NULL DEFAULT 'panda',
         equipped_outfit INTEGER NOT NULL DEFAULT -1
       )

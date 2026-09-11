@@ -159,6 +159,9 @@ class _LessonSessionScreenState extends State<LessonSessionScreen> {
         exerciseType: question.type.name,
       );
       await repos.stats.addXpAndRecordActivity(earned);
+      if (correct && question.type == ExerciseType.writeHanzi) {
+        await repos.stats.recordWritingCompleted();
+      }
       if (!correct) _mistakeIds.add(question.wordId);
 
       if (!mounted) return;

@@ -38,6 +38,7 @@ class StatsRepository {
       'race_wins': stats.raceWins,
       'listening_completed': stats.listeningCompleted,
       'pronunciation_completed': stats.pronunciationCompleted,
+      'writing_completed': stats.writingCompleted,
       'mascot_character': stats.mascotCharacter,
       'equipped_outfit': stats.equippedOutfit,
     }, where: 'id = 1');
@@ -127,6 +128,13 @@ class StatsRepository {
     stats = stats.copyWith(
       pronunciationCompleted: stats.pronunciationCompleted + 1,
     );
+    await _save(stats);
+    return stats;
+  }
+
+  Future<UserStats> recordWritingCompleted() async {
+    var stats = await getStats();
+    stats = stats.copyWith(writingCompleted: stats.writingCompleted + 1);
     await _save(stats);
     return stats;
   }

@@ -82,14 +82,15 @@ class _PlanDetailScreenState extends State<PlanDetailScreen>
         destination = const ListeningListScreen();
       case PlanStepKind.pronunciation:
         destination = const PronunciationCheckScreen();
-      // Streaks, words learned, daily challenges and perfect lessons are
-      // all earned across the app rather than at one screen, so these
-      // point at the practice hub instead of pretending to be a single
-      // exercise.
+      // Streaks, words learned, daily challenges, perfect lessons and
+      // writing milestones are all earned across the app rather than at one
+      // screen, so these point at the practice hub instead of pretending to
+      // be a single exercise.
       case PlanStepKind.words:
       case PlanStepKind.streak:
       case PlanStepKind.dailyChallenge:
       case PlanStepKind.perfectLesson:
+      case PlanStepKind.writing:
         destination = const PracticeHubScreen();
     }
 

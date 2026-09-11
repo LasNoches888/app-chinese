@@ -15,6 +15,7 @@ class UserStats {
   final int raceWins;
   final int listeningCompleted;
   final int pronunciationCompleted;
+  final int writingCompleted;
   final String mascotCharacter;
   final int equippedOutfit;
 
@@ -35,6 +36,7 @@ class UserStats {
     required this.raceWins,
     required this.listeningCompleted,
     required this.pronunciationCompleted,
+    required this.writingCompleted,
     this.mascotCharacter = 'panda',
     this.equippedOutfit = -1,
   });
@@ -60,6 +62,7 @@ class UserStats {
     raceWins: map['race_wins'] as int? ?? 0,
     listeningCompleted: map['listening_completed'] as int? ?? 0,
     pronunciationCompleted: map['pronunciation_completed'] as int? ?? 0,
+    writingCompleted: map['writing_completed'] as int? ?? 0,
     mascotCharacter: map['mascot_character'] as String? ?? 'panda',
     equippedOutfit: map['equipped_outfit'] as int? ?? -1,
   );
@@ -81,6 +84,7 @@ class UserStats {
     int? raceWins,
     int? listeningCompleted,
     int? pronunciationCompleted,
+    int? writingCompleted,
     String? mascotCharacter,
     int? equippedOutfit,
   }) {
@@ -103,6 +107,7 @@ class UserStats {
       listeningCompleted: listeningCompleted ?? this.listeningCompleted,
       pronunciationCompleted:
           pronunciationCompleted ?? this.pronunciationCompleted,
+      writingCompleted: writingCompleted ?? this.writingCompleted,
       mascotCharacter: mascotCharacter ?? this.mascotCharacter,
       equippedOutfit: equippedOutfit ?? this.equippedOutfit,
     );

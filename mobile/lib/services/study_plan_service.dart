@@ -113,6 +113,7 @@ class StudyPlanService {
     PlanStepKind.dailyChallenge => stats.dailyChallengesCompleted,
     PlanStepKind.perfectLesson => stats.perfectLessonsCount,
     PlanStepKind.listening => stats.listeningCompleted,
+    PlanStepKind.writing => stats.writingCompleted,
     PlanStepKind.pronunciation => stats.pronunciationCompleted,
   };
 }
