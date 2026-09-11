@@ -1364,5 +1364,190 @@
       "Вчера"
     ],
     "correct_index": 1
+  },
+  {
+    "id": "dlg_hsk4_01",
+    "topic": "hsk4_01",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "你姐姐在家吗？",
+        "pinyin": "Nǐ jiějie zài jiā ma?",
+        "translation_ru": "Твоя старшая сестра дома?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "在，她在房间里唱歌。",
+        "pinyin": "Zài, tā zài fángjiān lǐ chànggē.",
+        "translation_ru": "Дома, она в комнате поёт."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "歌好听吗？",
+        "pinyin": "Gē hǎotīng ma?",
+        "translation_ru": "Песня приятная?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很好听，你也来听吧。",
+        "pinyin": "Hěn hǎotīng, nǐ yě lái tīng ba.",
+        "translation_ru": "Очень приятная, приходи тоже послушать."
+      }
+    ],
+    "question": "Где сестра поёт?",
+    "options": [
+      "В комнате",
+      "В школе",
+      "В магазине"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_hsk4_02",
+    "topic": "hsk4_02",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "今天天气怎么样？",
+        "pinyin": "Jīntiān tiānqì zěnmeyàng?",
+        "translation_ru": "Какая сегодня погода?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "不好，下雨了。",
+        "pinyin": "Bù hǎo, xià yǔ le.",
+        "translation_ru": "Плохая, идёт дождь."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "那我们不去学校了吗？",
+        "pinyin": "Nà wǒmen bú qù xuéxiào le ma?",
+        "translation_ru": "Тогда мы не пойдём в школу?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "还是要去，没关系。",
+        "pinyin": "Háishi yào qù, méi guānxi.",
+        "translation_ru": "Всё равно нужно идти, ничего страшного."
+      }
+    ],
+    "question": "Какая сегодня погода?",
+    "options": [
+      "Идёт дождь",
+      "Солнечно",
+      "Идёт снег"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_hsk4_03",
+    "topic": "hsk4_03",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "下课以后你去哪儿？",
+        "pinyin": "Xiàkè yǐhòu nǐ qù nǎr?",
+        "translation_ru": "Куда ты пойдёшь после урока?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我去操场跑步。",
+        "pinyin": "Wǒ qù cāochǎng pǎobù.",
+        "translation_ru": "Я пойду на площадку бегать."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "我可以和你一起去吗？",
+        "pinyin": "Wǒ kěyǐ hé nǐ yìqǐ qù ma?",
+        "translation_ru": "Можно я пойду с тобой?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "可以，一起去吧。",
+        "pinyin": "Kěyǐ, yìqǐ qù ba.",
+        "translation_ru": "Можно, пойдём вместе."
+      }
+    ],
+    "question": "Куда B идёт после урока?",
+    "options": [
+      "На спортивную площадку",
+      "Домой",
+      "В магазин"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_hsk4_04",
+    "topic": "hsk4_04",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "这件衣服怎么样？",
+        "pinyin": "Zhè jiàn yīfu zěnmeyàng?",
+        "translation_ru": "Как эта одежда?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很好看，可是有点儿贵。",
+        "pinyin": "Hěn hǎokàn, kěshì yǒudiǎnr guì.",
+        "translation_ru": "Очень красивая, но немного дорогая."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "能便宜一点儿吗？",
+        "pinyin": "Néng piányi yìdiǎnr ma?",
+        "translation_ru": "Можно немного дешевле?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "可以，给你便宜一点儿。",
+        "pinyin": "Kěyǐ, gěi nǐ piányi yìdiǎnr.",
+        "translation_ru": "Можно, сделаю тебе немного дешевле."
+      }
+    ],
+    "question": "Какая проблема с одеждой у A?",
+    "options": [
+      "Она дорогая",
+      "Она некрасивая",
+      "Она чёрная"
+    ],
+    "correct_index": 0
+  },
+  {
+    "id": "dlg_hsk4_05",
+    "topic": "hsk4_05",
+    "lines": [
+      {
+        "speaker": "A",
+        "hanzi": "晚上你做什么菜？",
+        "pinyin": "Wǎnshang nǐ zuò shénme cài?",
+        "translation_ru": "Что ты готовишь вечером?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "我做鱼，还有米饭。",
+        "pinyin": "Wǒ zuò yú, hái yǒu mǐfàn.",
+        "translation_ru": "Я готовлю рыбу, и ещё рис."
+      },
+      {
+        "speaker": "A",
+        "hanzi": "好吃吗？",
+        "pinyin": "Hǎochī ma?",
+        "translation_ru": "Вкусно?"
+      },
+      {
+        "speaker": "B",
+        "hanzi": "很好吃，你也来吃吧。",
+        "pinyin": "Hěn hǎochī, nǐ yě lái chī ba.",
+        "translation_ru": "Очень вкусно, приходи тоже поесть."
+      }
+    ],
+    "question": "Что готовит B?",
+    "options": [
+      "Рыбу и рис",
+      "Овощи и чай",
+      "Мясо и суп"
+    ],
+    "correct_index": 0
   }
 ]

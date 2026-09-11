@@ -180,5 +180,40 @@
     "topic": "society3",
     "hsk_level": 3,
     "word_count": 12
+  },
+  {
+    "id": "hsk4_01",
+    "title": "HSK 4 · слова 1–25",
+    "topic": "hsk4_01",
+    "hsk_level": 4,
+    "word_count": 25
+  },
+  {
+    "id": "hsk4_02",
+    "title": "HSK 4 · слова 26–50",
+    "topic": "hsk4_02",
+    "hsk_level": 4,
+    "word_count": 24
+  },
+  {
+    "id": "hsk4_03",
+    "title": "HSK 4 · слова 51–75",
+    "topic": "hsk4_03",
+    "hsk_level": 4,
+    "word_count": 24
+  },
+  {
+    "id": "hsk4_04",
+    "title": "HSK 4 · слова 76–100",
+    "topic": "hsk4_04",
+    "hsk_level": 4,
+    "word_count": 25
+  },
+  {
+    "id": "hsk4_05",
+    "title": "HSK 4 · слова 101–125",
+    "topic": "hsk4_05",
+    "hsk_level": 4,
+    "word_count": 25
   }
 ]
