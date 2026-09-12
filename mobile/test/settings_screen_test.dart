@@ -62,7 +62,10 @@ void main() {
     debugSupportsSelfUpdate = true;
     await pumpSettings(tester);
 
-    expect(find.text('Uchi'), findsOneWidget);
+    // The header shows the level line once stats load, replacing the
+    // "Uchi" placeholder it starts on — there's no account/name to show,
+    // so the level stands in for it (see _BrandHeader).
+    expect(find.textContaining('Уровень'), findsOneWidget);
     expect(find.text('Внешний вид'), findsOneWidget);
     expect(find.text('Цели и напоминания'), findsOneWidget);
     expect(find.text('Обновления'), findsOneWidget);
