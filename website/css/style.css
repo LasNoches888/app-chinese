@@ -113,7 +113,23 @@ p { margin: 0; line-height: 1.55; }
    here looked fine in dev but left the whole hero at opacity:0 the moment
    its ticker didn't advance (backgrounded tab, slow script eval, a
    blocked CDN) — a CSS animation runs on the compositor regardless. */
-.hero { padding: 72px 0 40px; overflow: hidden; }
+.hero {
+  padding: 72px 0 40px; overflow: hidden; position: relative;
+  background: radial-gradient(ellipse 900px 500px at 80% 20%, color-mix(in srgb, var(--blue) 10%, transparent), transparent);
+}
+.hero__hanzi {
+  position: absolute;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--blue) 16%, transparent);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.hero__hanzi--1 { top: 10%;  left: 4%;   font-size: 46px; animation: drift 9s ease-in-out infinite; }
+.hero__hanzi--2 { top: 68%;  left: 10%;  font-size: 30px; color: color-mix(in srgb, var(--green) 20%, transparent); animation: drift 7s ease-in-out infinite 1.2s; }
+.hero__hanzi--3 { top: 20%;  left: 92%;  font-size: 34px; color: color-mix(in srgb, var(--purple) 20%, transparent); animation: drift 8s ease-in-out infinite 0.6s; }
+.hero__hanzi--4 { top: 78%;  left: 88%;  font-size: 52px; animation: drift 10s ease-in-out infinite 2s; }
+.hero__row { position: relative; z-index: 1; display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
 .hero__row { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center; }
 .hero__title { font-size: 52px; line-height: 1.08; animation: fade-up 0.7s both 0.05s; }
 .hero__sub { margin-top: 20px; font-size: 18px; color: var(--ink-soft); max-width: 46ch; animation: fade-up 0.7s both 0.15s; }
@@ -141,12 +157,36 @@ p { margin: 0; line-height: 1.55; }
 .badge b { color: var(--ink); }
 .icon { width: 18px; height: 18px; flex-shrink: 0; }
 
+/* The mascot "talking" to the visitor — a speech bubble, not another
+   rounded rectangle, because that's literally what a companion does. */
+.hero__bubble {
+  position: absolute; top: 2%; left: 46%;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 10px 16px;
+  box-shadow: var(--shadow-md);
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  animation: fade-up 0.6s both 0.75s;
+}
+.hero__bubble small { display: block; font-weight: 600; font-size: 11px; color: var(--ink-faint); margin-top: 1px; }
+.hero__bubble::after {
+  content: ''; position: absolute; bottom: -7px; left: 28px;
+  width: 14px; height: 14px; background: var(--surface);
+  clip-path: polygon(0 0, 100% 0, 0 100%);
+}
+
 @keyframes fade-up { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 @keyframes pop-in { from { opacity: 0; transform: scale(0.92) translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0) rotate(-4deg); }
+  50% { transform: translate(10px, -16px) rotate(4deg); }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .hero__title, .hero__sub, .hero__ctas, .hero__proof, .hero__panda, .badge { animation: none; }
+  .hero__title, .hero__sub, .hero__ctas, .hero__proof, .hero__panda, .badge, .hero__bubble, .hero__hanzi { animation: none; }
 }
 
 /* ===== Section shells ===== */
@@ -180,6 +220,9 @@ section { padding: 96px 0; }
 .compare-card__note { margin-top: 16px; font-size: 13px; color: var(--ink-faint); }
 
 /* ===== Companion ===== */
+.companion {
+  background: color-mix(in srgb, var(--green) 7%, var(--bg));
+}
 .companion__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 44px; max-width: 640px; }
 .companion__card { background: var(--surface); border-radius: var(--radius-card); padding: 24px 12px; text-align: center; box-shadow: var(--shadow-sm); }
 .companion__card img { width: 100%; max-width: 120px; margin: 0 auto 12px; }
@@ -238,6 +281,14 @@ html.js-ready .reveal.is-visible { opacity: 1; transform: none; transition: opac
   .hero__sub { max-width: none; }
   .badge { position: static; display: inline-flex; margin: 6px 8px 0 0; }
   .hero__art { flex-direction: column; align-items: center; }
+  /* The floating hanzi are tuned to a short, wide desktop hero — the much
+     taller stacked mobile layout scatters them over the body text
+     instead of the empty space they're meant to decorate, so they're
+     simpler to drop than to re-tune per breakpoint. The bubble still
+     earns its place, just back in normal document flow. */
+  .hero__hanzi { display: none; }
+  .hero__bubble { position: static; display: inline-flex; flex-direction: column; margin-bottom: 14px; }
+  .hero__bubble::after { display: none; }
 
   .tracks__grid, .companion__grid { grid-template-columns: 1fr 1fr; }
   .features__grid { grid-template-columns: 1fr; }
