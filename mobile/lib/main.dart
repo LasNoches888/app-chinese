@@ -7,8 +7,11 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'api/app_settings.dart';
 import 'app_repositories.dart';
+import 'screens/chat_screen.dart';
 import 'screens/dialects_map_screen.dart';
+import 'screens/dictionary_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/lessons_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/plans_screen.dart';
 import 'screens/progress_screen.dart';
@@ -90,11 +93,12 @@ class AppChinese extends StatelessWidget {
       // wrapping or centering. A generous-but-bounded ceiling here keeps
       // every screen readable (long text lines, wide cards) without
       // needing a max-width constraint added to two dozen screens
-      // individually; HomeShell below adds its own desktop navigation
-      // rail on top of this for the four main tabs specifically.
+      // individually. 1280 rather than the old 900: HomeShell's desktop
+      // sidebar plus a real dashboard grid needs more room than a
+      // slightly-stretched phone layout did.
       builder: (context, child) => Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 900),
+          constraints: const BoxConstraints(maxWidth: 1280),
           child: child,
         ),
       ),
@@ -140,9 +144,13 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
+  int _mobileIndex = 0;
+  int _desktopIndex = 0;
 
-  static const _screens = [
+  /// The phone bottom bar keeps exactly the tabs it already had — this
+  /// pass is about giving desktop its own real layout, not about
+  /// reshuffling a mobile nav that's already been tuned.
+  static const _mobileScreens = [
     HomeScreen(),
     DialectsMapScreen(),
     PlansScreen(),
@@ -150,15 +158,48 @@ class _HomeShellState extends State<HomeShell> {
     SettingsScreen(),
   ];
 
-  /// Below this, a NavigationRail would leave less room for content than
-  /// a phone screen already gets — the bottom bar stays the right call
+  /// Desktop gets Уроки/Словарь/Чат as sidebar destinations of their own
+  /// instead of two taps deep through Home's shortcut grid — that grid
+  /// is a phone-width compromise, not a design goal, and a sidebar has
+  /// the room to just list everything.
+  static const _desktopScreens = [
+    HomeScreen(),
+    LessonsScreen(),
+    DialectsMapScreen(),
+    DictionaryScreen(),
+    ChatScreen(),
+    ProgressScreen(),
+    SettingsScreen(),
+  ];
+
+  /// Below this, a sidebar would leave less room for content than a
+  /// phone screen already gets — the bottom bar stays the right call
   /// all the way up to a small desktop window.
   static const _railBreakpoint = 700.0;
+
+  Widget _animatedBody(Widget child, Object key) => AnimatedSwitcher(
+    // Cross-fades tabs with a slight upward drift instead of swapping
+    // them instantly.
+    duration: const Duration(milliseconds: 260),
+    switchInCurve: Curves.easeOutCubic,
+    switchOutCurve: Curves.easeInCubic,
+    transitionBuilder: (child, animation) => FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.015),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      ),
+    ),
+    child: KeyedSubtree(key: ValueKey(key), child: child),
+  );
 
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
-    final destinations = [
+    final mobileDestinations = [
       (
         icon: Icons.home_outlined,
         selected: Icons.home,
@@ -186,35 +227,57 @@ class _HomeShellState extends State<HomeShell> {
       ),
     ];
 
-    final body = AnimatedSwitcher(
-      // Cross-fades tabs with a slight upward drift instead of swapping
-      // them instantly.
-      duration: const Duration(milliseconds: 260),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) => FadeTransition(
-        opacity: animation,
-        child: SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.015),
-            end: Offset.zero,
-          ).animate(animation),
-          child: child,
-        ),
+    final desktopDestinations = [
+      (
+        icon: Icons.home_outlined,
+        selected: Icons.home,
+        label: settings.t('home'),
       ),
-      child: KeyedSubtree(key: ValueKey<int>(_index), child: _screens[_index]),
-    );
+      (
+        icon: Icons.menu_book_outlined,
+        selected: Icons.menu_book,
+        label: settings.t('lessons'),
+      ),
+      (
+        icon: Icons.location_on_outlined,
+        selected: Icons.location_on,
+        label: settings.t('dialects'),
+      ),
+      (
+        icon: Icons.import_contacts_outlined,
+        selected: Icons.import_contacts,
+        label: settings.t('dictionaryTitle'),
+      ),
+      (
+        icon: Icons.chat_bubble_outline,
+        selected: Icons.chat_bubble,
+        label: settings.t('chat'),
+      ),
+      (
+        icon: Icons.bar_chart_outlined,
+        selected: Icons.bar_chart,
+        label: settings.t('progress'),
+      ),
+      (
+        icon: Icons.person_outline,
+        selected: Icons.person,
+        label: settings.t('settings'),
+      ),
+    ];
 
     return LayoutBuilder(
       builder: (context, constraints) {
         if (constraints.maxWidth < _railBreakpoint) {
           return Scaffold(
-            body: body,
+            body: _animatedBody(
+              _mobileScreens[_mobileIndex],
+              _mobileIndex,
+            ),
             bottomNavigationBar: NavigationBar(
-              selectedIndex: _index,
-              onDestinationSelected: (i) => setState(() => _index = i),
+              selectedIndex: _mobileIndex,
+              onDestinationSelected: (i) => setState(() => _mobileIndex = i),
               destinations: [
-                for (final d in destinations)
+                for (final d in mobileDestinations)
                   NavigationDestination(
                     icon: Icon(d.icon),
                     selectedIcon: Icon(d.selected),
@@ -226,33 +289,158 @@ class _HomeShellState extends State<HomeShell> {
         }
 
         // Wide enough for a desktop window to feel like one — a
-        // permanent rail reads as native there, where a bottom bar
-        // would just be a mobile habit with room to spare either side.
+        // permanent, labeled sidebar reads as native there, where a
+        // bottom bar would just be a mobile habit with room to spare
+        // either side.
         return Scaffold(
           body: Row(
             children: [
-              NavigationRail(
-                selectedIndex: _index,
-                onDestinationSelected: (i) => setState(() => _index = i),
-                extended: constraints.maxWidth >= 860,
-                labelType: constraints.maxWidth >= 860
-                    ? NavigationRailLabelType.none
-                    : NavigationRailLabelType.all,
-                destinations: [
-                  for (final d in destinations)
-                    NavigationRailDestination(
-                      icon: Icon(d.icon),
-                      selectedIcon: Icon(d.selected),
-                      label: Text(d.label),
-                    ),
-                ],
+              _DesktopSidebar(
+                key: const Key('desktopSidebar'),
+                selectedIndex: _desktopIndex,
+                destinations: desktopDestinations,
+                onSelect: (i) => setState(() => _desktopIndex = i),
               ),
-              const VerticalDivider(width: 1),
-              Expanded(child: body),
+              Expanded(
+                child: _animatedBody(
+                  _desktopScreens[_desktopIndex],
+                  _desktopIndex,
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// A fixed-width, always-labeled desktop nav — deliberately not Material's
+/// [NavigationRail]: that widget's collapsed icon-only state and its
+/// pill-less selection highlight read as a generic Flutter default, not
+/// the brand. This matches the same sidebar built for the web app
+/// (website/js/shell.js) so the two feel like one product.
+class _DesktopSidebar extends StatelessWidget {
+  final int selectedIndex;
+  final List<({IconData icon, IconData selected, String label})>
+  destinations;
+  final ValueChanged<int> onSelect;
+
+  const _DesktopSidebar({
+    super.key,
+    required this.selectedIndex,
+    required this.destinations,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 240,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        border: Border(
+          right: BorderSide(
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+              child: Row(
+                children: [
+                  ClipOval(
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: Image.asset(
+                        'assets/mascot/panda_02.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Uchi',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (var i = 0; i < destinations.length; i++)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 3,
+                ),
+                child: _SidebarItem(
+                  spec: destinations[i],
+                  selected: i == selectedIndex,
+                  onTap: () => onSelect(i),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SidebarItem extends StatelessWidget {
+  final ({IconData icon, IconData selected, String label}) spec;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _SidebarItem({
+    required this.spec,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: selected
+          ? AppColors.blue.withValues(alpha: 0.12)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+          child: Row(
+            children: [
+              Icon(
+                selected ? spec.selected : spec.icon,
+                size: 20,
+                color: selected
+                    ? AppColors.blue
+                    : theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  spec.label,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: selected ? AppColors.blue : theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
