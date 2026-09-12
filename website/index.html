@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uchi</title>
+<meta name="description" content="Uchi — офлайн-курс китайского с двумя путями обучения (разговорные темы и подготовка к HSK), разделом о диалектах Китая, ИИ-репетитором и питомцем, который растёт вместе с вами.">
+<link rel="icon" href="assets/app-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<script>document.documentElement.classList.add('js-ready');</script>
+
+<header class="nav" id="nav">
+  <div class="wrap nav__row">
+    <a href="#top" class="brand">
+      <img src="assets/app-icon.png" alt="" class="brand__icon">
+      <span class="brand__name">Uchi</span>
+    </a>
+    <nav class="nav__links" id="navLinks">
+      <a href="#tracks">Два пути</a>
+      <a href="#dialects">Диалекты</a>
+      <a href="#companion">Питомец</a>
+      <a href="#download" class="nav__cta">Скачать</a>
+    </nav>
+    <button class="nav__burger" id="navBurger" aria-label="Меню" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero">
+    <div class="wrap hero__row">
+      <div class="hero__copy">
+        <h1 class="hero__title">Два пути в китайский.<br>Один спутник.</h1>
+        <p class="hero__sub">Разговорные темы для жизни или пошаговая подготовка к HSK — выбирайте сами. Панда, мопс или сова пройдут этот путь вместе с вами. Полностью офлайн, без интернета.</p>
+        <div class="hero__ctas">
+          <a href="#download" class="btn btn--primary">Скачать бесплатно</a>
+          <a href="#tracks" class="btn btn--ghost">Как это устроено</a>
+        </div>
+        <div class="hero__proof">
+          <span>Android</span>
+          <span class="dot"></span>
+          <span>Windows</span>
+          <span class="dot"></span>
+          <span>Работает без сети</span>
+        </div>
+      </div>
+      <div class="hero__art">
+        <img src="assets/mascot/panda_04.png" alt="Панда-компаньон Uchi радостно машет лапами" class="hero__panda" id="heroPanda">
+        <div class="badge badge--streak" id="badgeStreak">🔥 <b>12</b> дней подряд</div>
+        <div class="badge badge--level" id="badgeLevel">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9.5" r="5.5"/><path d="M9 14.5 7 21l5-2.2L17 21l-2-6.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          Уровень <b>7</b>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tracks" id="tracks">
+    <div class="wrap">
+      <h2 class="section__title">Два пути, а не одна лента карточек</h2>
+      <p class="section__lead">Большинство приложений выдают слова в случайном порядке. В Uchi с самого начала — два ясных маршрута, и прогресс по каждому виден отдельно.</p>
+      <div class="tracks__grid">
+        <article class="track-card track-card--topic">
+          <div class="track-card__icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.1 0-2.2-.2-3.1-.6L4 21l1.7-4.6C4.6 15 4 13.6 4 12Z" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </div>
+          <h3>По темам</h3>
+          <p>Приветствия, семья, еда, транспорт — разговорный китайский для реальной жизни, без привязки к уровню экзамена.</p>
+        </article>
+        <article class="track-card track-card--hsk">
+          <div class="track-card__icon">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="9.5" r="5.5"/><path d="M9 14.5 7 21l5-2.2L17 21l-2-6.5" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </div>
+          <h3>HSK-экзамен</h3>
+          <p>Пошагово закрываете целый уровень HSK — от аудирования и чтения до письма и говорения, по мере того как растут требования экзамена.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="dialects" id="dialects">
+    <div class="wrap dialects__row">
+      <div class="dialects__copy">
+        <h2 class="section__title">Китай говорит не только на путунхуа</h2>
+        <p class="section__lead">Отдельный раздел показывает семь основных диалектных групп Китая — где на них говорят, чем они отличаются и какие слова там свои. Аудио и разбор произношения — только там, где мы можем за них поручиться: для остального честно показываем письменную форму и перевод, а не выдуманную транскрипцию.</p>
+        <ul class="dialects__list">
+          <li><span class="dot" style="background:#4B93FD"></span>Мандарин — основа путунхуа</li>
+          <li><span class="dot" style="background:#53CD82"></span>У — шанхайская речь</li>
+          <li><span class="dot" style="background:#FDA14D"></span>Юэ — кантонский</li>
+          <li><span class="dot" style="background:#927CEE"></span>Мин — тайваньский хоккиен</li>
+          <li><span class="dot" style="background:#FFBE5A"></span>Хакка, <span class="dot" style="background:#42A468"></span>Сян, <span class="dot" style="background:#8094B1"></span>Гань</li>
+        </ul>
+      </div>
+      <div class="dialects__compare">
+        <div class="compare-card">
+          <div class="compare-card__word">你</div>
+          <div class="compare-card__row"><span>Мандарин</span><b>nǐ</b></div>
+          <div class="compare-card__row"><span>Кантонский</span><b>nei5</b></div>
+          <div class="compare-card__row"><span>Хоккиен</span><b>lí</b></div>
+          <p class="compare-card__note">Один иероглиф — три реальных, задокументированных чтения.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="companion" id="companion">
+    <div class="wrap">
+      <h2 class="section__title">Компаньон растёт вместе с вами</h2>
+      <p class="section__lead">Не просто счётчик серии дней — живой персонаж, которого можно переодеть, и который реагирует на каждый пройденный урок.</p>
+      <div class="companion__grid">
+        <div class="companion__card">
+          <img src="assets/mascot/panda_02.png" alt="Панда">
+          <span>Панда</span>
+        </div>
+        <div class="companion__card">
+          <img src="assets/mascot/pug_01.png" alt="Мопс">
+          <span>Мопс</span>
+        </div>
+        <div class="companion__card">
+          <img src="assets/mascot/owl_01.png" alt="Сова">
+          <span>Сова</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features">
+    <div class="wrap">
+      <div class="features__grid">
+        <article class="feature feature--wide">
+          <h3>Живой ИИ-репетитор</h3>
+          <p>Отрабатывайте диалоги в чате — компаньон поправляет ошибки и держит разговор на нужном уровне сложности.</p>
+        </article>
+        <article class="feature">
+          <h3>124 000 слов</h3>
+          <p>Полноценный справочный словарь на случай, когда учебных карточек не хватает.</p>
+        </article>
+        <article class="feature">
+          <h3>Офлайн</h3>
+          <p>Ни один урок не требует связи с интернетом — включая словарь и озвучку.</p>
+        </article>
+        <article class="feature feature--wide">
+          <h3>Цели и серии</h3>
+          <p>Дневная норма XP, серия дней подряд и заморозки серии — без давления, но с ощутимым прогрессом.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="download" id="download">
+    <div class="wrap download__row">
+      <div class="download__copy">
+        <h2 class="section__title">Установите Uchi</h2>
+        <p class="section__lead">Бесплатно, без рекламы. Сборки публикуются автоматически из исходного кода.</p>
+        <div class="download__buttons">
+          <a class="btn btn--primary" href="https://github.com/LasNoches888/app-chinese/releases/latest">Android (.apk)</a>
+          <a class="btn btn--secondary" href="https://github.com/LasNoches888/app-chinese/releases/latest">Windows (.exe)</a>
+        </div>
+      </div>
+      <img src="assets/mascot/panda_04.png" alt="" class="download__panda" aria-hidden="true">
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <div class="wrap footer__row">
+    <div class="brand">
+      <img src="assets/app-icon.png" alt="" class="brand__icon brand__icon--small">
+      <span class="brand__name">Uchi</span>
+    </div>
+    <p>学中文 · 每天一点</p>
+  </div>
+</footer>
+
+<script src="js/main.js"></script>
+</body>
+</html>
