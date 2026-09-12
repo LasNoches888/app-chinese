@@ -15,10 +15,8 @@ import '../services/connectivity_service.dart';
 import '../services/local_llm_service.dart';
 import '../services/persona.dart';
 import '../services/system_prompt.dart';
+import '../theme/app_theme.dart';
 import 'settings_screen.dart';
-
-const _accentGreen = Color(0xFF23C58F);
-const _accentGreenDark = Color(0xFF17A673);
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -279,7 +277,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         // unavailable" would read like something's broken.
                         final isWakingUp =
                             modelStatus == LocalModelStatus.loading;
-                        final color = isWakingUp ? _accentGreen : Colors.red;
+                        final color = isWakingUp ? AppColors.green : Colors.red;
                         // This banner only renders for `!comingSoon`,
                         // where the mode is always backed by a variant
                         // (Friend, right now).
@@ -434,7 +432,7 @@ class _PersonaPickerSheet extends StatelessWidget {
               variant: LocalModelVariant.friend,
               emoji: '🚪',
               readyEmoji: '👋',
-              gradient: const [_accentGreen, _accentGreenDark],
+              gradient: const [AppColors.green, AppColors.greenDark],
               title: settings.t('chatSourceLocal'),
               settings: settings,
               onPicked: onPicked,
@@ -442,7 +440,7 @@ class _PersonaPickerSheet extends StatelessWidget {
             const SizedBox(height: 10),
             _PersonaRow(
               emoji: '📕',
-              gradient: const [_accentGreenDark, _accentGreen],
+              gradient: const [AppColors.greenDark, AppColors.green],
               title: settings.t('chatSourceTutor'),
               subtitle: settings.t('comingSoonBadge'),
               enabled: false,

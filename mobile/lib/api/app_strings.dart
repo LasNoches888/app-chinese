@@ -5,6 +5,7 @@ enum CardFrontSide { hanzi, translation }
 class Strings {
   static const Map<String, Map<AppLocale, String>> _values = {
     // Nav
+    'home': {AppLocale.ru: 'Главная', AppLocale.en: 'Home'},
     'lessons': {AppLocale.ru: 'Уроки', AppLocale.en: 'Lessons'},
     'review': {AppLocale.ru: 'Повторить', AppLocale.en: 'Review'},
     'progress': {AppLocale.ru: 'Прогресс', AppLocale.en: 'Progress'},

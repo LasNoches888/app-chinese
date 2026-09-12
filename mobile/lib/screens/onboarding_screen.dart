@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
+import '../theme/app_theme.dart';
 import 'placement_test_screen.dart';
 
 /// First-launch welcome screen. There was no onboarding at all before this
@@ -84,7 +85,7 @@ class OnboardingScreen extends StatelessWidget {
                     child: FilledButton.icon(
                       style: FilledButton.styleFrom(
                         backgroundColor: Colors.white,
-                        foregroundColor: const Color(0xFF6C5CE7),
+                        foregroundColor: AppColors.purple,
                         padding: const EdgeInsets.symmetric(vertical: 15),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),

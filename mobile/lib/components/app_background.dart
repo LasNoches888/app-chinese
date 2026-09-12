@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../theme/app_theme.dart';
+
 /// Shared page backdrop: a soft themed base colour with the ink-wash
 /// mountain scene sitting along the bottom edge.
 ///
@@ -16,7 +18,7 @@ class AppBackground extends StatelessWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF14141F) : const Color(0xFFF5F6FA),
+        color: isDark ? AppColors.backgroundDark : AppColors.backgroundLight,
         image: DecorationImage(
           image: const AssetImage('assets/images/bg_scene.png'),
           alignment: Alignment.bottomCenter,

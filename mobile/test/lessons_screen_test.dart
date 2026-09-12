@@ -59,9 +59,7 @@ void main() {
     });
   });
 
-  testWidgets('shows the today card, HSK headings and deck progress', (
-    tester,
-  ) async {
+  testWidgets('shows HSK headings and deck progress', (tester) async {
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -88,11 +86,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Сегодня'), findsOneWidget);
-    // The header's call to action points at the first unfinished deck, so
-    // the learner never has to work out where they left off.
-    expect(find.textContaining('Продолжить'), findsWidgets);
-    // Decks are grouped under level headings rather than listed flat.
+    // Decks are grouped under level headings rather than listed flat. The
+    // "today" dashboard card (streak/XP/continue-lesson) used to live at
+    // the top of this same screen — it's HomeScreen's job now.
     expect(find.text('HSK 1'), findsOneWidget);
     expect(find.textContaining('слов выучено'), findsWidgets);
   });

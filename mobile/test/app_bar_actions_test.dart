@@ -12,7 +12,9 @@ import 'package:app_chinese/main.dart';
 /// The chat and settings buttons are meant to be reachable from anywhere.
 /// They used to be pasted into each app bar separately, which is how chat
 /// ended up on one screen while the gear was on five — so this walks the
-/// bottom navigation and checks every tab carries both.
+/// bottom navigation and checks every tab carries both, except Settings
+/// itself: since it became a main tab, it has no reason to also carry a
+/// button that reopens itself.
 void main() {
   setUpAll(() {
     sqfliteFfiInit();
@@ -57,12 +59,19 @@ void main() {
     final tabCount = tester
         .widgetList<NavigationDestination>(find.byType(NavigationDestination))
         .length;
-    expect(tabCount, greaterThanOrEqualTo(5));
+    expect(tabCount, 4);
+    // The last tab is Settings — see the class doc for why it's excluded.
+    final settingsTabIndex = tabCount - 1;
 
     for (var i = 0; i < tabCount; i++) {
       await tester.tap(find.byType(NavigationDestination).at(i));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
+
+      if (i == settingsTabIndex) {
+        expect(find.byType(AppBarActions), findsNothing);
+        continue;
+      }
 
       expect(
         find.byType(AppBarActions),

@@ -6,6 +6,7 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/app_bar_actions.dart';
 import '../services/daily_content_service.dart';
+import '../theme/app_theme.dart';
 import 'dictionary_screen.dart';
 import 'lesson_session_screen.dart';
 import 'listening_list_screen.dart';
@@ -210,13 +211,13 @@ class _PracticeHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [Color(0xFF6C5CE7), Color(0xFF4E7CFF)],
+          colors: [AppColors.purple, AppColors.blue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF4E7CFF).withValues(alpha: 0.3),
+            color: AppColors.blue.withValues(alpha: 0.3),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

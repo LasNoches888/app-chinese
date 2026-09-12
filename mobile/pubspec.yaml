@@ -48,6 +48,22 @@ flutter:
     - assets/images/
     - assets/mascot/
     - assets/mascot/hearts/
+  fonts:
+    # A single variable font (weight axis 100-900) declared once per weight
+    # the app's type scale actually uses — Google Fonts no longer ships
+    # per-weight static Inter files, only this variable one, and Flutter's
+    # font loader resolves the right instance from the weight axis per
+    # declared entry.
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter.ttf
+          weight: 400
+        - asset: assets/fonts/Inter.ttf
+          weight: 500
+        - asset: assets/fonts/Inter.ttf
+          weight: 600
+        - asset: assets/fonts/Inter.ttf
+          weight: 700
 
 flutter_launcher_icons:
   android: true

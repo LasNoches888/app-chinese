@@ -6,10 +6,8 @@ import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/app_bar_actions.dart';
 import '../services/study_plan_service.dart';
+import '../theme/app_theme.dart';
 import 'plan_detail_screen.dart';
-
-const _brandStart = Color(0xFFFF7A59);
-const _brandEnd = Color(0xFF6C5CE7);
 
 /// Goal-shaped routes through the material.
 ///
@@ -141,13 +139,13 @@ class _RecommendedCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(22),
           gradient: const LinearGradient(
-            colors: [_brandStart, _brandEnd],
+            colors: [AppColors.orange, AppColors.purple],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           boxShadow: [
             BoxShadow(
-              color: _brandEnd.withValues(alpha: 0.3),
+              color: AppColors.purple.withValues(alpha: 0.3),
               blurRadius: 18,
               offset: const Offset(0, 8),
             ),

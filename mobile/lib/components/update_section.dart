@@ -4,9 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../api/app_settings.dart';
 import '../services/app_update_service.dart';
-
-const _accentGreen = Color(0xFF23C58F);
-const _accentBlue = Color(0xFF4E7CFF);
+import '../theme/app_theme.dart';
 
 enum _UpdateStatus {
   idle,
@@ -140,7 +138,7 @@ class _UpdateSectionState extends State<UpdateSection> {
           ),
           _UpdateStatus.upToDate => _StatusLine(
             icon: Icons.check_circle_outline,
-            color: _accentGreen,
+            color: AppColors.green,
             text: settings.t('upToDate'),
           ),
           _UpdateStatus.checkFailed => _StatusLine(
@@ -150,7 +148,7 @@ class _UpdateSectionState extends State<UpdateSection> {
           ),
           _UpdateStatus.available => _StatusLine(
             icon: Icons.new_releases_outlined,
-            color: _accentBlue,
+            color: AppColors.blue,
             text: settings
                 .t('updateAvailable')
                 .replaceFirst('{build}', '${_update!.buildNumber}'),

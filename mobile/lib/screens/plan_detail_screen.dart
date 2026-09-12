@@ -8,13 +8,11 @@ import '../components/speak_button.dart';
 import '../data/study_plans.dart';
 import '../services/speech_service.dart';
 import '../services/study_plan_service.dart';
+import '../theme/app_theme.dart';
 import 'lesson_session_screen.dart';
 import 'listening_list_screen.dart';
 import 'practice_hub_screen.dart';
 import 'pronunciation_check_screen.dart';
-
-const _brandStart = Color(0xFFFF7A59);
-const _brandEnd = Color(0xFF6C5CE7);
 
 /// One plan, laid out as a promise and then a route to it.
 ///
@@ -187,13 +185,13 @@ class _PlanHeader extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [_brandStart, _brandEnd],
+          colors: [AppColors.orange, AppColors.purple],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: _brandEnd.withValues(alpha: 0.28),
+            color: AppColors.purple.withValues(alpha: 0.28),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),

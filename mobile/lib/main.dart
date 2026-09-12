@@ -7,14 +7,12 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'api/app_settings.dart';
 import 'app_repositories.dart';
-import 'screens/lessons_screen.dart';
+import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/plans_screen.dart';
-import 'screens/practice_hub_screen.dart';
 import 'screens/progress_screen.dart';
-import 'screens/review_screen.dart';
-
-const _brandSeed = Color(0xFF6C5CE7);
+import 'screens/settings_screen.dart';
+import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -74,23 +72,6 @@ class _SmoothScrollBehavior extends MaterialScrollBehavior {
 class AppChinese extends StatelessWidget {
   const AppChinese({super.key});
 
-  ThemeData _theme(Brightness brightness) {
-    return ThemeData(
-      colorSchemeSeed: _brandSeed,
-      brightness: brightness,
-      useMaterial3: true,
-      // Material's zoom transition animates both the incoming and outgoing
-      // route, so pushing Settings fades/scales in instead of snapping.
-      pageTransitionsTheme: const PageTransitionsTheme(
-        builders: {TargetPlatform.android: ZoomPageTransitionsBuilder()},
-      ),
-      appBarTheme: const AppBarTheme(
-        centerTitle: false,
-        scrolledUnderElevation: 0,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<AppSettings>();
@@ -99,8 +80,8 @@ class AppChinese extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       scrollBehavior: const _SmoothScrollBehavior(),
       themeMode: settings.themeMode,
-      theme: _theme(Brightness.light),
-      darkTheme: _theme(Brightness.dark),
+      theme: AppTheme.light(),
+      darkTheme: AppTheme.dark(),
       // Every screen was built assuming a phone-width viewport — on a
       // desktop window that's suddenly 1280px+ wide, the same layouts
       // stretch edge to edge and run their trailing content (chips,
@@ -109,7 +90,7 @@ class AppChinese extends StatelessWidget {
       // every screen readable (long text lines, wide cards) without
       // needing a max-width constraint added to two dozen screens
       // individually; HomeShell below adds its own desktop navigation
-      // rail on top of this for the five main tabs specifically.
+      // rail on top of this for the four main tabs specifically.
       builder: (context, child) => Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 900),
@@ -161,11 +142,10 @@ class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
   static const _screens = [
-    LessonsScreen(),
-    ReviewScreen(),
-    PracticeHubScreen(),
-    ProgressScreen(),
+    HomeScreen(),
     PlansScreen(),
+    ProgressScreen(),
+    SettingsScreen(),
   ];
 
   /// Below this, a NavigationRail would leave less room for content than
@@ -178,19 +158,14 @@ class _HomeShellState extends State<HomeShell> {
     final settings = context.watch<AppSettings>();
     final destinations = [
       (
-        icon: Icons.menu_book_outlined,
-        selected: Icons.menu_book,
-        label: settings.t('lessons'),
+        icon: Icons.home_outlined,
+        selected: Icons.home,
+        label: settings.t('home'),
       ),
       (
-        icon: Icons.refresh_outlined,
-        selected: Icons.refresh,
-        label: settings.t('review'),
-      ),
-      (
-        icon: Icons.auto_awesome_outlined,
-        selected: Icons.auto_awesome,
-        label: settings.t('practiceHub'),
+        icon: Icons.map_outlined,
+        selected: Icons.map,
+        label: settings.t('plansTitle'),
       ),
       (
         icon: Icons.bar_chart_outlined,
@@ -198,9 +173,9 @@ class _HomeShellState extends State<HomeShell> {
         label: settings.t('progress'),
       ),
       (
-        icon: Icons.map_outlined,
-        selected: Icons.map,
-        label: settings.t('plansTitle'),
+        icon: Icons.person_outline,
+        selected: Icons.person,
+        label: settings.t('settings'),
       ),
     ];
 

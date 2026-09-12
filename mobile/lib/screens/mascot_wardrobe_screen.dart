@@ -8,6 +8,7 @@ import '../components/mascot_stage.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
 import '../services/xp_service.dart';
+import '../theme/app_theme.dart';
 
 /// Pick a companion (panda, pug, or owl) and dress it in whatever outfit
 /// the current level has unlocked. Reachable by tapping the mascot on the
@@ -231,7 +232,7 @@ class _OutfitCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           gradient: equipped
               ? const LinearGradient(
-                  colors: [Color(0xFFFFB03A), Color(0xFFFF7A59)],
+                  colors: [AppColors.amber, AppColors.orange],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 )

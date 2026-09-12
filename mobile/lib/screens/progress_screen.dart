@@ -8,6 +8,7 @@ import '../components/app_bar_actions.dart';
 import '../models/achievement.dart';
 import '../models/user_stats.dart';
 import '../services/xp_service.dart';
+import '../theme/app_theme.dart';
 
 class ProgressScreen extends StatefulWidget {
   const ProgressScreen({super.key});
@@ -323,7 +324,7 @@ class _ProgressScreenState extends State<ProgressScreen> {
         borderRadius: BorderRadius.circular(16),
         gradient: unlocked
             ? const LinearGradient(
-                colors: [Color(0xFFFFB03A), Color(0xFFFF7A59)],
+                colors: [AppColors.amber, AppColors.orange],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               )

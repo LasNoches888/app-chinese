@@ -13,11 +13,8 @@ import '../components/update_section.dart';
 import '../models/user_stats.dart';
 import '../services/local_llm_service.dart';
 import '../services/speech_service.dart';
-
-const _brandStart = Color(0xFFFF7A59);
-const _brandEnd = Color(0xFF6C5CE7);
-const _accentGreen = Color(0xFF23C58F);
-const _accentBlue = Color(0xFF4E7CFF);
+import '../services/xp_service.dart';
+import '../theme/app_theme.dart';
 
 /// Whether self-update is offered — Android and Windows, the two
 /// platforms CI actually publishes an installer asset for (see
@@ -163,11 +160,11 @@ class _SettingsScreenState extends State<SettingsScreen>
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 4, 16, 40),
           children: [
-            const _BrandHeader(),
+            _BrandHeader(stats: _stats),
             const SizedBox(height: 20),
             _SectionCard(
               icon: Icons.palette_outlined,
-              accent: _brandEnd,
+              accent: AppColors.purple,
               title: settings.t('appearance'),
               children: [
                 _SettingTile(
@@ -214,13 +211,13 @@ class _SettingsScreenState extends State<SettingsScreen>
             ),
             _SectionCard(
               icon: Icons.volume_up_outlined,
-              accent: _accentGreen,
+              accent: AppColors.green,
               title: settings.t('speechSection'),
               children: [_buildSpeechSection(settings)],
             ),
             _SectionCard(
               icon: Icons.local_fire_department_outlined,
-              accent: _brandStart,
+              accent: AppColors.orange,
               title: settings.t('goalsSection'),
               children: [
                 _SettingTile(
@@ -265,14 +262,14 @@ class _SettingsScreenState extends State<SettingsScreen>
                               vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: _brandStart.withValues(alpha: 0.12),
+                              color: AppColors.orange.withValues(alpha: 0.12),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               settings.reminderTime.format(context),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
-                                color: _brandStart,
+                                color: AppColors.orange,
                               ),
                             ),
                           ),
@@ -285,7 +282,7 @@ class _SettingsScreenState extends State<SettingsScreen>
             if (debugSupportsSelfUpdate)
               _SectionCard(
                 icon: Icons.system_update_outlined,
-                accent: _accentBlue,
+                accent: AppColors.blue,
                 title: settings.t('updatesSection'),
                 children: const [UpdateSection()],
               ),
@@ -392,21 +389,32 @@ class _SettingsScreenState extends State<SettingsScreen>
 /// without relying on blur/backdrop filters, which have historically
 /// rendered inconsistently on Android's Impeller backend.
 class _BrandHeader extends StatelessWidget {
-  const _BrandHeader();
+  final UserStats? stats;
+
+  const _BrandHeader({required this.stats});
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<AppSettings>();
+    final s = stats;
+    // There's no account/login system, so there's no name to show — the
+    // level (the one piece of "who you are" the app actually tracks)
+    // stands in for it, same role the mockup's profile line plays.
+    final levelLine = s == null
+        ? null
+        : '${settings.t('level')} ${XpService.levelForXp(s.totalXp)}';
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(22),
         gradient: const LinearGradient(
-          colors: [_brandStart, _brandEnd],
+          colors: [AppColors.orange, AppColors.purple],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: _brandEnd.withValues(alpha: 0.3),
+            color: AppColors.purple.withValues(alpha: 0.3),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -414,32 +422,37 @@ class _BrandHeader extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
-        child: const Stack(
+        child: Stack(
           children: [
-            Positioned.fill(child: BrandHeaderArt()),
+            const Positioned.fill(child: BrandHeaderArt()),
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
-                  _EmojiAvatar(emoji: '🎓', background: Color(0x38FFFFFF)),
-                  SizedBox(width: 16),
+                  const _EmojiAvatar(
+                    emoji: '🎓',
+                    background: Color(0x38FFFFFF),
+                  ),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Uchi',
-                          style: TextStyle(
+                          levelLine ?? 'Uchi',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 24,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
                           ),
                         ),
-                        SizedBox(height: 2),
+                        const SizedBox(height: 2),
                         Text(
-                          '学中文 · 每天一点',
-                          style: TextStyle(
+                          s == null
+                              ? '学中文 · 每天一点'
+                              : '${s.totalXp} XP · ${s.currentStreak}🔥',
+                          style: const TextStyle(
                             color: Color(0xE6FFFFFF),
                             fontSize: 13,
                           ),
