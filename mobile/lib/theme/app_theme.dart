@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
 
 /// Centralized brand palette. Every screen that used to hardcode one of
-/// these as a local `const Color(0xFF...)` imports this instead — the
-/// values themselves are unchanged from what was already scattered across
-/// the app, this just gives them one home so "the brand purple" means one
-/// thing instead of N copy-pasted literals that can drift apart.
+/// these as a local `const Color(0xFF...)` imports this instead.
+///
+/// Values are sampled pixel-for-pixel from the "Палитра" swatch panel in
+/// the user's style mockup (not eyeballed/approximated), so this *is* that
+/// palette rather than something merely close to it. `greenDark` and
+/// `amber` have no swatch of their own in the mockup — they're derived
+/// from `green`/`orange` the same way the app's previous palette related
+/// its own dark-green and amber shades to its base green/orange.
 class AppColors {
   AppColors._();
 
-  static const purple = Color(0xFF6C5CE7);
-  static const orange = Color(0xFFFF7A59);
-  static const green = Color(0xFF23C58F);
-  static const greenDark = Color(0xFF17A673);
-  static const blue = Color(0xFF4E7CFF);
-  static const amber = Color(0xFFFFB03A);
+  static const blue = Color(0xFF4B93FD);
+  static const green = Color(0xFF53CD82);
+  static const orange = Color(0xFFFDA14D);
+  static const purple = Color(0xFF927CEE);
+  static const greenDark = Color(0xFF42A468);
+  static const amber = Color(0xFFFFBE5A);
 
-  static const backgroundLight = Color(0xFFF5F6FA);
+  /// The mockup's two neutral swatches — not yet wired into any screen
+  /// (Material 3's seed-derived outline/surface tones already cover most
+  /// of that role), kept here so they're available without re-sampling.
+  static const grey = Color(0xFFC1D3E7);
+  static const greyDark = Color(0xFF8094B1);
+
+  static const backgroundLight = Color(0xFFEDF5FB);
   static const backgroundDark = Color(0xFF14141F);
 }
 
@@ -29,8 +39,10 @@ class AppTheme {
   static ThemeData light() => _build(Brightness.light);
   static ThemeData dark() => _build(Brightness.dark);
 
-  static const _buttonRadius = 14.0;
-  static const _cardRadius = 16.0;
+  // The mockup's primary button reads as close to a full pill (radius on
+  // the order of half its height) rather than a lightly-rounded rectangle.
+  static const _buttonRadius = 24.0;
+  static const _cardRadius = 18.0;
 
   static ThemeData _build(Brightness brightness) {
     final scheme =
