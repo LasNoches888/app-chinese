@@ -78,7 +78,7 @@ function renderList() {
       <span class="dlegend__chevron">${ICON.chevron}</span>
     </div>`).join('');
   return `
-    ${appbar('Диалекты Китая', null, 'index.html')}
+    ${appbar('Диалекты Китая', null, 'app.html#/home')}
     <div class="screen">
       <p style="color:var(--ink-soft)">7 регионов — 7 уникальных культур, языков и традиций. Нажмите на диалект, чтобы узнать больше и пройти его на сайте.</p>
       <p style="color:var(--ink-faint);font-size:13px;margin-top:8px">Прогресс пока сохраняется только в этом браузере — аккаунт и синхронизация с приложением ещё не подключены.</p>
@@ -289,6 +289,7 @@ function render() {
     html = renderList();
   }
   app.innerHTML = html;
+  if (window.mountShell) mountShell('dialects');
   window.scrollTo(0, 0);
 }
 
