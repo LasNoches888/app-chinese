@@ -3,12 +3,20 @@
    The marketing page and the app screens share one brand; they don't need
    to share one layout language too, so this is deliberately its own file. */
 
+/* App shell: fixed header + one scrolling region below it, the full
+   height of the viewport — not a plain document flow. Short screens
+   (a single flashcard, one line of dialogue) used to leave a huge dead
+   gap under the content on a phone-tall viewport; this way the screen's
+   own flex layout (see .fc-screen/.p-screen) decides what fills that
+   space instead of just stopping. */
+html, body { height: 100%; }
+#app { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
 .appbar {
-  position: sticky; top: 0; z-index: 20;
+  flex-shrink: 0;
   display: flex; align-items: center; gap: 14px;
   padding: 16px 20px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(14px);
+  background: var(--bg);
   border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
 }
 .appbar__back {
@@ -20,7 +28,16 @@
 .appbar__title { font-weight: 800; font-size: 17px; flex: 1; }
 .appbar__title small { display: block; font-weight: 600; font-size: 12px; color: var(--ink-faint); }
 
-.screen { max-width: 640px; margin: 0 auto; padding: 20px 20px 64px; }
+.screen { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; max-width: 640px; width: 100%; margin: 0 auto; padding: 20px 20px 64px; box-sizing: border-box; display: flex; flex-direction: column; }
+
+/* Flashcards and practice: short, fixed-shape content that should fill
+   the screen like a native app screen, not float at the top with dead
+   space below. The middle element gets `margin: auto 0` to center in
+   whatever room is left and push the action row to the very bottom. */
+.fc-screen, .p-screen { display: flex; flex-direction: column; min-height: 100%; }
+.fc-screen .fc-card { margin: auto 0; }
+.p-screen .plines-wrap { flex: 1; }
+.p-screen .dbtn { margin-top: 16px; }
 
 /* ---- List screen ---- */
 .dlegend { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 8px; }
@@ -85,7 +102,8 @@
 /* ---- Practice dialogue ---- */
 .pline { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
 .pline.learner { flex-direction: row-reverse; }
-.pline__avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.pline__avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; overflow: hidden; color: var(--ink-faint); }
+.pline__avatar img { width: 100%; height: 100%; object-fit: cover; }
 .pline__bubble { max-width: 78%; border-radius: 14px; padding: 12px 14px; }
 .pline.mascot .pline__bubble { background: var(--surface); box-shadow: var(--shadow-sm); }
 .pline.learner .pline__bubble { color: #fff; }
@@ -94,7 +112,7 @@
 .pline__ru { font-size: 13px; margin-top: 4px; opacity: 0.9; }
 
 /* ---- Complete screen ---- */
-.complete { text-align: center; padding: 20px 0; }
+.complete { text-align: center; padding: 20px 0; margin: auto 0; }
 .complete img { width: 130px; margin: 0 auto 16px; }
 .complete h2 { font-size: 24px; }
 .complete p { color: var(--ink-soft); margin-top: 4px; }

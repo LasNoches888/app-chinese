@@ -53,6 +53,7 @@ const ICON = {
   speaker: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="icon-sm"><path d="M4 9v6h4l5 4V5L8 9H4Z" stroke-linejoin="round"/><path d="M17 8.5a5 5 0 0 1 0 7" stroke-linecap="round"/></svg>',
   book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="icon-sm"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H14v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z"/><path d="M14 4h4.5C19.3 4 20 4.7 20 5.5v13c0 .8-.7 1.5-1.5 1.5H14"/></svg>',
   chat: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="icon-sm"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.1 0-2.2-.2-3.1-.6L4 21l1.7-4.6C4.6 15 4 13.6 4 12Z" stroke-linejoin="round" stroke-linecap="round"/></svg>',
+  person: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="icon-sm"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7" stroke-linecap="round"/></svg>',
   feature: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-sm"><path d="M20 6 9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
 };
 
@@ -163,9 +164,11 @@ function renderStudy(id) {
   const e = d.examples[fcIndex];
   return `
     ${appbar(d.nameRu, null, `#/d/${d.id}/lessons`)}
-    <div class="screen">
-      <div class="fc-progress"><div class="fc-progress__bar" style="width:${((fcIndex + 1) / d.examples.length) * 100}%;background:${d.color}"></div></div>
-      <div class="fc-count">${fcIndex + 1} / ${d.examples.length}</div>
+    <div class="screen fc-screen">
+      <div>
+        <div class="fc-progress"><div class="fc-progress__bar" style="width:${((fcIndex + 1) / d.examples.length) * 100}%;background:${d.color}"></div></div>
+        <div class="fc-count">${fcIndex + 1} / ${d.examples.length}</div>
+      </div>
       <div class="fc-card">
         <div class="fc-card__hanzi">${esc(e.hanzi)} ${d.hasAudio && zhVoice ? `<button class="dcard__speak" data-speak="${esc(e.hanzi)}">${ICON.speaker}</button>` : ''}</div>
         ${e.reading ? `<div class="fc-card__reading">${esc(e.reading)}</div>` : ''}
@@ -210,7 +213,7 @@ function renderPractice(id) {
   if (!d || !d.dialogue) return renderList();
   const lines = d.dialogue.slice(0, pShown).map((l) => `
     <div class="pline ${l.speaker}">
-      <div class="pline__avatar">${l.speaker === 'mascot' ? '🐼' : '🙂'}</div>
+      <div class="pline__avatar">${l.speaker === 'mascot' ? '<img src="assets/mascot/panda_02.png" alt="">' : ICON.person}</div>
       <div class="pline__bubble" style="${l.speaker === 'learner' ? `background:${d.color}` : ''}">
         <div class="pline__hanzi">${esc(l.hanzi)} ${l.speaker === 'mascot' && zhVoice ? `<button class="dcard__speak" style="padding:0" data-speak="${esc(l.hanzi)}">${ICON.speaker}</button>` : ''}</div>
         ${l.reading ? `<div class="pline__reading">${esc(l.reading)}</div>` : ''}
@@ -220,9 +223,9 @@ function renderPractice(id) {
   const isLast = pShown >= d.dialogue.length;
   return `
     ${appbar('Мини-диалог', null, `#/d/${d.id}/lessons`)}
-    <div class="screen">
+    <div class="screen p-screen">
       <div class="fc-progress"><div class="fc-progress__bar" style="width:${(pShown / d.dialogue.length) * 100}%;background:${d.color}"></div></div>
-      <div style="margin-top:20px">${lines}</div>
+      <div class="plines-wrap" style="margin-top:20px">${lines}</div>
       <button class="dbtn" style="background:${d.color}" data-practice-next="${id}">${isLast ? 'Продолжить' : 'Далее'}</button>
     </div>`;
 }
@@ -232,16 +235,18 @@ function renderComplete(id, count) {
   if (!d) return renderList();
   return `
     ${appbar('Готово', null, `#/d/${d.id}/lessons`)}
-    <div class="screen complete">
-      <img src="assets/mascot/panda_04.png" alt="">
-      <h2>Отличная работа!</h2>
-      <p>Вы прошли раздел</p>
-      <div class="complete-stat">
-        <span style="display:flex;align-items:center;gap:8px"><span class="dlegend__dot" style="background:${d.color}"></span>${esc(d.nameRu)}</span>
-        <b>${count} фраз</b>
+    <div class="screen">
+      <div class="complete">
+        <img src="assets/mascot/panda_04.png" alt="">
+        <h2>Отличная работа!</h2>
+        <p>Вы прошли раздел</p>
+        <div class="complete-stat">
+          <span style="display:flex;align-items:center;gap:8px"><span class="dlegend__dot" style="background:${d.color}"></span>${esc(d.nameRu)}</span>
+          <b>${count} фраз</b>
+        </div>
+        <button class="dbtn" style="background:${d.color}" data-nav="#/d/${d.id}/lessons">Продолжить</button>
+        <button class="dbtn" style="background:none;border:2px solid var(--grey);color:var(--ink)" data-nav="#/">К списку диалектов</button>
       </div>
-      <button class="dbtn" style="background:${d.color}" data-nav="#/d/${d.id}/lessons">Продолжить</button>
-      <button class="dbtn" style="background:none;border:2px solid var(--grey);color:var(--ink)" data-nav="#/">К списку диалектов</button>
     </div>`;
 }
 
