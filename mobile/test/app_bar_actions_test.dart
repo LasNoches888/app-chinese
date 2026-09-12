@@ -59,7 +59,7 @@ void main() {
     final tabCount = tester
         .widgetList<NavigationDestination>(find.byType(NavigationDestination))
         .length;
-    expect(tabCount, 4);
+    expect(tabCount, 5);
     // The last tab is Settings — see the class doc for why it's excluded.
     final settingsTabIndex = tabCount - 1;
 

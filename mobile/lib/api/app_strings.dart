@@ -53,6 +53,88 @@ class Strings {
       AppLocale.en: 'Clear a whole HSK level, step by step',
     },
 
+    // Dialects
+    'dialects': {AppLocale.ru: 'Диалекты', AppLocale.en: 'Dialects'},
+    'dialectsTitle': {
+      AppLocale.ru: 'Диалекты Китая',
+      AppLocale.en: 'Chinese dialects',
+    },
+    'dialectsSubtitle': {
+      AppLocale.ru: '7 регионов — 7 уникальных культур, языков и традиций',
+      AppLocale.en: '7 regions — 7 distinct cultures, languages and traditions',
+    },
+    'dialectsCompareTooltip': {
+      AppLocale.ru: 'Сравнить произношение',
+      AppLocale.en: 'Compare pronunciation',
+    },
+    'dialectStudyButton': {
+      AppLocale.ru: 'Изучить диалект',
+      AppLocale.en: 'Explore this dialect',
+    },
+    'dialectFeatures': {
+      AppLocale.ru: 'Особенности',
+      AppLocale.en: 'Features',
+    },
+    'dialectExamples': {AppLocale.ru: 'Примеры', AppLocale.en: 'Examples'},
+    'dialectCultureTeaser': {
+      AppLocale.ru: 'Культура и традиции',
+      AppLocale.en: 'Culture and traditions',
+    },
+    'dialectLessonsSubtitle': {
+      AppLocale.ru: 'Уроки и материалы',
+      AppLocale.en: 'Lessons and materials',
+    },
+    'dialectLessonExamples': {
+      AppLocale.ru: 'Примеры и фразы',
+      AppLocale.en: 'Examples and phrases',
+    },
+    'dialectLessonCulture': {
+      AppLocale.ru: 'Культура и особенности',
+      AppLocale.en: 'Culture and features',
+    },
+    'dialectLessonPractice': {
+      AppLocale.ru: 'Мини-диалог',
+      AppLocale.en: 'Mini dialogue',
+    },
+    'dialectKnew': {AppLocale.ru: 'Знал', AppLocale.en: 'Knew it'},
+    'dialectDidntKnow': {AppLocale.ru: 'Не знал', AppLocale.en: "Didn't know"},
+    'dialectCultureVocab': {
+      AppLocale.ru: 'Полезные слова',
+      AppLocale.en: 'Useful words',
+    },
+    'dialectPracticeNext': {
+      AppLocale.ru: 'Далее',
+      AppLocale.en: 'Next',
+    },
+    'dialectCompareTitle': {
+      AppLocale.ru: 'Сравнение произношения',
+      AppLocale.en: 'Pronunciation comparison',
+    },
+    'dialectCompareIntro': {
+      AppLocale.ru:
+          'Одни и те же иероглифы, три реальных, задокументированных чтения — '
+          'мандарин, кантонский и южноминьский (хоккиен/тайваньский).',
+      AppLocale.en:
+          'The same characters, three real documented readings — Mandarin, '
+          'Cantonese and Southern Min (Hokkien/Taiwanese).',
+    },
+    'dialectCompleteTitle': {
+      AppLocale.ru: 'Отличная работа!',
+      AppLocale.en: 'Great job!',
+    },
+    'dialectCompleteSubtitle': {
+      AppLocale.ru: 'Вы прошли раздел',
+      AppLocale.en: 'You finished this section',
+    },
+    'dialectCompletePhrases': {
+      AppLocale.ru: 'Изучено фраз',
+      AppLocale.en: 'Phrases covered',
+    },
+    'dialectBackToList': {
+      AppLocale.ru: 'К списку диалектов',
+      AppLocale.en: 'Back to dialect list',
+    },
+
     // Lessons / deck map
     'deckLocked': {AppLocale.ru: 'Заблокировано', AppLocale.en: 'Locked'},
     'deckWordsLearned': {

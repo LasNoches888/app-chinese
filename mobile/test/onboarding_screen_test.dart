@@ -61,7 +61,7 @@ void main() {
 
     expect(find.text('Uchi'), findsOneWidget);
     expect(find.text('Проверить свой уровень'), findsOneWidget);
-    // The four-tab shell (and therefore Home) must not be reachable yet.
+    // The five-tab shell (and therefore Home) must not be reachable yet.
     expect(find.byType(NavigationBar), findsNothing);
   });
 

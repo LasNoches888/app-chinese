@@ -7,6 +7,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import 'api/app_settings.dart';
 import 'app_repositories.dart';
+import 'screens/dialects_map_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/plans_screen.dart';
@@ -143,6 +144,7 @@ class _HomeShellState extends State<HomeShell> {
 
   static const _screens = [
     HomeScreen(),
+    DialectsMapScreen(),
     PlansScreen(),
     ProgressScreen(),
     SettingsScreen(),
@@ -161,6 +163,11 @@ class _HomeShellState extends State<HomeShell> {
         icon: Icons.home_outlined,
         selected: Icons.home,
         label: settings.t('home'),
+      ),
+      (
+        icon: Icons.location_on_outlined,
+        selected: Icons.location_on,
+        label: settings.t('dialects'),
       ),
       (
         icon: Icons.map_outlined,
