@@ -5,10 +5,10 @@ import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/app_bar_actions.dart';
-import '../components/mascot_widget.dart';
 import '../models/deck.dart';
 import '../models/user_stats.dart';
 import '../services/mascot_service.dart';
+import '../services/xp_service.dart';
 import '../theme/app_theme.dart';
 import 'chat_screen.dart';
 import 'dictionary_screen.dart';
@@ -35,7 +35,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<DeckProgress>? _decks;
   UserStats? _stats;
-  int _dueCount = 0;
+  bool _continueDismissed = false;
 
   @override
   void didChangeDependencies() {
@@ -48,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final decks = await repos.words.getDecks();
     final completed = await repos.srs.getCompletedLessonIds();
     final stats = await repos.stats.getStats();
-    final due = await repos.srs.getDueWordIds();
 
     final result = <DeckProgress>[
       for (var i = 0; i < decks.length; i++)
@@ -62,7 +61,6 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _decks = result;
       _stats = stats;
-      _dueCount = due.length;
     });
   }
 
@@ -118,15 +116,47 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: ListView(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                   children: [
-                    _TodayCard(
+                    _GreetingHeader(
                       stats: _stats,
-                      dueCount: _dueCount,
                       settings: settings,
-                      nextDeck: _nextDeck,
-                      onContinue: _openDeck,
                       onMascotTap: () =>
                           _push(const MascotWardrobeScreen()),
                     ),
+                    const SizedBox(height: 16),
+                    _LevelCard(stats: _stats, settings: settings),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatBadge(
+                            icon: '🔥',
+                            iconBackground: AppColors.orange,
+                            label: settings.t('streakShort'),
+                            value: '${_stats?.currentStreak ?? 0}',
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatBadge(
+                            icon: '🎯',
+                            iconBackground: AppColors.greenDark,
+                            label: settings.t('dailyGoal'),
+                            value:
+                                '${_stats?.xpToday ?? 0}/${_stats?.dailyGoalXp ?? 0}',
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (!_continueDismissed && _nextDeck != null) ...[
+                      const SizedBox(height: 12),
+                      _ContinueCard(
+                        deck: _nextDeck!.deck,
+                        settings: settings,
+                        onContinue: () => _openDeck(_nextDeck!.deck),
+                        onDismiss: () =>
+                            setState(() => _continueDismissed = true),
+                      ),
+                    ],
                     const SizedBox(height: 20),
                     _ShortcutGrid(
                       settings: settings,
@@ -145,189 +175,323 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-/// The "what should I do right now" card. Without it the app would open
-/// onto a grid of shortcuts and leave the learner to work out where they
-/// left off.
-class _TodayCard extends StatelessWidget {
+/// "Привет!" + a tap-to-dress mascot avatar. Plain text on the page
+/// background rather than a card — the mockup treats the greeting as a
+/// page title, not a content block.
+class _GreetingHeader extends StatelessWidget {
   final UserStats? stats;
-  final int dueCount;
   final AppSettings settings;
-  final DeckProgress? nextDeck;
-  final void Function(Deck) onContinue;
   final VoidCallback onMascotTap;
 
-  const _TodayCard({
+  const _GreetingHeader({
     required this.stats,
-    required this.dueCount,
     required this.settings,
-    required this.nextDeck,
-    required this.onContinue,
     required this.onMascotTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final s = stats;
-    final goalFraction = s == null || s.dailyGoalXp == 0
-        ? 0.0
-        : (s.xpToday / s.dailyGoalXp).clamp(0.0, 1.0);
-
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          colors: [AppColors.orange, AppColors.purple],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.purple.withValues(alpha: 0.3),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Asleep if the streak has gone cold for a couple of days,
-              // otherwise wearing whatever outfit is equipped — tapping it
-              // opens the wardrobe to pick a companion and dress it up.
-              GestureDetector(
-                onTap: onMascotTap,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    MascotWidget(
-                      asset: s == null
-                          ? 'assets/mascot/panda_02.png'
-                          : MascotService.homeAsset(s),
-                      size: 64,
-                    ),
-                    Positioned(
-                      right: -2,
-                      bottom: -2,
-                      child: Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.checkroom,
-                          size: 14,
-                          color: AppColors.purple,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+              Text(
+                settings.t('homeGreeting'),
+                style: theme.textTheme.headlineSmall,
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      settings.t('todayTitle'),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        _Pill(icon: '🔥', label: '${s?.currentStreak ?? 0}'),
-                        const SizedBox(width: 8),
-                        _Pill(icon: '⭐', label: '${s?.xpToday ?? 0} XP'),
-                        if ((s?.streakFreezes ?? 0) > 0) ...[
-                          const SizedBox(width: 8),
-                          _Pill(icon: '🧊', label: '${s!.streakFreezes}'),
-                        ],
-                        if (dueCount > 0) ...[
-                          const SizedBox(width: 8),
-                          _Pill(icon: '🔄', label: '$dueCount'),
-                        ],
-                      ],
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 4),
+              Text(
+                settings.t('homeGreetingSubtitle'),
+                style: theme.textTheme.bodyMedium,
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              value: goalFraction,
-              minHeight: 8,
-              backgroundColor: Colors.white.withValues(alpha: 0.25),
-              valueColor: const AlwaysStoppedAnimation(Colors.white),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            '${settings.t('dailyGoal')}: ${s?.xpToday ?? 0}/${s?.dailyGoalXp ?? 0} XP',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.92),
-              fontSize: 12,
-            ),
-          ),
-          if (nextDeck != null) ...[
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                style: FilledButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: AppColors.purple,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () => onContinue(nextDeck!.deck),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(
-                  '${settings.t('continueLearning')} · ${nextDeck!.deck.title}',
-                  overflow: TextOverflow.ellipsis,
-                ),
+        ),
+        const SizedBox(width: 12),
+        // Asleep if the streak has gone cold for a couple of days,
+        // otherwise wearing whatever outfit is equipped — tapping it opens
+        // the wardrobe to pick a companion and dress it up.
+        GestureDetector(
+          onTap: onMascotTap,
+          child: ClipOval(
+            child: SizedBox(
+              width: 52,
+              height: 52,
+              child: Image.asset(
+                s == null
+                    ? 'assets/mascot/panda_02.png'
+                    : MascotService.homeAsset(s),
+                fit: BoxFit.cover,
               ),
             ),
-          ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// White card wrapper every dashboard block shares — the mockup's cards
+/// are plain white/surface with a soft shadow, no colored fills or
+/// gradients of their own (those live only on the small icon badges).
+class _DashboardCard extends StatelessWidget {
+  final Widget child;
+  const _DashboardCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
+/// Level badge + a progress bar for XP *within* the current level (e.g.
+/// "560/1000 XP") — distinct from the daily-goal number shown in
+/// [_StatBadge] below it.
+class _LevelCard extends StatelessWidget {
+  final UserStats? stats;
+  final AppSettings settings;
+
+  const _LevelCard({required this.stats, required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final totalXp = stats?.totalXp ?? 0;
+    final level = XpService.levelForXp(totalXp);
+    final floor = XpService.thresholdForLevel(level);
+    final ceiling = XpService.thresholdForLevel(level + 1);
+    final span = ceiling - floor;
+    final fraction = span == 0 ? 0.0 : ((totalXp - floor) / span).clamp(0.0, 1.0);
+
+    return _DashboardCard(
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppColors.green.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.workspace_premium_rounded,
+              color: AppColors.green,
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${settings.t('level')} $level',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: fraction,
+                          minHeight: 8,
+                          backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                          valueColor: const AlwaysStoppedAnimation(
+                            AppColors.green,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${totalXp - floor}/$span XP',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _Pill extends StatelessWidget {
+/// One of the two side-by-side stat cards (streak, daily goal) — an emoji
+/// badge on a tinted circle, a small label, and the number itself in bold.
+class _StatBadge extends StatelessWidget {
   final String icon;
+  final Color iconBackground;
   final String label;
+  final String value;
 
-  const _Pill({required this.icon, required this.label});
+  const _StatBadge({
+    required this.icon,
+    required this.iconBackground,
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.22),
-        borderRadius: BorderRadius.circular(20),
+    final theme = Theme.of(context);
+    return _DashboardCard(
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: iconBackground.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(icon, style: const TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(label, style: theme.textTheme.bodySmall),
+                Text(
+                  value,
+                  style: theme.textTheme.titleMedium,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
-      child: Text(
-        '$icon $label',
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ),
+    );
+  }
+}
+
+/// "Продолжить обучение" card: a dismissible nudge naming the next unlocked
+/// deck, with a full-width primary button into it.
+class _ContinueCard extends StatelessWidget {
+  final Deck deck;
+  final AppSettings settings;
+  final VoidCallback onContinue;
+  final VoidCallback onDismiss;
+
+  const _ContinueCard({
+    required this.deck,
+    required this.settings,
+    required this.onContinue,
+    required this.onDismiss,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return _DashboardCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  settings.t('continueLearningTitle'),
+                  style: theme.textTheme.titleMedium,
+                ),
+              ),
+              InkWell(
+                onTap: onDismiss,
+                borderRadius: BorderRadius.circular(20),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.5,
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.orange.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(11),
+                  ),
+                  child: const Icon(
+                    Icons.menu_book_rounded,
+                    color: AppColors.orange,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        deck.title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        'HSK ${deck.hskLevel} · ${deck.wordCount} '
+                        '${settings.t('deckWordsLearned').split(' ').first}',
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onContinue,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: Text(settings.t('continueLearning')),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -362,19 +526,19 @@ class _ShortcutGrid extends StatelessWidget {
     final tiles = [
       (
         icon: Icons.menu_book_rounded,
-        color: AppColors.purple,
+        color: AppColors.blue,
         label: settings.t('lessons'),
         onTap: onLessons,
       ),
       (
         icon: Icons.refresh_rounded,
-        color: AppColors.blue,
+        color: AppColors.purple,
         label: settings.t('review'),
         onTap: onReview,
       ),
       (
         icon: Icons.auto_awesome_rounded,
-        color: AppColors.orange,
+        color: AppColors.greenDark,
         label: settings.t('practiceHub'),
         onTap: onPractice,
       ),
@@ -386,13 +550,13 @@ class _ShortcutGrid extends StatelessWidget {
       ),
       (
         icon: Icons.chat_bubble_rounded,
-        color: AppColors.greenDark,
+        color: AppColors.blue,
         label: settings.t('chat'),
         onTap: onChat,
       ),
       (
         icon: Icons.checkroom_rounded,
-        color: AppColors.amber,
+        color: AppColors.orange,
         label: settings.t('mascotWardrobeTitle'),
         onTap: onWardrobe,
       ),

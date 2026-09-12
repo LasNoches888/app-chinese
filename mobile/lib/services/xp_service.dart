@@ -24,6 +24,11 @@ class XpService {
     return _thresholdFor(level + 1) - totalXp;
   }
 
+  /// Cumulative XP required to reach [level] (level 1 needs 0). Exposed for
+  /// UI that shows progress *within* the current level (e.g. "560/1000 XP"
+  /// toward the next one), which needs both ends of that level's span.
+  static int thresholdForLevel(int level) => _thresholdFor(level);
+
   static int _thresholdFor(int level) {
     if (level <= 1) return 0;
     return (100 * math.pow(level.toDouble(), 1.2)).floor();

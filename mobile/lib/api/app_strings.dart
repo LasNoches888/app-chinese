@@ -50,7 +50,17 @@ class Strings {
       AppLocale.en: 'words learned',
     },
     'todayTitle': {AppLocale.ru: 'Сегодня', AppLocale.en: 'Today'},
+    'homeGreeting': {AppLocale.ru: 'Привет!', AppLocale.en: 'Hi there!'},
+    'homeGreetingSubtitle': {
+      AppLocale.ru: 'Вперёд к новым словам!',
+      AppLocale.en: 'Onward to new words!',
+    },
+    'streakShort': {AppLocale.ru: 'Стрик', AppLocale.en: 'Streak'},
     'continueLearning': {AppLocale.ru: 'Продолжить', AppLocale.en: 'Continue'},
+    'continueLearningTitle': {
+      AppLocale.ru: 'Продолжить обучение',
+      AppLocale.en: 'Continue learning',
+    },
     'deckCompleted': {AppLocale.ru: 'Пройдено', AppLocale.en: 'Completed'},
     'noReviewDue': {
       AppLocale.ru: 'Нечего повторять — все слова свежие!',

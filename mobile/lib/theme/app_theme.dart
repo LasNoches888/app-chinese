@@ -45,11 +45,24 @@ class AppTheme {
   static const _cardRadius = 18.0;
 
   static ThemeData _build(Brightness brightness) {
+    // Blue is the mockup's actual primary interactive color (the main
+    // button, the active nav icon, links) — purple is only a secondary
+    // accent there. Seeding on blue and then pinning primary/secondary/
+    // tertiary to the exact sampled hexes (rather than trusting Material's
+    // tonal derivation to land on them) is what makes buttons/nav render
+    // that same blue instead of a purple-tinted derivative of it.
     final scheme =
         ColorScheme.fromSeed(
-          seedColor: AppColors.purple,
+          seedColor: AppColors.blue,
           brightness: brightness,
-        ).copyWith(secondary: AppColors.green, tertiary: AppColors.orange);
+        ).copyWith(
+          primary: AppColors.blue,
+          onPrimary: Colors.white,
+          secondary: AppColors.green,
+          onSecondary: Colors.white,
+          tertiary: AppColors.orange,
+          onTertiary: Colors.white,
+        );
 
     final base = ThemeData(
       colorScheme: scheme,

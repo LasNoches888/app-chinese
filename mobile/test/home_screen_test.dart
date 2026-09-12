@@ -40,9 +40,12 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
 
-    expect(find.text('Сегодня'), findsOneWidget);
-    // The card's call to action points at the first unfinished deck, so
-    // the learner never has to work out where they left off.
+    expect(find.text('Привет!'), findsOneWidget);
+    // The level card shows the current level and an XP-within-level bar.
+    expect(find.textContaining('Уровень'), findsOneWidget);
+    // The continue-learning card's call to action points at the first
+    // unfinished deck, so the learner never has to work out where they
+    // left off.
     expect(find.textContaining('Продолжить'), findsWidgets);
     // The shortcut grid replaces what used to be five separate bottom-nav
     // tabs for everything that isn't Home/Plans/Progress/Settings.
