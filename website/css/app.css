@@ -1,0 +1,112 @@
+/* Styles for the actual interactive learning screens (dialects.html) —
+   loaded after style.css and reusing its tokens (--blue, --ink, --radius-card...).
+   The marketing page and the app screens share one brand; they don't need
+   to share one layout language too, so this is deliberately its own file. */
+
+.appbar {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 8%, transparent);
+}
+.appbar__back {
+  width: 38px; height: 38px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--surface); box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+.appbar__title { font-weight: 800; font-size: 17px; flex: 1; }
+.appbar__title small { display: block; font-weight: 600; font-size: 12px; color: var(--ink-faint); }
+
+.screen { max-width: 640px; margin: 0 auto; padding: 20px 20px 64px; }
+
+/* ---- List screen ---- */
+.dlegend { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); overflow: hidden; margin-top: 8px; }
+.dlegend__row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 18px; cursor: pointer;
+  border-bottom: 1px solid color-mix(in srgb, var(--ink) 6%, transparent);
+}
+.dlegend__row:last-child { border-bottom: none; }
+.dlegend__row:hover { background: color-mix(in srgb, var(--ink) 3%, transparent); }
+.dlegend__dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.dlegend__name { font-weight: 700; flex: 1; }
+.dlegend__region { font-size: 13px; color: var(--ink-faint); text-align: right; max-width: 40%; }
+.dlegend__chevron { color: var(--ink-faint); flex-shrink: 0; }
+
+/* ---- Detail screen ---- */
+.dhead { border-radius: 22px; padding: 24px; color: #fff; }
+.dhead__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.dhead__name { font-size: 24px; font-weight: 800; }
+.dhead__tag { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 5px 10px; font-size: 12px; white-space: nowrap; }
+.dhead__region { opacity: 0.85; font-size: 13px; margin-top: 4px; }
+.dhead__desc { margin-top: 12px; line-height: 1.45; opacity: 0.96; }
+
+.dsection { margin-top: 26px; }
+.dsection__title { font-weight: 800; font-size: 15px; margin-bottom: 10px; }
+.dfeature { display: flex; align-items: flex-start; gap: 9px; padding: 5px 0; line-height: 1.35; }
+.dfeature svg { flex-shrink: 0; margin-top: 2px; color: var(--blue); }
+
+.dcard { background: var(--surface); border-radius: 16px; padding: 14px; box-shadow: var(--shadow-sm); margin-bottom: 8px; display: flex; align-items: center; gap: 12px; }
+.dcard__hanzi { font-size: 19px; font-weight: 700; }
+.dcard__reading { font-size: 13px; font-style: italic; color: var(--ink-faint); margin-top: 2px; }
+.dcard__ru { font-size: 14px; margin-top: 3px; }
+.dcard__speak { margin-left: auto; background: none; border: none; color: var(--blue); cursor: pointer; padding: 6px; flex-shrink: 0; }
+.dcard__speak:disabled { display: none; }
+
+.dteaser { display: flex; align-items: center; gap: 12px; background: var(--surface); border-radius: 16px; padding: 14px; box-shadow: var(--shadow-sm); cursor: pointer; }
+.dteaser__icon { width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.dteaser__title { font-weight: 700; flex: 1; }
+
+.dbtn { display: block; width: 100%; text-align: center; padding: 15px; border-radius: 999px; color: #fff; font-weight: 700; margin-top: 24px; border: none; cursor: pointer; font-size: 15px; font-family: inherit; }
+
+/* ---- Lessons list ---- */
+.ltile { display: flex; align-items: center; gap: 14px; background: var(--surface); border-radius: 14px; padding: 14px; box-shadow: var(--shadow-sm); margin-bottom: 10px; cursor: pointer; }
+.ltile__icon { width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ltile__title { font-weight: 700; }
+.ltile__sub { font-size: 13px; color: var(--ink-faint); }
+.ltile__done { color: #2fb35e; flex-shrink: 0; }
+
+/* ---- Flashcards ---- */
+.fc-progress { height: 8px; border-radius: 8px; background: color-mix(in srgb, var(--ink) 10%, transparent); overflow: hidden; margin: 8px 0 4px; }
+.fc-progress__bar { height: 100%; border-radius: 8px; transition: width 0.25s ease; }
+.fc-count { font-size: 13px; color: var(--ink-faint); }
+.fc-card { background: var(--surface); border-radius: 20px; box-shadow: var(--shadow-md); padding: 40px 24px; text-align: center; margin: 40px 0; }
+.fc-card__hanzi { font-size: 34px; font-weight: 700; display: inline-flex; align-items: center; gap: 8px; }
+.fc-card__reading { font-style: italic; color: var(--ink-faint); margin-top: 8px; font-size: 18px; }
+.fc-card__ru { margin-top: 10px; font-size: 17px; }
+.fc-actions { display: flex; gap: 12px; }
+.fc-actions button { flex: 1; padding: 15px; border-radius: 999px; font-weight: 700; font-size: 15px; cursor: pointer; font-family: inherit; }
+.fc-actions .no { background: none; border: 2px solid var(--grey); color: var(--ink); }
+.fc-actions .yes { border: none; color: #fff; }
+
+/* ---- Practice dialogue ---- */
+.pline { display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end; }
+.pline.learner { flex-direction: row-reverse; }
+.pline__avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--surface); box-shadow: var(--shadow-sm); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 15px; }
+.pline__bubble { max-width: 78%; border-radius: 14px; padding: 12px 14px; }
+.pline.mascot .pline__bubble { background: var(--surface); box-shadow: var(--shadow-sm); }
+.pline.learner .pline__bubble { color: #fff; }
+.pline__hanzi { font-weight: 700; font-size: 16px; display: flex; align-items: center; gap: 6px; }
+.pline__reading { font-size: 12px; font-style: italic; opacity: 0.85; margin-top: 2px; }
+.pline__ru { font-size: 13px; margin-top: 4px; opacity: 0.9; }
+
+/* ---- Complete screen ---- */
+.complete { text-align: center; padding: 20px 0; }
+.complete img { width: 130px; margin: 0 auto 16px; }
+.complete h2 { font-size: 24px; }
+.complete p { color: var(--ink-soft); margin-top: 4px; }
+.complete-stat { background: var(--surface); border-radius: 16px; padding: 16px; box-shadow: var(--shadow-sm); margin: 20px 0; display: flex; justify-content: space-between; text-align: left; }
+
+/* ---- Compare ---- */
+.cmp-card { background: var(--surface); border-radius: var(--radius-card); box-shadow: var(--shadow-sm); padding: 20px; margin-bottom: 16px; }
+.cmp-card__label { font-size: 13px; color: var(--ink-faint); margin-bottom: 10px; }
+.cmp-cols { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.cmp-cols__name { font-size: 12px; font-weight: 700; }
+.cmp-cols__hanzi { font-size: 24px; font-weight: 800; margin: 6px 0 2px; }
+.cmp-cols__reading { font-size: 13px; font-style: italic; color: var(--ink-faint); }
+.cmp-tip { display: flex; gap: 8px; margin-top: 14px; padding: 10px; border-radius: 12px; background: color-mix(in srgb, var(--ink) 5%, transparent); font-size: 13px; line-height: 1.35; }
+
+.icon-sm { width: 20px; height: 20px; }
