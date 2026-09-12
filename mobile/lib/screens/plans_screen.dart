@@ -5,6 +5,7 @@ import '../api/app_settings.dart';
 import '../app_repositories.dart';
 import '../components/app_background.dart';
 import '../components/app_bar_actions.dart';
+import '../data/study_plans.dart';
 import '../services/study_plan_service.dart';
 import '../theme/app_theme.dart';
 import 'plan_detail_screen.dart';
@@ -86,30 +87,79 @@ class _PlansScreenState extends State<PlansScreen> {
                       ),
                       const SizedBox(height: 22),
                     ],
-                    for (final stage in [1, 2, 3]) ...[
-                      if (plans.any((p) => p.plan.stage == stage)) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8, top: 4),
-                          child: Text(
-                            settings.t('planStage$stage'),
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ),
-                        for (final p in plans.where(
-                          (p) => p.plan.stage == stage,
-                        ))
+                    for (final track in PlanTrack.values) ...[
+                      if (plans.any((p) => p.plan.track == track)) ...[
+                        _TrackHeader(track: track, settings: settings),
+                        for (final p in (plans.where(
+                          (p) => p.plan.track == track,
+                        ).toList()..sort(
+                          (a, b) => a.plan.stage.compareTo(b.plan.stage),
+                        )))
                           _PlanCard(
                             progress: p,
                             settings: settings,
                             onTap: () => _open(p),
                           ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 18),
                       ],
                     ],
                   ],
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// Section header splitting the plan list into the app's two learning
+/// tracks — everyday topics vs. clearing a whole HSK level — so they read
+/// as two distinct goals rather than one undifferentiated list.
+class _TrackHeader extends StatelessWidget {
+  final PlanTrack track;
+  final AppSettings settings;
+
+  const _TrackHeader({required this.track, required this.settings});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isHsk = track == PlanTrack.hsk;
+    final color = isHsk ? AppColors.purple : AppColors.blue;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10, top: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              isHsk ? Icons.workspace_premium_rounded : Icons.forum_rounded,
+              size: 19,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  settings.t(isHsk ? 'planTrackHsk' : 'planTrackTopic'),
+                  style: theme.textTheme.titleMedium,
+                ),
+                Text(
+                  settings.t(isHsk ? 'planTrackHskDesc' : 'planTrackTopicDesc'),
+                  style: theme.textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

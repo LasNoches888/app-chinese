@@ -47,6 +47,7 @@ void main() {
     samples: [PlanSample('你好', 'nǐ hǎo', 'привет')],
     paceRu: 'темп',
     stage: 1,
+    track: PlanTrack.topic,
     steps: [
       PlanStep.deck('greetings', 'Здороваться', 'подробности'),
       PlanStep.words(10, 'Выучить 10 слов', 'подробности'),

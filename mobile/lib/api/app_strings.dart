@@ -42,6 +42,16 @@ class Strings {
       AppLocale.ru: 'Ближе к среднему уровню',
       AppLocale.en: 'Approaching intermediate',
     },
+    'planTrackTopic': {AppLocale.ru: 'По темам', AppLocale.en: 'By topic'},
+    'planTrackHsk': {AppLocale.ru: 'HSK-экзамен', AppLocale.en: 'HSK exam'},
+    'planTrackTopicDesc': {
+      AppLocale.ru: 'Разговорные темы для жизни — не привязаны к уровню экзамена',
+      AppLocale.en: 'Everyday conversation topics — not tied to an exam level',
+    },
+    'planTrackHskDesc': {
+      AppLocale.ru: 'Пошагово закрыть уровень HSK целиком',
+      AppLocale.en: 'Clear a whole HSK level, step by step',
+    },
 
     // Lessons / deck map
     'deckLocked': {AppLocale.ru: 'Заблокировано', AppLocale.en: 'Locked'},

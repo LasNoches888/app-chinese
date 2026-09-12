@@ -93,6 +93,19 @@ class PlanSample {
   const PlanSample(this.hanzi, this.pinyin, this.ru);
 }
 
+/// Which of the app's two learning tracks a plan belongs to — shown as two
+/// separate sections on the Plans screen so "learn to talk about things"
+/// and "prepare for the HSK exam" read as distinct goals rather than one
+/// undifferentiated list.
+enum PlanTrack {
+  /// Everyday-life topics (greetings, family, food, getting around...),
+  /// not tied to clearing a specific exam level.
+  topic,
+
+  /// Aimed at finishing a whole HSK level.
+  hsk,
+}
+
 class StudyPlan {
   final String id;
   final String emoji;
@@ -115,8 +128,12 @@ class StudyPlan {
   final String paceRu;
 
   /// Roughly which stage this belongs to: 1 foundation, 2 expanding,
-  /// 3 approaching intermediate. Drives grouping in the list.
+  /// 3 approaching intermediate. Orders plans within their [track] section.
   final int stage;
+
+  /// Which of the two Plans-screen sections this belongs in. See
+  /// [PlanTrack].
+  final PlanTrack track;
 
   final List<PlanStep> steps;
 
@@ -129,6 +146,7 @@ class StudyPlan {
     required this.samples,
     required this.paceRu,
     required this.stage,
+    required this.track,
     required this.steps,
   });
 }
@@ -161,6 +179,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '10–15 минут в день · около недели',
     stage: 1,
+    track: PlanTrack.topic,
     steps: [
       PlanStep.deck(
         'greetings',
@@ -221,6 +240,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '15 минут в день · 1–2 недели',
     stage: 1,
+    track: PlanTrack.topic,
     steps: [
       PlanStep.deck(
         'family',
@@ -272,6 +292,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '15 минут в день · 2 недели',
     stage: 2,
+    track: PlanTrack.topic,
     steps: [
       PlanStep.deck(
         'food',
@@ -327,6 +348,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '15 минут в день · 2 недели',
     stage: 2,
+    track: PlanTrack.topic,
     steps: [
       PlanStep.deck(
         'places1',
@@ -378,6 +400,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '15–20 минут в день · 4–6 недель',
     stage: 2,
+    track: PlanTrack.hsk,
     steps: [
       PlanStep.deck(
         'time',
@@ -447,6 +470,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '20 минут в день · 6–8 недель',
     stage: 2,
+    track: PlanTrack.hsk,
     steps: [
       PlanStep.deck(
         'colors',
@@ -526,6 +550,7 @@ const kStudyPlans = <StudyPlan>[
     ],
     paceRu: '20 минут в день · 6–8 недель',
     stage: 3,
+    track: PlanTrack.hsk,
     steps: [
       PlanStep.deck(
         'emotions3',
