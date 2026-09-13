@@ -87,6 +87,13 @@ class DialectInfo {
   });
 }
 
+/// The per-group `color`s here are the app's blue-family set, because the
+/// app runs styles #1/#2 of the brand sheet. The website runs style #6
+/// (warm paper), where those hues fight the background, so
+/// `website/js/dialects-data.js` carries an earth-toned set instead. The
+/// two lists differing is intentional — neither is a stale copy of the
+/// other, and everything else about a group (names, examples, which ones
+/// honestly have audio) is identical on both sides.
 const List<DialectInfo> kDialects = [
   DialectInfo(
     id: 'mandarin',
