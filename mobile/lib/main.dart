@@ -161,10 +161,13 @@ class _HomeShellState extends State<HomeShell> {
   /// Desktop gets Уроки/Словарь/Чат as sidebar destinations of their own
   /// instead of two taps deep through Home's shortcut grid — that grid
   /// is a phone-width compromise, not a design goal, and a sidebar has
-  /// the room to just list everything.
+  /// the room to just list everything. Планы sits next to Уроки because
+  /// they're the two halves of the same thing: the deck list is the
+  /// material, the plans are the route through it.
   static const _desktopScreens = [
     HomeScreen(),
     LessonsScreen(),
+    PlansScreen(),
     DialectsMapScreen(),
     DictionaryScreen(),
     ChatScreen(),
@@ -237,6 +240,11 @@ class _HomeShellState extends State<HomeShell> {
         icon: Icons.menu_book_outlined,
         selected: Icons.menu_book,
         label: settings.t('lessons'),
+      ),
+      (
+        icon: Icons.map_outlined,
+        selected: Icons.map,
+        label: settings.t('plansTitle'),
       ),
       (
         icon: Icons.location_on_outlined,

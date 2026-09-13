@@ -12,7 +12,11 @@ import 'package:app_chinese/main.dart';
 /// labeled sidebar with its own, wider destination list (Уроки, Словарь
 /// and Чат get their own entry instead of being two taps deep through
 /// Home's shortcut grid) — this locks down that the sidebar actually
-/// shows all seven and that each one really navigates.
+/// shows all eight and that each one really navigates.
+///
+/// Планы is in that list on purpose: it went missing once when this list
+/// was rewritten, which silently dropped the whole study-plan track from
+/// desktop, so it gets asserted here as well as in widget_test.dart.
 ///
 /// Several of these labels (Уроки, Словарь, Чат) also appear as tiles in
 /// Home's own shortcut grid, so every lookup here is scoped to the
@@ -24,7 +28,7 @@ void main() {
     databaseFactory = databaseFactoryFfiNoIsolate;
   });
 
-  testWidgets('desktop sidebar lists all seven destinations and navigates', (
+  testWidgets('desktop sidebar lists all eight destinations and navigates', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1200, 900);
@@ -64,6 +68,7 @@ void main() {
     const labels = [
       'Главная',
       'Уроки',
+      'Планы',
       'Диалекты',
       'Словарь',
       'Чат',
