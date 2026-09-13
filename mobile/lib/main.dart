@@ -347,7 +347,10 @@ class _DesktopSidebar extends StatelessWidget {
     return Container(
       width: 240,
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        // surfaceContainerLowest is the rail colour specifically: in the
+        // night-mode panel the sidebar sits a shade *under* the canvas
+        // rather than on a lighter card like the rest of the surfaces.
+        color: theme.colorScheme.surfaceContainerLowest,
         border: Border(
           right: BorderSide(
             color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
@@ -415,10 +418,14 @@ class _SidebarItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    // The active pill is a solid wash from the palette rather than a
+    // translucent blue: over the navy night canvas an alpha-blended blue
+    // turns muddy, while the pinned pillDark keeps the same crispness the
+    // light panel has.
+    final activeInk = scheme.onPrimaryContainer;
     return Material(
-      color: selected
-          ? AppColors.blue.withValues(alpha: 0.12)
-          : Colors.transparent,
+      color: selected ? scheme.primaryContainer : Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -430,9 +437,7 @@ class _SidebarItem extends StatelessWidget {
               Icon(
                 selected ? spec.selected : spec.icon,
                 size: 20,
-                color: selected
-                    ? AppColors.blue
-                    : theme.colorScheme.onSurfaceVariant,
+                color: selected ? activeInk : scheme.onSurfaceVariant,
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -441,7 +446,7 @@ class _SidebarItem extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
-                    color: selected ? AppColors.blue : theme.colorScheme.onSurface,
+                    color: selected ? activeInk : scheme.onSurface,
                   ),
                 ),
               ),

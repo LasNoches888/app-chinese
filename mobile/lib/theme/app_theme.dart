@@ -26,7 +26,35 @@ class AppColors {
   static const greyDark = Color(0xFF8094B1);
 
   static const backgroundLight = Color(0xFFEDF5FB);
-  static const backgroundDark = Color(0xFF14141F);
+
+  /// Light-mode surfaces, from style #1 ("Светлый и дружелюбный"): plain
+  /// white cards on the pale blue canvas, with a ladder of barely-blue
+  /// tints for the tinted tiles and inset rows above them.
+  static const surfaceLight = Color(0xFFFFFFFF);
+  static const surfaceLightHigh = Color(0xFFE9F1FB);
+  static const outlineLight = Color(0xFFD9E5F3);
+  static const inkLight = Color(0xFF0F1A3A);
+  static const inkLightSoft = Color(0xFF5A6B88);
+
+  /// Dark mode is style #2 ("Тёмная / ночной режим"), which is a deep
+  /// **navy**, not the neutral near-black this used to be — the whole
+  /// point of that panel is that night mode stays the same blue brand
+  /// rather than draining to grey. Sampled from the mockup: canvas
+  /// #061B3C, sidebar a shade under it, cards and raised tiles two steps
+  /// above.
+  static const backgroundDark = Color(0xFF061B3C);
+  static const surfaceDark = Color(0xFF0E2549);
+  static const surfaceDarkHigh = Color(0xFF16305C);
+  static const sidebarDark = Color(0xFF051837);
+  static const outlineDark = Color(0xFF1F3C6B);
+  static const inkDark = Color(0xFFE8EEF9);
+  static const inkDarkSoft = Color(0xFF9FB2D0);
+
+  /// The active sidebar/nav pill in both panels: a wash of the primary
+  /// blue, with the blue itself as the label colour.
+  static const pillLight = Color(0xFFE8F3FE);
+  static const pillDark = Color(0xFF14315F);
+  static const onPillDark = Color(0xFF9DC6FF);
 }
 
 /// Builds the app's light/dark [ThemeData] from [AppColors] — the one place
@@ -51,6 +79,11 @@ class AppTheme {
     // tertiary to the exact sampled hexes (rather than trusting Material's
     // tonal derivation to land on them) is what makes buttons/nav render
     // that same blue instead of a purple-tinted derivative of it.
+    //
+    // The surface ladder is pinned too, for the same reason: Material's
+    // tonal derivation from a blue seed lands on a desaturated grey-violet
+    // in dark mode, which is exactly the drained look style #2 is not.
+    final isDark = brightness == Brightness.dark;
     final scheme =
         ColorScheme.fromSeed(
           seedColor: AppColors.blue,
@@ -62,6 +95,30 @@ class AppTheme {
           onSecondary: Colors.white,
           tertiary: AppColors.orange,
           onTertiary: Colors.white,
+          primaryContainer: isDark ? AppColors.pillDark : AppColors.pillLight,
+          onPrimaryContainer: isDark ? AppColors.onPillDark : AppColors.blue,
+          surface: isDark ? AppColors.surfaceDark : AppColors.surfaceLight,
+          onSurface: isDark ? AppColors.inkDark : AppColors.inkLight,
+          onSurfaceVariant: isDark
+              ? AppColors.inkDarkSoft
+              : AppColors.inkLightSoft,
+          // Lowest is the sidebar/nav rail; the rest is the card ladder.
+          surfaceContainerLowest: isDark
+              ? AppColors.sidebarDark
+              : AppColors.surfaceLight,
+          surfaceContainerLow: isDark
+              ? AppColors.surfaceDark
+              : const Color(0xFFF7FAFE),
+          surfaceContainer: isDark
+              ? AppColors.surfaceDark
+              : const Color(0xFFF2F7FD),
+          surfaceContainerHigh: isDark
+              ? AppColors.surfaceDarkHigh
+              : const Color(0xFFEDF4FC),
+          surfaceContainerHighest: isDark
+              ? AppColors.surfaceDarkHigh
+              : AppColors.surfaceLightHigh,
+          outlineVariant: isDark ? AppColors.outlineDark : AppColors.outlineLight,
         );
 
     final base = ThemeData(
@@ -81,9 +138,15 @@ class AppTheme {
     const buttonTextStyle = TextStyle(fontWeight: FontWeight.w600);
 
     return base.copyWith(
-      scaffoldBackgroundColor: brightness == Brightness.light
-          ? AppColors.backgroundLight
-          : AppColors.backgroundDark,
+      scaffoldBackgroundColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
+      // Both panels show the header sitting flat on the canvas rather than
+      // on a card of its own — without this, M3 tints the bar with its
+      // elevation overlay and it reads as a separate slab.
+      canvasColor: isDark
+          ? AppColors.backgroundDark
+          : AppColors.backgroundLight,
       // Mirrors the mockup's type scale: Bold 24 headings, Semibold 16
       // subheadings, Regular 14 body, Medium 14 labels/buttons.
       textTheme: base.textTheme.copyWith(
@@ -117,10 +180,23 @@ class AppTheme {
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {TargetPlatform.android: ZoomPageTransitionsBuilder()},
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         centerTitle: false,
         scrolledUnderElevation: 0,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        foregroundColor: scheme.onSurface,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: isDark
+            ? AppColors.sidebarDark
+            : AppColors.surfaceLight,
+        indicatorColor: scheme.primaryContainer,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+      ),
+      dividerTheme: DividerThemeData(color: scheme.outlineVariant, space: 1),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           padding: buttonPadding,
