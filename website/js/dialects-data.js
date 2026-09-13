@@ -1,3 +1,9 @@
+/* Region colours here are the *site's* paper-palette set (style #6).
+   The Flutter app keeps the blue-family values in
+   mobile/lib/data/dialects.dart on purpose — it runs styles #1/#2 — so
+   these two lists are meant to differ, and neither is a stale copy of
+   the other. Everything else about a dialect group (names, examples,
+   which ones honestly have audio) is identical on both sides. */
 // Mirrors mobile/lib/data/dialects.dart field-for-field — same content, same
 // honesty rules (romanization only where a real standard exists; audio only
 // offered for Mandarin, and even then only if the browser actually reports a
@@ -6,7 +12,7 @@
 const DIALECTS = [
   {
     id: 'mandarin', nameRu: 'Мандарин', nativeName: '官话', romanization: 'Guānhuà',
-    regionRu: 'Север и юго-запад Китая', color: '#4B93FD', hasAudio: true,
+    regionRu: 'Север и юго-запад Китая', color: '#3F5A7A', hasAudio: true,
     descriptionRu: 'Самый распространённый диалект Китая — основа современного путунхуа, официального языка страны.',
     featuresRu: [
       'Основа путунхуа — стандартного языка, который преподают в школах',
@@ -34,7 +40,7 @@ const DIALECTS = [
   },
   {
     id: 'wu', nameRu: 'У (шанхайский)', nativeName: '吴语', romanization: 'Wúyǔ',
-    regionRu: 'Шанхай, юг Цзянсу, Чжэцзян', color: '#53CD82', hasAudio: false,
+    regionRu: 'Шанхай, юг Цзянсу, Чжэцзян', color: '#4E6B5B', hasAudio: false,
     descriptionRu: 'Один из самых своеобразных диалектов юго-востока Китая — на нём говорят в Шанхае и соседних регионах.',
     featuresRu: [
       'Фонетика сильно отличается от путунхуа',
@@ -54,7 +60,7 @@ const DIALECTS = [
   },
   {
     id: 'yue', nameRu: 'Юэ (кантонский)', nativeName: '粤语', romanization: 'Yuèyǔ',
-    regionRu: 'Гуандун, Гуанси, Гонконг, Макао', color: '#FDA14D', hasAudio: false,
+    regionRu: 'Гуандун, Гуанси, Гонконг, Макао', color: '#A85A32', hasAudio: false,
     descriptionRu: 'Яркий, мелодичный диалект с собственной лексикой и грамматикой — основной язык Гонконга и Макао.',
     featuresRu: [
       'От 6 до 9 тонов в зависимости от анализа — заметно больше, чем в путунхуа',
@@ -76,7 +82,7 @@ const DIALECTS = [
   },
   {
     id: 'min', nameRu: 'Мин', nativeName: '闽语', romanization: 'Mǐnyǔ',
-    regionRu: 'Фуцзянь, Тайвань, Хайнань', color: '#927CEE', hasAudio: false,
+    regionRu: 'Фуцзянь, Тайвань, Хайнань', color: '#7A4A63', hasAudio: false,
     descriptionRu: 'Одна из древнейших ветвей китайских диалектов — включает южноминьский (тайваньский) и ряд других, слабо понятных друг другу вариантов.',
     featuresRu: [
       'Рано отделился от общего ствола — сохраняет очень архаичные черты',
@@ -97,7 +103,7 @@ const DIALECTS = [
   },
   {
     id: 'hakka', nameRu: 'Хакка', nativeName: '客家话', romanization: 'Kèjiāhuà',
-    regionRu: 'Разрозненно на стыке Фуцзянь, Гуандун, Цзянси', color: '#FFBE5A', hasAudio: false,
+    regionRu: 'Разрозненно на стыке Фуцзянь, Гуандун, Цзянси', color: '#9A7327', hasAudio: false,
     descriptionRu: 'Диалект не одного региона, а рассеянной по югу Китая группы хакка («гостевых семей») — потомков переселенцев с севера.',
     featuresRu: [
       'Название 客家 буквально значит «гостевые семьи»',
@@ -117,7 +123,7 @@ const DIALECTS = [
   },
   {
     id: 'xiang', nameRu: 'Сян', nativeName: '湘语', romanization: 'Xiāngyǔ',
-    regionRu: 'Хунань', color: '#42A468', hasAudio: false,
+    regionRu: 'Хунань', color: '#2F6B68', hasAudio: false,
     descriptionRu: 'Диалект провинции Хунань, исторически связанный с языком древнего царства Чу.',
     featuresRu: [
       'Делится на «новый сян» (ближе к путунхуа) и «старый сян» (более консервативный)',
@@ -134,7 +140,7 @@ const DIALECTS = [
   },
   {
     id: 'gan', nameRu: 'Гань', nativeName: '赣语', romanization: 'Gànyǔ',
-    regionRu: 'Цзянси', color: '#8094B1', hasAudio: false,
+    regionRu: 'Цзянси', color: '#6E6355', hasAudio: false,
     descriptionRu: 'Диалект провинции Цзянси — один из наименее изученных крупных диалектов Китая.',
     featuresRu: [
       'Некоторые лингвисты считают гань исторически близким к хакка',

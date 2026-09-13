@@ -26,35 +26,35 @@ function renderHome() {
         <div>
           <h1 class="dash-hero__title">Китайский язык ближе, чем кажется</h1>
           <p class="dash-hero__sub">Учись в своём темпе — офлайн, с умным помощником и милыми компаньонами.</p>
-          <a href="#/lessons" class="dbtn" style="display:inline-block;width:auto;padding:13px 26px;margin-top:16px;background:var(--blue)">Начать обучение</a>
+          <a href="#/lessons" class="dbtn" style="display:inline-block;width:auto;padding:13px 26px;margin-top:16px;background:var(--accent);color:var(--on-accent)">Начать обучение</a>
         </div>
         <img src="assets/mascot/panda_04.png" alt="">
       </div>
 
       <div class="dash-grid">
         <a class="dash-card" href="#/lessons">
-          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--blue) 16%, transparent);color:var(--blue)">
+          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--accent) 16%, transparent);color:var(--accent)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H14v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z" stroke-linejoin="round"/><path d="M14 4h4.5C19.3 4 20 4.7 20 5.5v13c0 .8-.7 1.5-1.5 1.5H14" stroke-linejoin="round"/></svg>
           </div>
           <div class="dash-card__title">Уроки</div>
           <div class="dash-card__sub">Изучай новые слова и грамматику</div>
         </a>
         <a class="dash-card" href="dialects.html">
-          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--purple) 16%, transparent);color:var(--purple)">
+          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--forest) 16%, transparent);color:var(--forest)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M12 21s7-6.1 7-11.5S16.4 3 12 3 5 5.6 5 9.5 12 21 12 21Z" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.5"/></svg>
           </div>
           <div class="dash-card__title">Диалекты</div>
           <div class="dash-card__sub">Погрузись в культуру разных регионов</div>
         </a>
         <a class="dash-card" href="#/dictionary">
-          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--green) 16%, transparent);color:var(--green-dark)">
+          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--sage) 16%, transparent);color:var(--sage-deep)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M4 5.5C4 4.7 4.7 4 5.5 4H19v16H5.5A1.5 1.5 0 0 1 4 18.5v-13Z" stroke-linejoin="round"/><path d="M8 8h7M8 12h7" stroke-linecap="round"/></svg>
           </div>
           <div class="dash-card__title">Словарь</div>
           <div class="dash-card__sub">Слова курса и примеры</div>
         </a>
         <div class="dash-card is-soon">
-          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--orange) 16%, transparent);color:var(--orange)">
+          <div class="dash-card__icon" style="background:color-mix(in srgb, var(--copper) 16%, transparent);color:var(--copper)">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="20" height="20"><path d="M4 12c0-4.4 3.6-8 8-8s8 3.6 8 8-3.6 8-8 8c-1.1 0-2.2-.2-3.1-.6L4 21l1.7-4.6C4.6 15 4 13.6 4 12Z" stroke-linejoin="round" stroke-linecap="round"/></svg>
           </div>
           <div class="dash-card__title">Чат</div>
@@ -66,7 +66,7 @@ function renderHome() {
       <div class="dash-progress">
         <div class="dsection__title" style="margin-bottom:12px">Твой прогресс на сайте</div>
         ${dialectProgress.length === 0 && coursesDone.length === 0
-          ? `<p class="dash-progress__empty">Пока пусто — начни с <a href="#/lessons" style="color:var(--blue);font-weight:600">урока</a> или <a href="dialects.html" style="color:var(--blue);font-weight:600">диалектов</a>. Это прогресс именно в этом браузере — с приложением на телефоне он пока не синхронизирован.</p>`
+          ? `<p class="dash-progress__empty">Пока пусто — начни с <a href="#/lessons" style="color:var(--accent);font-weight:600">урока</a> или <a href="dialects.html" style="color:var(--accent);font-weight:600">диалектов</a>. Это прогресс именно в этом браузере — с приложением на телефоне он пока не синхронизирован.</p>`
           : `
             ${coursesDone.length ? `<div class="dash-progress__row"><span>Пройдено тем</span><span style="color:var(--ink-faint);font-size:13px">${coursesDone.length}</span></div>` : ''}
             ${dialectProgress.map((p) => `<div class="dash-progress__row"><span>${p.name}</span><span style="color:var(--ink-faint);font-size:13px">${p.kinds.length} из 3 разделов</span></div>`).join('')}

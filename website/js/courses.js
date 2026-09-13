@@ -134,7 +134,7 @@ const Courses = (() => {
             <img src="assets/mascot/panda_04.png" alt="">
             <h2>Урок пройден!</h2>
             <p>${deck.title} · ${quiz.correct} из ${quiz.questions.length} правильно</p>
-            <button class="dbtn" style="background:var(--blue)" data-nav="app.html#/lessons">К списку тем</button>
+            <button class="dbtn" style="background:var(--accent);color:var(--on-accent)" data-nav="app.html#/lessons">К списку тем</button>
           </div>
         </div>`;
     }
@@ -149,7 +149,7 @@ const Courses = (() => {
             <div style="font-size:12.5px;color:var(--ink-faint)">Вопрос ${quiz.index + 1} из ${quiz.questions.length}</div>
           </div>
         </div>
-        <div class="fc-progress"><div class="fc-progress__bar" style="width:${(quiz.index / quiz.questions.length) * 100}%;background:var(--blue)"></div></div>
+        <div class="fc-progress"><div class="fc-progress__bar" style="width:${(quiz.index / quiz.questions.length) * 100}%;background:var(--accent)"></div></div>
         <div class="quiz-card">
           <div class="quiz-card__hanzi">${q.word.hanzi}
             <button class="dcard__speak" ${zhVoice ? '' : 'disabled'} data-speak="${q.word.hanzi}">${icon('speaker')}</button>
@@ -166,7 +166,7 @@ const Courses = (() => {
               return `<button class="quiz-option ${cls}" data-answer="${esc(opt)}" ${answered ? 'disabled' : ''}>${esc(opt)}</button>`;
             }).join('')}
           </div>
-          ${answered ? `<button class="dbtn" style="background:var(--blue);margin-top:20px" data-quiz-next>Далее</button>` : ''}
+          ${answered ? `<button class="dbtn" style="background:var(--accent);color:var(--on-accent);margin-top:20px" data-quiz-next>Далее</button>` : ''}
         </div>
       </div>`;
   }

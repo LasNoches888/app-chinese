@@ -91,7 +91,7 @@ const Dictionary = (() => {
                   <div class="dcard__hanzi">${selected.example_sentence}</div>
                   <div class="dcard__ru" style="margin-top:4px">${selected.example_translation || ''}</div>
                 </div>` : ''}
-              <button class="dbtn" style="background:var(--blue);margin-top:20px" data-fav="${selected.id}">${favs.includes(selected.id) ? 'В избранном ✓' : 'Добавить в избранное'}</button>
+              <button class="dbtn" style="background:var(--accent);color:var(--on-accent);margin-top:20px" data-fav="${selected.id}">${favs.includes(selected.id) ? 'В избранном ✓' : 'Добавить в избранное'}</button>
             ` : ''}
           </div>
         </div>

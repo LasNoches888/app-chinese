@@ -83,7 +83,7 @@ function renderList() {
       <p style="color:var(--ink-soft)">7 регионов — 7 уникальных культур, языков и традиций. Нажмите на диалект, чтобы узнать больше и пройти его на сайте.</p>
       <p style="color:var(--ink-faint);font-size:13px;margin-top:8px">Прогресс пока сохраняется только в этом браузере — аккаунт и синхронизация с приложением ещё не подключены.</p>
       <div class="dlegend">${rows}</div>
-      <button class="dbtn" style="background:var(--ink);margin-top:20px" data-nav="#/compare">Сравнить произношение</button>
+      <button class="dbtn" style="background:var(--ink);color:var(--bg);margin-top:20px" data-nav="#/compare">Сравнить произношение</button>
     </div>`;
 }
 
@@ -245,7 +245,7 @@ function renderComplete(id, count) {
           <b>${count} фраз</b>
         </div>
         <button class="dbtn" style="background:${d.color}" data-nav="#/d/${d.id}/lessons">Продолжить</button>
-        <button class="dbtn" style="background:none;border:2px solid var(--grey);color:var(--ink)" data-nav="#/">К списку диалектов</button>
+        <button class="dbtn" style="background:none;border:2px solid var(--line);color:var(--ink)" data-nav="#/">К списку диалектов</button>
       </div>
     </div>`;
 }
@@ -255,9 +255,9 @@ function renderCompare() {
     <div class="cmp-card">
       <div class="cmp-card__label">${esc(c.ru)}</div>
       <div class="cmp-cols">
-        <div><div class="cmp-cols__name" style="color:#4B93FD">Мандарин</div><div class="cmp-cols__hanzi">${esc(c.hanziMandarin)}</div><div class="cmp-cols__reading">${esc(c.pinyin)}</div></div>
-        <div><div class="cmp-cols__name" style="color:#FDA14D">Кантонский</div><div class="cmp-cols__hanzi">${esc(c.hanziYue)}</div><div class="cmp-cols__reading">${esc(c.jyutping)}</div></div>
-        <div><div class="cmp-cols__name" style="color:#927CEE">Мин</div><div class="cmp-cols__hanzi">${esc(c.hanziMin)}</div><div class="cmp-cols__reading">${esc(c.poj)}</div></div>
+        <div><div class="cmp-cols__name" style="color:#3F5A7A">Мандарин</div><div class="cmp-cols__hanzi">${esc(c.hanziMandarin)}</div><div class="cmp-cols__reading">${esc(c.pinyin)}</div></div>
+        <div><div class="cmp-cols__name" style="color:#A85A32">Кантонский</div><div class="cmp-cols__hanzi">${esc(c.hanziYue)}</div><div class="cmp-cols__reading">${esc(c.jyutping)}</div></div>
+        <div><div class="cmp-cols__name" style="color:#7A4A63">Мин</div><div class="cmp-cols__hanzi">${esc(c.hanziMin)}</div><div class="cmp-cols__reading">${esc(c.poj)}</div></div>
       </div>
       <div class="cmp-tip">💡 <span>${esc(c.tipRu)}</span></div>
     </div>`).join('');
