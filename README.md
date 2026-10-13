@@ -7,7 +7,7 @@ AI-репетитором на локальной модели Qwen. Голос 
 - [`/backend`](backend) — FastAPI, нужен только для `/chat` (LLM-клиент)
 - [`/mobile`](mobile) — Flutter, offline-first: уроки/SRS/XP/жизни/стрики/ачивки
   полностью локальные (SQLite), только чат требует backend
-- [`/web`](web) — отдельное веб-приложение в стиле Duolingo (React + TS + Tailwind,
+- [`/web`](web) — отдельное веб-приложение (React + TS + Tailwind,
   без бэкенда, прогресс в localStorage) — независимый продукт, не связан с
   backend/mobile выше
 
@@ -48,7 +48,7 @@ HSK1/2 зашит в APK, прогресс в локальной SQLite. Backend
 хоста для Android-эмулятора); для физического устройства поменяйте base URL
 на экране Settings (например, IP машины в локальной сети).
 
-### 4. Web (Duolingo-style, опционально, независимо от остального)
+### 4. Web (опционально, независимо от остального)
 
 ```bash
 cd web
